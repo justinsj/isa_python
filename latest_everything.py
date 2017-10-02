@@ -49,7 +49,7 @@ t = 12 #Version number
 
 #training parameters
 batch_size = 200
-num_classes = 60
+num_classes = 64
 epochs = 300
 training_ratio = 0.7
 img_rows, img_cols = 100, 100
@@ -87,8 +87,8 @@ def random_split_dataset(data_set, training_ratio):
    #function: load pre-shuffled data
 def load_data():
     data_all = np.load('/home/chloong/Desktop/Justin San Juan/Testing Folder/'+'Training_Samples_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_all'+'.npy')
-    train_data=np.load('/home/chloong/Desktop/Justin San Juan/Testing Folder/'+'Training_Samples_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_'+'train_data.npy',mmap_mode='c')
-    test_data=np.load('/home/chloong/Desktop/Justin San Juan/Testing Folder/'+'Training_Samples_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_'+'test_data.npy',mmap_mode='c')
+    train_data=np.load('/home/chloong/Desktop/Justin San Juan/Testing Folder/'+'Training_Samples_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_'+'train_data.npy')
+    test_data=np.load('/home/chloong/Desktop/Justin San Juan/Testing Folder/'+'Training_Samples_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_'+'test_data.npy')
     x_train = train_data[:,:-1]
     y_train = train_data[:,(-1)]
     y_train=y_train.reshape(y_train.shape[0],1)
@@ -129,7 +129,7 @@ def load_data():
 
     #function: use random_split_dataset and shuffle data in batches (small due to memory error)
 def load_data_in_batches(batch_size):
-    data_all = np.load('/home/chloong/Desktop/Justin San Juan/Testing Folder/'+'Training_Samples_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_all.npy',mmap_mode='c')
+    data_all = np.load('/home/chloong/Desktop/Justin San Juan/Testing Folder/'+'Training_Samples_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_all.npy')
     print(data_all.shape)
         # for X batches
     for j in range(0,int(np.ceil(data_all.shape[0]/batch_size))):
@@ -940,7 +940,8 @@ def binarize_image(image,a):
 def select_good_bounding_boxes(image,imagename,ext_images,ext_data,ext_class_index,ext_class_name,target_names):
     
     lines=[]
-    filename = 'GT_'+str(imagename)
+    address = "/home/chloong/Desktop/ISA_FYP/GT/"
+    filename = address+'GT_'+str(imagename)
     mode = 'w+'#input('mode of file (w:write,a:append, include "+" to create if not there'+'\n'))
     f = open(str(filename)+'.txt',str(mode))
     lines.append(str(imagename)+'\n')
@@ -1292,25 +1293,30 @@ def select_good_bounding_boxes(image,imagename,ext_images,ext_data,ext_class_ind
 print('Done defining functions...')
 
 #%%
+##### LOAD IMAGE SET ##### (Only need to load once)
+set_num=1
+image_set = np.load('/home/chloong/Desktop/Justin San Juan/Testing Folder/all_training_images_'+str(set_num)+'.npy')
+#%%
         ######################### TEST FULL CODE ON SAMPLE ######################
         
 ####### Load hand-drawn image #########
 #al=np.linspace(1.2,3,int((3-1.2)/0.1+1))
 #al=[2.4] # to test different gaussian filters
 a=2.4
-first=0
-last=2
-il=np.arange(first,last+1)
 
-for e in il:
-    imagename='easy_'+str(e)
+e = int(input("Which image?"+'\n'))
+
+
+imagename='all_'+str(e+(set_num-1)*400)
+
 #    image = cv2.imread('/home/chloong/Desktop/Justin San Juan/Testing Folder/'+imagename+'.JPG')
 #    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 #    image = np.array(image)
 #    image = binarize_image(image,a)
-    image_set = np.load('/home/chloong/Desktop/Justin San Juan/Testing Folder/easy_training_images.npy')
-    image=image_set[:,:,e]
-    start = time.time()
+start = time.time()
+
+image=image_set[:,:,e]
+
 #current samples answers only work with this loading method of hand-drawn image
 #test_image = cv2.imread('/home/chloong/Desktop/Justin San Juan/Testing Folder/Previous Data/samples1.jpg')
 #
@@ -1325,245 +1331,248 @@ for e in il:
 
 #image = np.load('/home/chloong/Desktop/Justin San Juan/Testing Folder/easy_training_images.npy')[:,:,6]
 ##############
-    end = time.time()
-    print('Loading image done... Time Elapsed : '+str(end-start)+' seconds...')
-    t1 = end-start
-    start = time.time()
-    ##############0.3
-        # reset sets and lists
-    good_candidates = set()
-    good_candidates_list=[]
-    bad_candidates = set()
-    
-        # get good_candidates set from search function, and also put it into 'candidates'
-    search(image, good_candidates, bad_candidates, scale_input, sigma_input, min_size_input)
-    candidates=good_candidates # select candidates to be classified, can be only good, only bad, or both sets of candidates
-        #full class 1-60 list (index 0 to 59) available at: https://drive.google.com/open?id=1AlqCo-44dX59BYiu5-u0Dk6uDpNi89PI21rgJE1kfts
-        # define merged class names
-    target_names_all = ['0','1','2','3','4','5','6','7','8','9',
+end = time.time()
+print('Loading image done... Time Elapsed : '+str(end-start)+' seconds...')
+t1 = end-start
+start = time.time()
+##############0.3
+    # reset sets and lists
+good_candidates = set()
+good_candidates_list=[]
+bad_candidates = set()
+
+    # get good_candidates set from search function, and also put it into 'candidates'
+search(image, good_candidates, bad_candidates, scale_input, sigma_input, min_size_input)
+candidates=good_candidates # select candidates to be classified, can be only good, only bad, or both sets of candidates
+    #full class 1-60 list (index 0 to 59) available at: https://drive.google.com/open?id=1AlqCo-44dX59BYiu5-u0Dk6uDpNi89PI21rgJE1kfts
+    # define merged class names
+target_names_all = ['0','1','2','3','4','5','6','7','8','9',
+            #10
+            'upwards force','downwards force','rightwards force','leftwards force',
+            #14
+            'counter-clockwise moment right', 'counter-clockwise moment up', 'counter-clockwise moment left', 'counter-clockwise moment down', 
+            #18
+            'clockwise moment right','clockwise moment up','clockwise moment left','clockwise moment down',
+            #22
+            'unknown','random alphabet',
+            #24
+            'fixed support right','fixed support left','fixed support down', 'fixed support up',
+            #28
+            'fixed support right w/ beam','fixed support left w/ beam','fixed support down w/ beam', 'fixed support up w/ beam',
+            #32
+            'pinned support down', 'pinned support up','pinned support left', 'pinned support right',
+            #36
+            'pinned support down w/ beam', 'pinned support up w/ beam','pinned support left w/ beam', 'pinned support right w/ beam',
+            #40
+            'roller support down', 'roller support up','roller support left','roller support right',
+            #44
+            'roller support down w/ beam', 'roller support up w/ beam','roller support left w/ beam','roller support right w/ beam',
+            #48
+            'uniformly distributed load', 'linearly distributed load','quadratically distributed load', 'cubically distributed load',
+        	   #52
+        	   'horizontal beam','vertical beam','downward diagonal beam', 'upward diagonal beam',
+            #56
+            'length','height','counter-clockwise angle','clockwise angle',
+            #60
+            'measure left','measure right','measure up','measure down'
+            ]
+target_names=['0','1','2','3','4','5','6','7','8','9',
                 #10
                 'upwards force','downwards force','rightwards force','leftwards force',
                 #14
-                'counter-clockwise moment right', 'counter-clockwise moment up', 'counter-clockwise moment left', 'counter-clockwise moment down', 
+                'counter-clockwise moment', 'clockwise moment','unknown','random',
                 #18
-                'clockwise moment right','clockwise moment up','clockwise moment left','clockwise moment down',
+                'fixed support','pinned support','roller support vertical', 'roller support horizontal',
                 #22
-                'unknown','random alphabet',
-                #24
-                'fixed support right','fixed support left','fixed support down', 'fixed support up',
-                #28
-                'fixed support right w/ beam','fixed support left w/ beam','fixed support down w/ beam', 'fixed support up w/ beam',
-                #32
-                'pinned support down', 'pinned support up','pinned support left', 'pinned support right',
-                #36
-                'pinned support down w/ beam', 'pinned support up w/ beam','pinned support left w/ beam', 'pinned support right w/ beam',
-                #40
-                'roller support down', 'roller support up','roller support left','roller support right',
-                #44
-                'roller support down w/ beam', 'roller support up w/ beam','roller support left w/ beam','roller support right w/ beam',
-                #48
                 'uniformly distributed load', 'linearly distributed load','quadratically distributed load', 'cubically distributed load',
-            	   #52
-            	   'horizontal beam','vertical beam','downward diagonal beam', 'upward diagonal beam',
-                #56
+                #26
+                'horizontal beam','vertical beam','downward diagonal beam', 'upward diagonal beam',
+                #30
                 'length','height','counter-clockwise angle','clockwise angle',
-                #60
-                'measure left','measure right','measure up','measure down'
+                #34
+                'measure left','measure right', 'measure up','measure down',
                 ]
-    target_names=['0','1','2','3','4','5','6','7','8','9',
-                    #10
-                    'upwards force','downwards force','rightwards force','leftwards force',
-                    #14
-                    'counter-clockwise moment', 'clockwise moment','unknown','random',
-                    #18
-                    'fixed support','pinned support','roller support vertical', 'roller support horizontal',
-                    #22
-                    'uniformly distributed load', 'linearly distributed load','quadratically distributed load', 'cubically distributed load',
-                    #26
-                    'horizontal beam','vertical beam','downward diagonal beam', 'upward diagonal beam',
-                    #30
-                    'length','height','counter-clockwise angle','clockwise angle',
-                    #34
-                    'measure left','measure right', 'measure up','measure down',
-                    ]
 
-        
-        # Create/reset list of images, coordinates (x,y,w,h) data, class indices, class names, and top three percentage matches
-    ext_images=[]
-    ext_data=[]
-    ext_class_index=[]
-    ext_class_name=[]
-    ext_match_percent=[]
-    ext_match_percent2=[]
-    ext_next_round=[]
-    ext_next_round_index=[]
     
-        # define wanted_w, and wanted_h, which is the are where the extraction is limited to
-        # define export_w and export_h as required by the classifier
-    wanted_w=img_cols
-    wanted_h=img_rows
-    export_w=img_cols
-    export_h=img_rows
-    
-        # prepare extractions to be sent to classifier
-        # ext_class_index and _name are empty
-    ext_images, ext_data, ext_class_index, ext_class_name = preprocess_extractions(image,candidates, wanted_w, wanted_h, export_w, export_h) 
-    
-    name = 'Sketch-a-Net_Single_Model_'+str(t)
-    
-    ##############
-    end = time.time()
-    print('Segmentation done... Time Elapsed : '+str(end-start)+' seconds...')
-    t2=end-start
-    start = time.time()
-    ##############
-    name = 'TestGaussian'+'_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_'+str(a)#+'_gaussian'
+    # Create/reset list of images, coordinates (x,y,w,h) data, class indices, class names, and top three percentage matches
+ext_images=[]
+ext_data=[]
+ext_class_index=[]
+ext_class_name=[]
+ext_match_percent=[]
+ext_match_percent2=[]
+ext_next_round=[]
+ext_next_round_index=[]
 
-        # plot bounding boxes on original image
-    plot_bounding_boxes_with_names(image,candidates, name) 
-    
-    ##############
-    end = time.time()
-    print('Plotting bounding boxes done... Time Elapsed : '+str(end-start)+' seconds...')
-    t3=end-start
-    start = time.time()
-    ##############
-        #load data only if not yet loaded, or update data if number of samples in data_all does not match current y_train number of data samples
-    try: y_train = y_train
-    except: 
-        try:
-            data_all=np.load('Training_Samples_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_all.npy')
-            if y_train.shape[0]==data_all.shape[0]:
-                y_train=y_train
-            else:
-                x_train, y_train, x_test, y_test,input_shape,data_all=load_data()
-        except:
+    # define wanted_w, and wanted_h, which is the are where the extraction is limited to
+    # define export_w and export_h as required by the classifier
+wanted_w=img_cols
+wanted_h=img_rows
+export_w=img_cols
+export_h=img_rows
+
+    # prepare extractions to be sent to classifier
+    # ext_class_index and _name are empty
+ext_images, ext_data, ext_class_index, ext_class_name = preprocess_extractions(image,candidates, wanted_w, wanted_h, export_w, export_h) 
+
+name = 'Sketch-a-Net_Single_Model_'+str(t)
+
+##############
+end = time.time()
+print('Segmentation done... Time Elapsed : '+str(end-start)+' seconds...')
+t2=end-start
+start = time.time()
+##############
+name = 'TestGaussian'+'_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_'+str(a)#+'_gaussian'
+
+    # plot bounding boxes on original image
+plot_bounding_boxes_with_names(image,candidates, name) 
+
+##############
+end = time.time()
+print('Plotting bounding boxes done... Time Elapsed : '+str(end-start)+' seconds...')
+t3=end-start
+start = time.time()
+##############
+    #load data only if not yet loaded, or update data if number of samples in data_all does not match current y_train number of data samples
+try: y_train
+except: 
+    try:
+        data_all=np.load('Training_Samples_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_all.npy')
+        if y_train.shape[0]==data_all.shape[0]:
+            y_train=y_train
+        else:
             x_train, y_train, x_test, y_test,input_shape,data_all=load_data()
+    except:
+        x_train, y_train, x_test, y_test,input_shape,data_all=load_data()
+#data_all=np.load('Training_Samples_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_all.npy')
+#x_train, y_train, x_test, y_test,input_shape,data_all=load_data()
+
+##############
+end = time.time()
+print('Loading training data done... Time Elapsed : '+str(end-start)+' seconds...')
+t4=end-start
+start = time.time()
+##############
+
+epochs=100
+group='all'
+    #list of dropout values to be tested
+#di=[0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7]
+di=[0.0]
+for d in di:
+
+    name = 'Sketch-a-Net'+'_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_'+str(d)#+'_gaussian'
+    print('name = '+name)
+    model = Sequential() #model needs to be defined as a global variable before using load_model_layers, train_model, or load_model_weights
+    
+    load_model_layers(d)
+#    train_model(epochs)
+#    save_model_weights(name,epochs)
+    print('loading model weights...')
+    load_model_weights(name,epochs)
+    score = model.evaluate(x_test, y_test, verbose=0)
+    print('Test loss:', score[0])
+    print('Test accuracy:', score[1]) 
+    name = 'TestGaussian'+'_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_'+str(d)+'_'+str(a)#+'_gaussian'
+
     ##############
     end = time.time()
-    print('Loading training data done... Time Elapsed : '+str(end-start)+' seconds...')
-    t4=end-start
+    print('Loading/training model done... Time Elapsed : '+str(end-start)+' seconds...')
+    t5 = end-start
     start = time.time()
     ##############
     
-    epochs=50
-    group='all'
-        #list of dropout values to be tested
-    #di=[0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7]
-    di=[0.0]
-    for d in di:
+    print('predicting classes...')
+    predict_classes(ext_images,group,ext_class_index,ext_class_name,ext_next_round,ext_next_round_index)
     
-        name = 'Sketch_a_Net'+'_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_'+str(d)#+'_gaussian'
-        print('name = '+name)
-        model = Sequential() #model needs to be defined as a global variable before using load_model_layers, train_model, or load_model_weights
-        
-        load_model_layers(d)
-#            train_model(epochs)
-#            save_model_weights(name,epochs)
-        print('loading model weights...')
-        load_model_weights(name,epochs)
-        score = model.evaluate(x_test, y_test, verbose=0)
-        print('Test loss:', score[0])
-        print('Test accuracy:', score[1]) 
-        name = 'TestGaussian'+'_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_'+str(d)+'_'+str(a)#+'_gaussian'
+    ##############
+    end = time.time()
+    print('predict classes done... Time Elapsed : '+str(end-start)+' seconds...')
+    t6 = end-start
+    start = time.time()
+    ##############
+    
+    ##### all lists of of samples answers available at: https://docs.google.com/document/d/1-baP1bGHS5Eyu9cKchAxfyYbnh9kxVCdC72uX6lOuj0/edit?usp=sharing
+        #answers for samples1.jpg
+#    ans=[28,52,3,0,33,23,54,53,23,45,55,52,0,52,13,23,
+#    23,53,23,10,1,18,10,41,2,23,10,1,53,24,18,1,
+#    23,23,33,55,9,26,5,7,18,27,55,23,53,23,23,41,
+#    5,2,37,23,23,13,9,11,52,23,23,52,44,23,23,23,
+#    27,52,53,1,23,12,23,12,23,7,23,23,23,52,55,54,
+#    23,23,24,53,0,1,45,52,41,23,23,23,24,40,52,6,
+#    7,7,23,52,45,4,53,23,2,23,53,1,55,23,0,23,
+#    23,52,6,27,23,53,23,23,23,23,8,23,16,11,11,23,
+#    8,23,9,23,8,11,7,29,23,36,32,28,52,45,1,23,
+#    52,23,33,10,1,5,36,23,13,28,52,11,41,27,52,7,
+#    11,23,55,55,11,52,52,23,52,44,4,1,7,23,27,41,
+#    27,53,23,52,52,45,55,23,52,16,23,53,55,28,23,23,
+#    41,52,23,11,55,52,25,23,11,4,23,23,23,23,52,23,
+#    36,52,44,37,52,41,3,18,23,52,3,23,45,54,37,12,
+#    28,23,52,23,16,23,23,53,0,23,6
+#    ]
+#        # answers for samples.jpg
+#    ans = [13,8,23,16,14,4,5,12,28,53,52,
+#    0,11,23,2,6,8,23,23,52,23,13,
+#    18,23,1,2,53,7,11,53,11,33,41,
+#    58,55,27,1,23,23,23,22,33,23,41,
+#    9,24,53,12,18,7,52,6,53,23,53,
+#    23,10,27,23,5,16,23,33,23,23,1,
+#    12,4,52,13,9,23,10,41,17,41,27,
+#    53,23,10,6,10,23,3,12,13,56,23,
+#    52,52,10,5,9,8,23,1,0,27,0,
+#    23,9,52,58,12,13,12,53,19,1,2,
+#    23,52,23,53,3,3,1,7]
+#    
+    try:
+        adjusted_ans = ans[:]
+        for r in range(0,int(len(ans))):
+            if ans[r] >= 14 and ans[r] <= 17:
+                adjusted_ans[r] = 14
+            elif ans[r] >=18 and ans[r] <=21:
+                adjusted_ans[r] = 15
+            elif ans[r] ==22:
+                adjusted_ans[r] = 16
+            elif ans[r] ==23:
+                adjusted_ans[r] = 17
+            
+            elif ans[r] >= 24 and ans[r] <=31:
+                adjusted_ans[r] = 18
+            elif ans[r] >=32 and ans[r] <=39:
+                adjusted_ans[r] = 19
+            elif (ans[r] >=40 and ans[r] <=41) or (ans[r] >=44 and ans[r]<=45):
+                adjusted_ans[r] = 20
+            elif (ans[r] >=42 and ans[r] <=43) or (ans[r] >=46 and ans[r]<=47):
+                adjusted_ans[r] = 21
+            elif ans[r] >=48:
+                adjusted_ans[r] = adjusted_ans[r] - 26
+    except:
+        adjusted_ans=''
+        #create figure with all extractions and percent matches if no answers
+    
+    select_good_bounding_boxes(image,imagename,ext_images,ext_data,ext_class_index,ext_class_name,target_names)
+    
+    adjust_predictions(ext_class_index,ext_class_name)
+    print('plotting extractions with names...')
+#    plot_extractions_with_names(ext_images, ext_data, ext_class_name, ext_class_index, name) 
+#    plot_extractions_with_names(ext_images, ext_data, ext_class_name, ext_class_index, name, ans = adjusted_ans) 
 
-        ##############
-        end = time.time()
-        print('Loading/training model done... Time Elapsed : '+str(end-start)+' seconds...')
-        t5 = end-start
-        start = time.time()
-        ##############
-        
-        print('predicting classes...')
-        predict_classes(ext_images,group,ext_class_index,ext_class_name,ext_next_round,ext_next_round_index)
-        
-        ##############
-        end = time.time()
-        print('predict classes done... Time Elapsed : '+str(end-start)+' seconds...')
-        t6 = end-start
-        start = time.time()
-        ##############
-        
-        ##### all lists of of samples answers available at: https://docs.google.com/document/d/1-baP1bGHS5Eyu9cKchAxfyYbnh9kxVCdC72uX6lOuj0/edit?usp=sharing
-            #answers for samples1.jpg
-    #    ans=[28,52,3,0,33,23,54,53,23,45,55,52,0,52,13,23,
-    #    23,53,23,10,1,18,10,41,2,23,10,1,53,24,18,1,
-    #    23,23,33,55,9,26,5,7,18,27,55,23,53,23,23,41,
-    #    5,2,37,23,23,13,9,11,52,23,23,52,44,23,23,23,
-    #    27,52,53,1,23,12,23,12,23,7,23,23,23,52,55,54,
-    #    23,23,24,53,0,1,45,52,41,23,23,23,24,40,52,6,
-    #    7,7,23,52,45,4,53,23,2,23,53,1,55,23,0,23,
-    #    23,52,6,27,23,53,23,23,23,23,8,23,16,11,11,23,
-    #    8,23,9,23,8,11,7,29,23,36,32,28,52,45,1,23,
-    #    52,23,33,10,1,5,36,23,13,28,52,11,41,27,52,7,
-    #    11,23,55,55,11,52,52,23,52,44,4,1,7,23,27,41,
-    #    27,53,23,52,52,45,55,23,52,16,23,53,55,28,23,23,
-    #    41,52,23,11,55,52,25,23,11,4,23,23,23,23,52,23,
-    #    36,52,44,37,52,41,3,18,23,52,3,23,45,54,37,12,
-    #    28,23,52,23,16,23,23,53,0,23,6
-    #    ]
-    #        # answers for samples.jpg
-    #    ans = [13,8,23,16,14,4,5,12,28,53,52,
-    #    0,11,23,2,6,8,23,23,52,23,13,
-    #    18,23,1,2,53,7,11,53,11,33,41,
-    #    58,55,27,1,23,23,23,22,33,23,41,
-    #    9,24,53,12,18,7,52,6,53,23,53,
-    #    23,10,27,23,5,16,23,33,23,23,1,
-    #    12,4,52,13,9,23,10,41,17,41,27,
-    #    53,23,10,6,10,23,3,12,13,56,23,
-    #    52,52,10,5,9,8,23,1,0,27,0,
-    #    23,9,52,58,12,13,12,53,19,1,2,
-    #    23,52,23,53,3,3,1,7]
-    #    
-        try:
-            adjusted_ans = ans[:]
-            for r in range(0,int(len(ans))):
-                if ans[r] >= 14 and ans[r] <= 17:
-                    adjusted_ans[r] = 14
-                elif ans[r] >=18 and ans[r] <=21:
-                    adjusted_ans[r] = 15
-                elif ans[r] ==22:
-                    adjusted_ans[r] = 16
-                elif ans[r] ==23:
-                    adjusted_ans[r] = 17
-                
-                elif ans[r] >= 24 and ans[r] <=31:
-                    adjusted_ans[r] = 18
-                elif ans[r] >=32 and ans[r] <=39:
-                    adjusted_ans[r] = 19
-                elif (ans[r] >=40 and ans[r] <=41) or (ans[r] >=44 and ans[r]<=45):
-                    adjusted_ans[r] = 20
-                elif (ans[r] >=42 and ans[r] <=43) or (ans[r] >=46 and ans[r]<=47):
-                    adjusted_ans[r] = 21
-                elif ans[r] >=48:
-                    adjusted_ans[r] = adjusted_ans[r] - 26
-        except:
-            adjusted_ans=''
-            #create figure with all extractions and percent matches if no answers
-        
-        select_good_bounding_boxes(image,imagename,ext_images,ext_data,ext_class_index,ext_class_name,target_names)
-        
-        adjust_predictions(ext_class_index,ext_class_name)
-        print('plotting extractions with names...')
-        plot_extractions_with_names(ext_images, ext_data, ext_class_name, ext_class_index, name) 
-    #    plot_extractions_with_names(ext_images, ext_data, ext_class_name, ext_class_index, name, ans = adjusted_ans) 
-    
-        ##############
-        end = time.time()
-        print('plot extractions with names done... Time Elapsed : '+str(end-start)+' seconds...')
-        t7 = end-start
-        start = time.time()
-        ##############
-        #update answers if necessary
-    #update_answers(ext_images,ans) 
-    
-    print('Loading image : ' + str(t1) + '\n'
-          'Segmentation : ' + str(t2) + '\n'
-          'Plot bounding boxes : ' + str(t3) + '\n'
-          'Load training data : ' + str(t4) + '\n'
-          'Load/train model : ' + str(t5) + '\n'
-          'Predict classes : ' + str(t6) + '\n'
-          'Plot extractions with names : ' + str(t7) + '\n')
+    ##############
+    end = time.time()
+    print('plot extractions with names done... Time Elapsed : '+str(end-start)+' seconds...')
+    t7 = end-start
+    start = time.time()
+    ##############
+    #update answers if necessary
+#update_answers(ext_images,ans) 
+
+print('Loading image : ' + str(t1) + '\n'
+      'Segmentation : ' + str(t2) + '\n'
+      'Plot bounding boxes : ' + str(t3) + '\n'
+      'Load training data : ' + str(t4) + '\n'
+      'Load/train model : ' + str(t5) + '\n'
+      'Predict classes : ' + str(t6) + '\n'
+      'Plot extractions with names : ' + str(t7) + '\n')
 #%%
 
     #Print test loss & accuracy
@@ -1859,3 +1868,8 @@ for i in range(first_img,last_img):
     plt.show()
     
     fig1.savefig('C:/Users/JustinSanJuan/Desktop/HKUST/UROP Deep Learning Image-based Structural Analysis/Code/Python/Testing Folder 1.0/easy'+str(i)+'.jpg')
+    
+#%%
+fig1, ax1 = plt.subplots(ncols=1, nrows=1, figsize=(15, 15))
+ax1.imshow(image)
+plt.show()
