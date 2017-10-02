@@ -11,6 +11,3 @@ class ImagePreprocessing(object):
         # 1 (BLACK): image < adaptive_threshold
         image = np.array(image < adaptive_threshold) * 1
         return image
-
-    def is_good_bounding_boxes():
-        return a == 2

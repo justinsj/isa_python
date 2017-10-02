@@ -1,6 +1,42 @@
 from adjustText import adjust_text
 import matplotlib.patheffects as PathEffects
 from scipy import interpolate
+from keras.utils import plot_model
+
+
+def load_model_weights(name):
+    """ Read model weights from file """
+    model.load_weights(name)
+    return model
+
+def dropout_search(dropout_ls):
+    """
+    Hyperparameter search for dropout
+    """
+    pass
+
+def random_split_dataset(data_set):
+    """
+    Split data set randomly
+    Further optimization: Convert it into numpy
+    """
+    l = data_set.shape[0]
+    f = int(l * self.TRAINING_RATIO)
+    train_indices = sample(range(l),f)
+    test_indices = np.delete(np.array(range(0, l)), train_indices)
+    train_data = data_set[train_indices]
+    test_data = data_set[test_indices]
+    x_train = train_data[:,:-1]
+    y_train = train_data[:,(-1)]
+    y_train=y_train.reshape(y_train.shape[0],1)
+    x_test = test_data[:,:-1]
+    y_test = test_data[:,(-1)]
+    y_test = y_test.reshape(y_test.shape[0],1)
+
+    return x_train, y_train, x_test, y_test
+
+def plot_model_and_save(self):
+    pass
 
 def plot_extractions_with_names(ext_images,ext_data,ext_class_name,ext_class_index,name,**kwargs):
     """ Should add here or in helper_functions ?? """
