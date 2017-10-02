@@ -1,3 +1,4 @@
+import collections
 import numpy as np
 import matplotlib.pyplot as plt
 from keras import backend as K
@@ -25,45 +26,52 @@ class ComponentClassifierTraining(object):
     batch_size = 200
     img_rows, img_cols = 100, 100
 
-    def __init__(self, training_data, test_data, dropout=0):
+    def __init__(self, training_data, val_data, test_data, dropout=0):
         """
         Input:
-        - training data is in shape(num_train, 100*100+1), where the last values in
+        - training_data is in shape(num_train, 100*100+1), where the last values in
           second dimension are the labels
-        - test data is in shape(num_test, 100*100+1), where the last values in
+        - val_data is in shape(num_val, 100*100+1), where the last values in
+          second dimension are the labels 
+        - test_data is in shape(num_test, 100*100+1), where the last values in
           second dimension are the labels 
         """
-        self.is_trained = False  # To indicate that the model is not trained yet
-        self.X_train, self.y_train, self.X_test, self.y_test, self.num_classes \
-            = self.load_data(training_data, test_data)
+        self.is_trained = False  # To initialize that the model is not trained yet
+        self.X_train, self.y_train, self.X_val, self.y_val, self.X_test, self.y_test, \
+            self.num_classes = self.load_data(training_data, val_data, test_data)
         self.model = self.load_sketch_a_net_model(dropout)
 
-    def load_data(self, training_data, test_data):
+    def load_data(self, training_data, val_data, test_data):
         """ Load all data to be directly passed into the model """
 
         # Convert input data to 2D float data
         # The last values in second dimension are the labels
         X_train, y_train = training_data[:, 0:-1].astype('float32'), training_data[:, -1]
+        X_val, y_val = val_data[:, 0:-1].astype('float32'), val_data[:, -1]
         X_test, y_test = test_data[:, 0:-1].astype('float32'), test_data[:, -1]
 
         # Reshape back to 3D matrix to be passed into CNN
-        X_train = X_train.reshape(X_train.shape[0], self.img_rows, self.img_cols) 
+        X_train = X_train.reshape(X_train.shape[0], self.img_rows, self.img_cols)
+        X_val = X_val.reshape(X_val.shape[0], self.img_rows, self.img_cols)
         X_test = X_test.reshape(X_test.shape[0], self.img_rows, self.img_cols)
 
         # Necessary transformation
         if K.image_data_format() == 'channels_first':
             X_train = X_train.reshape(X_train.shape[0], 1, self.img_rows, self.img_cols)
+            X_val = X_val.reshape(X_val.shape[0], 1, self.img_rows, self.img_cols)
             X_test = X_test.reshape(X_test.shape[0], 1, self.img_rows, self.img_cols)
         else:
             X_train = X_train.reshape(X_train.shape[0], self.img_rows, self.img_cols, 1)
+            X_val = X_val.reshape(X_val.shape[0], self.img_rows, self.img_cols, 1)
             X_test = X_test.reshape(X_test.shape[0], self.img_rows, self.img_cols, 1)
 
         # Convert class vectors to one-hot matrices
-        num_classes = len(np.unique([y_train, y_test]))  # Obtain number of classes
+        num_classes = len(np.unique([y_train, y_val, y_test]))  # Obtain number of classes
         y_train = to_categorical(y_train, num_classes)
+        y_val = to_categorical(y_val, num_classes)
         y_test = to_categorical(y_test, num_classes)
 
-        return X_train, y_train, X_test, y_test, num_classes
+        return X_train, y_train, X_val, y_val, X_test, y_test, num_classes
 
     def load_sketch_a_net_model(self, dropout):
         """ Load Sketch-A-Net keras model layers """
@@ -112,13 +120,40 @@ class ComponentClassifierTraining(object):
                                       validation_data=(self.X_test, self.y_test))
         self.is_trained = True
 
+    def get_train_stats(self):
+        """ Get training loss and ccuracy from history """
+        train_loss = self.history.history['loss'][-1]
+        train_accuracy = self.history.history['acc'][-1]
+
+        return train_loss, train_accuracy
+
+    def get_validation_stats(self):
+        """ Get validation loss and accuracy from history """
+        validation_loss = self.history.history['val_loss'][-1]
+        validation_accuracy = self.history.history['val_acc'][-1]
+
+        return validation_loss, validation_accuracy
+
+    def get_test_stats(self):
+        """ Use model to evaluate test loss and accuracy """
+        [test_loss, test_accuracy] = self.model.evaluate(self.X_test, self.y_test, verbose=0)
+        return test_loss, test_accuracy
+
     def get_stats(self):
-        """ Get loss and accuracy """
         if not self.is_trained:
             raise ModelNotTrained('Model is not trained yet!')
         else:
-            [loss, accuracy] = self.model.evaluate(self.X_test, self.y_test, verbose=0)
-            return {'validation_loss': loss, 'validation_accuracy': accuracy}
+            # User ordered dict here to preserve order of training, val, test
+            stats = collections.OrderedDict()
+
+            stats['train_loss'], stats['train_accuracy'] \
+                = self.get_train_stats()
+            stats['validation_loss'], stats['validation_accuracy'] \
+                = self.get_validation_stats()
+            stats['test_loss'], stats['test_accuracy'] \
+                = self.get_test_stats()
+
+            return stats
 
     def print_model_summary(self):
         if not self.is_trained:
@@ -138,7 +173,7 @@ class ComponentClassifierTraining(object):
             plt.title('model accuracy')
             plt.ylabel('accuracy')
             plt.xlabel('epoch')
-            plt.legend(['train', 'test'], loc='upper left')
+            plt.legend(['train', 'val'], loc='upper left')
             plt.show()
             # Plot history for loss
             plt.subplot(2, 1, 2)
@@ -147,7 +182,7 @@ class ComponentClassifierTraining(object):
             plt.title('model loss')
             plt.ylabel('loss')
             plt.xlabel('epoch')
-            plt.legend(['train', 'test'], loc='upper left')
+            plt.legend(['train', 'val'], loc='upper left')
             plt.show()
 
     def save(self, name):
