@@ -5,8 +5,14 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D
 from keras.utils import to_categorical
 
+
 class ModelNotTrained(Exception):
+    """
+    When certain class attributes are accessed but but requires the model to be
+    trained first
+    """
     pass
+
 
 class ComponentClassifierTraining(object):
     """
