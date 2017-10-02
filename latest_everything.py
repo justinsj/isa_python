@@ -28,7 +28,6 @@ print('Done Importing...')
 ##### HYPER-PARAMTERS #####
 ###########################
 
-
 #change ALL CAPS for constants (hyperparamaters)
 #selective search parameters
 scale_input=10 #10

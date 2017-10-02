@@ -5,11 +5,10 @@ class ExtractionPreprocessing(object):
     
     """
 
-
-
     def __init__():
         self.___ = ___
         pass
+
         # define padding function, to be used in preprocessing
 
     def padwithzeros(self, vector, pad_width, iaxis, kwargs):
@@ -26,7 +25,7 @@ class ExtractionPreprocessing(object):
             
             labelled_array, max_label = measure.label(extraction, background=0, connectivity=1, return_num=True)
             
-    def trim_extraction(self,extraction,)
+    def trim_extraction(self,extraction)
                 # skip if array is empty
             if max_label == 0: 
                 continue 
