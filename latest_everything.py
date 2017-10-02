@@ -67,177 +67,12 @@ min_confidence = 0 # set to 0.6 possibly set to 0.3
 
 print('Done setting hyperparamters...')
 #%%
-    #function: split dataset randomly
-def random_split_dataset(data_set, training_ratio):
-       l = data_set.shape[0]
-       f = int(l * training_ratio)
-       train_indices = sample(range(l),f)
-       test_indices = np.delete(np.array(range(0, l)), train_indices)
-       train_data = data_set[train_indices]
-       test_data = data_set[test_indices]
-       x_train = train_data[:,:-1]
-       y_train = train_data[:,(-1)]
-       y_train=y_train.reshape(y_train.shape[0],1)
-       print(x_train.shape)
-       x_test = test_data[:,:-1]
-       y_test = test_data[:,(-1)]
-       y_test = y_test.reshape(y_test.shape[0],1)
-       return x_train, y_train, x_test, y_test
-   
-   #function: load pre-shuffled data
-def load_data():
-    data_all = np.load('/home/chloong/Desktop/Justin San Juan/Testing Folder/'+'Training_Samples_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_all'+'.npy')
-    train_data=np.load('/home/chloong/Desktop/Justin San Juan/Testing Folder/'+'Training_Samples_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_'+'train_data.npy')
-    test_data=np.load('/home/chloong/Desktop/Justin San Juan/Testing Folder/'+'Training_Samples_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_'+'test_data.npy')
-    x_train = train_data[:,:-1]
-    y_train = train_data[:,(-1)]
-    y_train=y_train.reshape(y_train.shape[0],1)
-    x_test = test_data[:,:-1]
-    y_test = test_data[:,(-1)]
-    y_test = y_test.reshape(y_test.shape[0],1)
-    x_train = x_train.reshape(x_train.shape[0], img_rows, img_cols)
-        
-        # Reshape back to 3D matrix to be passed into CNN
-    x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols)
-    
-        # Necessary transformation
-    if K.image_data_format() == 'channels_first':
-        x_train = x_train.reshape(x_train.shape[0], 1, img_rows, img_cols)
-        x_test = x_test.reshape(x_test.shape[0], 1, img_rows, img_cols)
-        input_shape = (1, img_rows, img_cols)
-    else:
-        x_train = x_train.reshape(x_train.shape[0], img_rows, img_cols, 1)
-        x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1)
-        input_shape = (img_rows, img_cols, 1)
-        
-        #change data type    
-    x_train = x_train.astype('float32')
-    x_test = x_test.astype('float32')
-    
-        # Preparation and training of neural network\n",
-    print('x_train shape:', x_train.shape)
-    print(x_train.shape[0], 'train samples')
-    print(x_test.shape[0], 'test samples')
-        
-        # Convert class vectors to binary class matrices
-    y_train = keras.utils.to_categorical(y_train, num_classes)
-    y_test = keras.utils.to_categorical(y_test, num_classes)
-    print('Loaded dataset')
-    
-    return x_train, y_train, x_test, y_test, input_shape, data_all
+
    
 
-    #function: use random_split_dataset and shuffle data in batches (small due to memory error)
-def load_data_in_batches(batch_size):
-    data_all = np.load('/home/chloong/Desktop/Justin San Juan/Testing Folder/'+'Training_Samples_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_all.npy')
-    print(data_all.shape)
-        # for X batches
-    for j in range(0,int(np.ceil(data_all.shape[0]/batch_size))):
-        print(int(np.ceil(data_all.shape[0]/batch_size)))
-            #if first batch, don't stack
-        if j ==0:
-            try:
-                data_set=data_all[j*batch_size:(j+1)*batch_size,:]
-            except:
-                data_set=data_all[j*batch_size:int(data_all.shape[0]),:]
-            x_train, y_train, x_test, y_test = random_split_dataset(data_set, training_ratio)
-            #if second or further batch, stack with previous data
-        else:
-            try:
-                data_set=data_all[j*batch_size:(j+1)*batch_size,:]
+   
+    
 
-            except:
-                data_set=data_all[j*batch_size:int(data_all.shape[0]),]
-            x_train1, y_train1, x_test1, y_test1 = random_split_dataset(data_set, training_ratio)
-            x_train = np.vstack((x_train,x_train1))
-            x_test = np.vstack((x_test,x_test1))
-            print(x_train1.shape)
-            print(x_train.shape)
-
-            y_train = np.vstack((y_train,y_train1))
-            y_test = np.vstack((y_test,y_test1))
-    x_train = x_train.reshape(x_train.shape[0], img_rows, img_cols)
-        
-        # Reshape back to 3D matrix to be passed into CNN
-    x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols)
-    
-        # Necessary transformation
-    if K.image_data_format() == 'channels_first':
-        x_train = x_train.reshape(x_train.shape[0], 1, img_rows, img_cols)
-        x_test = x_test.reshape(x_test.shape[0], 1, img_rows, img_cols)
-        input_shape = (1, img_rows, img_cols)
-    else:
-        x_train = x_train.reshape(x_train.shape[0], img_rows, img_cols, 1)
-        x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1)
-        input_shape = (img_rows, img_cols, 1)
-        
-        #change data type    
-    x_train = x_train.astype('float32')
-    x_test = x_test.astype('float32')
-    
-        # Preparation and training of neural network\n",
-    print('x_train shape:', x_train.shape)
-    print(x_train.shape[0], 'train samples')
-    print(x_test.shape[0], 'test samples')
-        
-        # Convert class vectors to binary class matrices
-    y_train = keras.utils.to_categorical(y_train, num_classes)
-    y_test = keras.utils.to_categorical(y_test, num_classes)
-    print('Loaded dataset')
-    
-    return x_train, y_train,x_test,y_test, input_shape, data_all
-    
-    #function: load Sketch-A-Net keras model layers ***model must have been declared as a global variable
-def load_model_layers(d):
-    #L1
-    model.add(Conv2D(64, (15,15),strides=3, activation='relu',input_shape=input_shape))
-    model.add(MaxPooling2D(pool_size=(3, 3),strides=1))
-    model.add(Dropout(d))
-    #L2
-    model.add(Conv2D(128, (5,5),strides=1, activation='relu'))
-    model.add(MaxPooling2D(pool_size=(3, 3),strides=2))
-    model.add(Dropout(d))
-    #L3
-    model.add(Conv2D(256, (3,3),strides=1,padding='same', activation='relu'))
-    model.add(Dropout(d))
-    #L4
-    model.add(Conv2D(256, (3,3),strides=1,padding='same', activation='relu'))
-    model.add(Dropout(d))
-    #L5
-    model.add(Conv2D(256, (3,3),strides=1,padding='same', activation='relu'))
-    model.add(MaxPooling2D(pool_size=(3, 3),strides=2))
-    model.add(Dropout(d))
-    #L6
-    model.add(Conv2D(512, (5,5),strides=1, activation='relu'))
-    model.add(Dropout(0.5))
-    #L7
-    model.add(Conv2D(512, (1,1),strides=1, activation='relu'))
-    model.add(Dropout(0.5))
-    #L8
-    model.add(Flatten())
-    model.add(Dense(num_classes, activation='softmax'))
-    
-    model.summary()
-    model.compile(loss=keras.losses.categorical_crossentropy,
-                      optimizer=keras.optimizers.Adadelta(),
-                      metrics=['accuracy'])
-
-    #function: train model with input number of epochs ***model must have been declared as a global variable
-def train_model(epochs):
-    model.fit(x_train, y_train, batch_size=batch_size,
-                                epochs=epochs,
-                                verbose=1,
-                                validation_data=(x_test, y_test))
-    
-    #function: save model weights ***model must have been declared as a global variable
-def save_model_weights(name,epochs):
-    model.save_weights(name + '_all_'+str(epochs)+"epochs"+".h5")
-    print('saved model weights as '+name + "_" + str(epochs)+"epochs"+".h5")
-    
-    #function: load model weights from file ***model must have been declared as a global variable
-def load_model_weights(name,epochs):
-    model.load_weights(name + "_all_"+ str(epochs)+"epochs"+".h5")
-    print('loaded model weights from '+name + "_" + str(epochs)+"epochs"+".h5")
 
     #function: use connectivity and selective search to create candidate bounding boxes for classification
 def search(image, good_candidates, bad_candidates, _scale, _sigma, _min_size):
@@ -597,105 +432,11 @@ def preprocess_extractions(image,candidates, wanted_w, wanted_h, export_w, expor
     ext_class_index = np.zeros((len(ext_images))).tolist()
     ext_class_name = np.zeros((len(ext_images))).tolist()
     return ext_images, ext_data, ext_class_index, ext_class_name
-def predict_classes(ext_images,group,ext_class_index,ext_class_name,ext_next_round,ext_next_round_index):
-    if group =='numbers' or group =='all': 
-        indices = range(len(ext_images))
-    else: 
-        indices = ext_next_round_index[:]
-    if indices != []:
-        for i in indices:
-            image = ext_images[i]
-    ########### ADD DIMENSIONS TO MATCH CLASSIFIER DIMENSIONS ################
-            num_channel = 3 # since we need RGB
-            
-            if num_channel==1: # if classifier only needs 1 channel
-                if K.image_dim_ordering()=='th': # modify data if using theano instead of tensorflow
-                    image = np.expand_dims(image, axis=0)
-                    image = np.expand_dims(image, axis=0)
-                else:
-                    image = np.expand_dims(image, axis=3) 
-                    image = np.expand_dims(image, axis=0)
-            		
-            else:
-                if K.image_dim_ordering()=='th': # modify data if using theano instead of tensorflow
-                    image=np.rollaxis(image,2,0)
-                    image = np.expand_dims(image, axis=0)
-                else:
-                    # expand dimensions as needed in classifier
-                    image = np.expand_dims(image, axis=3)
-                    image = np.expand_dims(image, axis=0)
-    
-    ########### PREDICT OBJECT CLASS W/ ENTROPY THEORY & RECORD DATA ############## 
-    
-                # get match percentages for each class from classifier
-            prediction=model.predict(image)
-            
-            second_max=list(prediction[0])
-            second_max.remove(max(second_max))
-           
-                # get first, second, and third maximum percentage matches, to be used for entropy calculations
-            first_max=max(prediction[0])
-            second_max=max(second_max)
-            
-                # attach percentages to lists (in range of 0 to 1.0, ex: 91% is recorded as 0.91)
-            ext_match_percent.append(first_max)
-            ext_match_percent2.append(second_max)
-            
-                # if prediction is not confident or if confidence, as calculated by the difference top two predictions is too hight, or if another third prediction is close to the second prediction
-                # discard =raction as an 'unknown' class
-            if first_max < min_percent_match or first_max-second_max < min_confidence:
-                index=17 # index 17 is class 18, the unknown class
-                
-                # otherwise, if prediciton is confident, record the index and class name
-            else:
-                index=((prediction[0]).tolist().index(first_max))
-            
-                #save extractions
-            ext_class_index[i] = index
-            ext_class_name[i] = target_names_all[index]
+
                 
     ######################## ADJUST PREDICTIONS ########################
                 #adjust predictions to merge counter-clockwise moments
-def adjust_predictions(ext_class_index,ext_class_name):
-    for k in range(len(ext_class_index)):
-        index= ext_class_index[k]
-        
-        if index >=14 and index <=17:
-            index = 14
-            
-            #adjust predictions to merge clockwise moments
-        elif index >=18 and index <=21:
-            index = 15
-            #adjust index of noise
-        elif index == 22:
-            index = 16
-            
-            #adjust index of random letters
-        elif index ==23:
-            index = 17
-            
-            #adjust predicitons to merge fixed supports
-        elif index >= 24 and index <=31:
-            index = 18
-            
-            #adjust predicitons to merge pinned supports
-        elif index >=32 and index <=39:
-            index = 19
-            
-            #adjust predictions to merge vertical roller supports
-        elif (index >=40 and index <=41) or (index >=44 and index<=45):
-            index = 20
-            
-            #adjust predicitons to merge horizontal roller supports
-        elif (index >=42 and index <=43) or (index >=46 and index<=47):
-            index = 21
-            
-            #adjust index of last 12 classes
-        elif index >=48 and index <=63:
-            index = index - 26
-        
-        ext_class_index[k] = index
-        ext_class_name[k] = target_names[index]
+
                 
 ###############################################################################
         
@@ -925,17 +666,7 @@ def update_answers(ext_images,ans):
     print('Final shape = '+ eval('data_all').shape)
         #Save data
     np.save('Training_Samples_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_all',data_all)
-def binarize_image(image,a):
-    image = filters.gaussian(image,a)
-    
-    # Locally adaptive threshold
-    adaptive_threshold = threshold_local(image, block_size=21, offset=0.02)
-    
-    # Return a binary array
-    # 0 (WHITE): image >= adaptive_threshold
-    # 1 (BLACK): image < adaptive_threshold
-    image = np.array(image < adaptive_threshold) * 1
-    return image
+
 
 def select_good_bounding_boxes(image,imagename,ext_images,ext_data,ext_class_index,ext_class_name,target_names):
     
