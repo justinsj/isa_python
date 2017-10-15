@@ -1,4 +1,6 @@
 #%%
+%load_ext autoreload
+%autoreload 2
 from __future__ import print_function
 import numpy as np
 
@@ -10,18 +12,20 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras import backend as K
 
 import matplotlib.pyplot as plt
-
-
+import matplotlib.patches as mpatches
 
 from skimage import filters
 from skimage.filters import threshold_local
 
-import matplotlib.patches as mpatches
+
 import selectivesearch
 
 from skimage import measure
 import cv2
 import time
+
+from component_segmentation import ComponentSegmentation
+
 print('Done Importing...')
 #%%
 ###########################
@@ -44,8 +48,6 @@ min_area=200 #min. area of bounding box
 min_black=100 #min. number of black pixels
 min_black_ratio=0.05 #min ratio of black pixels to the bounding box area
 
-
-
 #overlap parameters
 overlap_repeats = 8 #set to 8
 overlap_threshold = 0.3 #set to 0.3
@@ -57,60 +59,30 @@ print('Done setting hyperparamters...')
 
 #%%
 ##### LOAD IMAGE SET ##### (Only need to load once)
-set_num=1
-image_set = np.load('/home/chloong/Desktop/Justin San Juan/Testing Folder/all_training_images_'+str(set_num)+'.npy')
-#%%
-        ######################### TEST FULL CODE ON SAMPLE ######################
-        
-####### Load hand-drawn image #########
-#al=np.linspace(1.2,3,int((3-1.2)/0.1+1))
-#al=[2.4] # to test different gaussian filters
-a=2.4
-
-e = int(input("Which image?"+'\n'))
-
-
-imagename='all_'+str(e+(set_num-1)*400)
-
-#    image = cv2.imread('/home/chloong/Desktop/Justin San Juan/Testing Folder/'+imagename+'.JPG')
-#    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-#    image = np.array(image)
-#    image = binarize_image(image,a)
 start = time.time()
 
-image=image_set[:,:,e]
+PATH = 'C:/Users/JustinSanJuan/Desktop/HKUST/UROP Deep Learning Image-based Structural Analysis/Code/Python/Testing Folder/'
+image_set = np.load(PATH+'easy_training_images.npy')
 
-#current samples answers only work with this loading method of hand-drawn image
-#test_image = cv2.imread('/home/chloong/Desktop/Justin San Juan/Testing Folder/Previous Data/samples1.jpg')
-#
-#test_image = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
-#test_image = np.array(test_image)
-#test_image = test_image.astype('float32')
-#test_image /= 255
-#test_image = 1 - test_image # invert image since in this code, 0 is set to white areas, 1 is black area, since majority of images should be white, so more 0s and less written data
-#test_image = 1.48 * test_image # amplify image to prevent loss of data from blur
-#test_image = np.round(test_image)
-#image=test_image
 
-#image = np.load('/home/chloong/Desktop/Justin San Juan/Testing Folder/easy_training_images.npy')[:,:,6]
+image=image_set[:,:,6]
+
+
 ##############
 end = time.time()
 print('Loading image done... Time Elapsed : '+str(end-start)+' seconds...')
 t1 = end-start
 start = time.time()
-##############0.3
-    # reset sets and lists
-good_candidates = set()
-good_candidates_list=[]
-bad_candidates = set()
+##############
+name = 'sample_1_test'
+sample_1_test = ComponentSegmentation(image, name, 
+                                      scale_input, sigma_input, min_size_input,
+                                      min_shape, min_height, min_width, 
+                                      buffer_zone, min_area, min_black, min_black_ratio,
+                                      overlap_repeats, overlap_threshold)
+sample_1_test.search()
 
-    # get good_candidates set from search function, and also put it into 'candidates'
-search(image, good_candidates, bad_candidates, scale_input, sigma_input, min_size_input)
-candidates=good_candidates # select candidates to be classified, can be only good, only bad, or both sets of candidates
-    #full class 1-60 list (index 0 to 59) available at: https://drive.google.com/open?id=1AlqCo-44dX59BYiu5-u0Dk6uDpNi89PI21rgJE1kfts
-    # define merged class names
-
-    
+#%%    
     # Create/reset list of images, coordinates (x,y,w,h) data, class indices, class names, and top three percentage matches
 ext_images=[]
 ext_data=[]
@@ -130,7 +102,6 @@ export_h=img_rows
 
     # prepare extractions to be sent to classifier
     # ext_class_index and _name are empty
-ext_images, ext_data, ext_class_index, ext_class_name = preprocess_extractions(image,candidates, wanted_w, wanted_h, export_w, export_h) 
 
 name = 'Sketch-a-Net_Single_Model_'+str(t)
 
