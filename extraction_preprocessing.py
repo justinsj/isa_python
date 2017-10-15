@@ -1,35 +1,37 @@
 from image_preprocessing import ImagePreprocessing
+import numpy as np
+from skimage import measure
+import selectivesearch
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 
 class ExtractionPreprocessing(object):
     """
-    
+
+    Inputs: list of Bounding boxes astuples (x, y, w, h)
+    Outputs: resized inputs for CNN classifier
     """
 
-    def __init__():
-        self.___ = ___
-        pass
+    def __init__(self, image, name, merged_set,
+                img_rows, img_cols, 
+                wanted_w, wanted_h, export_w, export_h,
+                max_piece_percent):
+        self.adjusted_set = merged_set #as list of tuples
+        self.img_rows = img_rows
+        self.img_cols = img_cols
+        self.max_piece_percent = max_piece_percent
 
-        # define padding function, to be used in preprocessing
-
+    # define padding function, to be used in preprocessing
     def padwithzeros(self, vector, pad_width, iaxis, kwargs):
             # pad vector (image) in all directions with 0's for a length of pad_width
         vector[:pad_width[0]] = 0
         vector[-pad_width[1]:] = 0
         return vector
 
-     # Edge-trim, remove unconnected edge pieces, resize, then predict classes
-    def preprocess_extractions(self, image,candidates, wanted_w, wanted_h, export_w, export_h):
-        for x,y,w,h in candidates:
-            # Given x,y,w,h, store each extraction and coordinates in lists    
-            extraction = np.copy(image[y:y+h,x:x+w])
-            
-            labelled_array, max_label = measure.label(extraction, background=0, connectivity=1, return_num=True)
-            
-    def trim_extraction(self,extraction)
-                # skip if array is empty
-            if max_label == 0: 
-                continue 
 
+    def trim_extraction(self,extraction, wanted_w, wanted_h, export_w, export_h,
+                                                max_piece_percent)
+                
     ############## Adjust extraction window to remove excess empty area ##############
             black = np.array(np.where(extraction == 1))
             x1=min(black[1])
@@ -56,6 +58,7 @@ class ExtractionPreprocessing(object):
                 if num_black > largest_array_count:
                     largest_array_count = num_black
                     largest_array_index = q
+
             ##### Parse through all labelled pieces except largest piece again and delete piece if on edge and not part of largest object
             for q in range(1,max_label+1):
                 array_coords = np.where(labelled_array==q)
@@ -127,4 +130,40 @@ class ExtractionPreprocessing(object):
             ext_data.append([x,y,w,h]) #record the (x,y,w,h) coordinates in list with first index = 0, this list data will be used for the reconstruction of the system (since coordinates are saved here)
         ext_class_index = np.zeros((len(ext_images))).tolist()
         ext_class_name = np.zeros((len(ext_images))).tolist()
+
+        self.adjusted_set = ext_data
+        
         return ext_images, ext_data, ext_class_index, ext_class_name
+
+    # Edge-trim, remove unconnected edge pieces, resize, then predict classes
+    def preprocess_extractions(self, wanted_w, wanted_h, export_w, export_h,
+                                                max_piece_percent):
+        for x, y, w, h in merged_set:
+            # Given x,y,w,h, store each extraction and coordinates in lists    
+            extraction = np.copy(image[y:y+h,x:x+w])
+            
+            labelled_array, max_label = measure.label(extraction, background=0, connectivity=1, return_num=True)
+            
+            # skip if array is empty
+            if max_label == 0: 
+                continue 
+
+            ext_images, ext_data, ext_class_index, ext_class_name = self.trim_extraction(extraction, wanted_w, wanted_h, export_w, export_h,
+                                                max_piece_percent)
+
+            return ext_images, ext_data, ext_class_index, ext_class_name
+
+    def plot_bounding_boxes_with_name(self):
+        """
+        Create fig1, ax1, create single subplot, then draw bounding boxes x, y, w, h and save figure with name of model
+        """
+        # Draw rectangles on the original image
+        fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(25, 25))
+        ax.imshow(self.image)
+        for x, y, w, h in self.adjusted_set: #or in candidates
+            rect = mpatches.Rectangle(
+                (x, y), w, h, fill=False, edgecolor='red', linewidth=1)
+            ax.add_patch(rect)
+        plt.show()
+
+        fig.savefig(str(self.name)+'.jpg')

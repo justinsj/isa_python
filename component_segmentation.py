@@ -228,9 +228,9 @@ class ComponentSegmentation(object):
 
                 # reset premerged_set to be what is inside merged_set for looping process
                 self.premerged_set = list(merged_set)
-            self.merged_set = merged_set
+            self.merged_set = list(merged_set)
 
-    def separate_unconnected_segments(self):
+    def separate_unconnected_segments(self, scale_input, sigma_input, min_size_input):
         """
         a. Separate unconnected segments using measure.label.
         b. Ignore segment if it does not pass minimum requirements, record segment if it passes, as [x,y,w,h]
@@ -280,9 +280,9 @@ class ComponentSegmentation(object):
             cropped = temp
 
             # perform selective search on cropped region
-            self.selective_search(cropped,left,up)
+            self.selective_search(cropped,left,up, scale_input, sigma_input, min_size)
 
-    def selective_search(self,cropped,left,up):
+    def selective_search(self,cropped,left,up, scale_input, sigma_input, min_size_input):
         """
         1. Perform selective search on cropped region
         2. Apply minimum requirements
@@ -297,7 +297,7 @@ class ComponentSegmentation(object):
 
 
         # perform selective search
-        img_lbl, regions = selectivesearch.selective_search(cropped, scale=self.scale, sigma=self.sigma, min_size=self.min_size)
+        img_lbl, regions = selectivesearch.selective_search(cropped, scale=scale_input, sigma=sigma_input, min_size=min_size_input)
         
         # each r in regions is a dictionary (rect: x, y, w, h; size: n ...)
         for r in regions:
@@ -331,22 +331,8 @@ class ComponentSegmentation(object):
                 #add ls as list into self.premerged_set as tuple of (x,y,w,h) , which will be merged based on overlap
             self.premerged_set.append(tuple(ls))
             
-    def plot_bounding_boxes_with_name(self):
-        """
-        Create fig1, ax1, create single subplot, then draw bounding boxes x, y, w, h and save figure with name of model
-        """
-        # Draw rectangles on the original image
-        fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(25, 25))
-        ax.imshow(self.image)
-        for x, y, w, h in self.merged_set: #or in candidates
-            rect = mpatches.Rectangle(
-                (x, y), w, h, fill=False, edgecolor='red', linewidth=1)
-            ax.add_patch(rect)
-        plt.show()
 
-        fig.savefig(str(self.name)+'.jpg')
-
-    def search(self):
+    def search(self, scale_input, sigma_input, min_size_input):
         """
         1.  a) Separate unconnected segments
             b) Apply minimum requirements
@@ -360,6 +346,5 @@ class ComponentSegmentation(object):
         Returns:
         List of bounding boxes & extraction arrays self.merged_set
         """
-        self.separate_unconnected_segments() 
+        self.separate_unconnected_segments(scale_input, sigma_input, min_size_input) 
         self.merge_set()
-        self.plot_bounding_boxes_with_name()
