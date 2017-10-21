@@ -25,6 +25,7 @@ import cv2
 import time
 
 from component_segmentation import ComponentSegmentation
+from extraction_preprocessing import ExtractionPreprocessing
 
 print('Done Importing...')
 #%%
@@ -35,18 +36,20 @@ print('Done Importing...')
 #change ALL CAPS for constants (hyperparamaters)
 #selective search parameters
 scale_input=10 #10
-sigma_input=15 #15
+sigma_input=0 #15
 min_size_input=5 #5
 
 #noise reduction parameters
-min_shape=50 #min. number of black pixels  
+min_shape=40 #min. number of black pixels  
 min_height=5 #min. height of bounding box
 min_width=5 #min. width of bounding box
 
 buffer_zone=2 #expand bounding box by this amount in all directions  
-min_area=200 #min. area of bounding box
-min_black=100 #min. number of black pixels
-min_black_ratio=0.05 #min ratio of black pixels to the bounding box area
+min_area=150 #min. area of bounding box
+min_black=50 #min. number of black pixels
+min_black_ratio=0.03 #min ratio of black pixels to the bounding box area
+
+img_rows, img_cols = 100,100
 
 #overlap parameters
 overlap_repeats = 8 #set to 8
@@ -55,15 +58,17 @@ overlap_threshold = 0.3 #set to 0.3
 #removing unconnected pieces parameters
 max_piece_percent=0.30
 
+wanted_w, wanted_h, export_w, export_h = img_cols, img_rows, img_cols, img_rows
+
 print('Done setting hyperparamters...')
 
 #%%
-##### LOAD IMAGE SET ##### (Only need to load once)
+
 start = time.time()
 
 PATH = 'C:/Users/JustinSanJuan/Desktop/HKUST/UROP Deep Learning Image-based Structural Analysis/Code/Python/Testing Folder/'
 image_set = np.load(PATH+'easy_training_images.npy')
-
+name = 'sample_1_test'
 
 image=image_set[:,:,6]
 
@@ -74,24 +79,34 @@ print('Loading image done... Time Elapsed : '+str(end-start)+' seconds...')
 t1 = end-start
 start = time.time()
 ##############
-name = 'sample_1_test'
-sample_1_test = ComponentSegmentation(image, name, 
+
+sample_test = ComponentSegmentation(image, name, 
                                       min_shape, min_height, min_width, 
                                       buffer_zone, min_area, min_black, min_black_ratio,
                                       overlap_repeats, overlap_threshold)
-sample_1_test.search(scale_input, sigma_input, min_size_input)
 
-merged_set = sample_1_test.merged_set # to be passed on to ExtractionPreprocessing class
+sample_test.search(scale_input, sigma_input, min_size_input)
 
-sample_1_preprocessed = ExtractionPreprocessing(image, name, merged_set,
-                                                img_rows, img_cols, 
-                                                )
+merged_set = sample_test.merged_set # to be passed on to ExtractionPreprocessing class
+
+sample_preprocessed = ExtractionPreprocessing(image, name, merged_set)
 
 #get 4 lists from preprocess_extractions function
-ext_images, ext_data, ext_class_index, ext_class_name = sample_1_preprocessed.preprocess_extractions(wanted_w, wanted_h, export_w, export_h,
+ext_images, ext_data, ext_class_index, ext_class_name = sample_preprocessed.preprocess_extractions(wanted_w, wanted_h, export_w, export_h,
                                                 max_piece_percent)
-sample_1_preprocessed.plot_bounding_boxes_with_names()
-#%%    
+sample_preprocessed.plot_bounding_boxes_with_names()
+
+
+
+#%%   
+
+
+
+
+
+
+
+ 
     # Create/reset list of images, coordinates (x,y,w,h) data, class indices, class names, and top three percentage matches
 ext_images=[]
 ext_data=[]

@@ -7,19 +7,16 @@ import matplotlib.patches as mpatches
 class ComponentSegmentation(object):
     
     def __init__(self, image, name, 
-                 scale, sigma, min_size,
                  min_shape, min_height, min_width, 
                  buffer_zone, min_area, min_black, min_black_ratio,
                  overlap_repeats, overlap_threshold):
+        
         self.name = name
         self.image = image
         self.temp_set = []
         self.premerged_set = []
         self.merged_set = []
         self.used_set = set()
-        self.scale = scale
-        self.sigma = sigma
-        self.min_size = min_size
         self.min_shape = min_shape 
         self.min_height = min_height
         self.min_width = min_width
@@ -280,7 +277,7 @@ class ComponentSegmentation(object):
             cropped = temp
 
             # perform selective search on cropped region
-            self.selective_search(cropped,left,up, scale_input, sigma_input, min_size)
+            self.selective_search(cropped,left,up, scale_input, sigma_input, min_size_input)
 
     def selective_search(self,cropped,left,up, scale_input, sigma_input, min_size_input):
         """
