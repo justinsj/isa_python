@@ -1,3 +1,0 @@
-
-class ComponentPreprocessing(object):
-    pass
