@@ -26,6 +26,8 @@ import time
 
 from component_segmentation import ComponentSegmentation
 from extraction_preprocessing import ExtractionPreprocessing
+from extraction_labelling import ExtractionLabelling
+import constants
 
 print('Done Importing...')
 #%%
@@ -62,17 +64,22 @@ wanted_w, wanted_h, export_w, export_h = img_cols, img_rows, img_cols, img_rows
 
 print('Done setting hyperparamters...')
 
+target_names = constants.target_names
+target_names_all = constants.target_names_all
+num_classes = 60
+
 #%%
 
 start = time.time()
 
 PATH = 'C:/Users/JustinSanJuan/Desktop/HKUST/UROP Deep Learning Image-based Structural Analysis/Code/Python/Testing Folder/'
-image_set = np.load(PATH+'easy_training_images.npy')
+#image_set = np.load(PATH+'all_training_images.npy')
 name = 'sample_1_test'
-
-image=image_set[:,:,6]
-
-
+image_index = 371
+image=np.load(PATH+'all_training_images.npy')[:,:,image_index]
+fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(15, 15))
+ax.imshow(image)
+plt.show()
 ##############
 end = time.time()
 print('Loading image done... Time Elapsed : '+str(end-start)+' seconds...')
@@ -80,21 +87,26 @@ t1 = end-start
 start = time.time()
 ##############
 
-sample_test = ComponentSegmentation(image, name, 
+current_object = ComponentSegmentation(image, name, 
                                       min_shape, min_height, min_width, 
                                       buffer_zone, min_area, min_black, min_black_ratio,
                                       overlap_repeats, overlap_threshold)
 
-sample_test.search(scale_input, sigma_input, min_size_input)
+current_object.search(scale_input, sigma_input, min_size_input) # run search (segmentation code)
 
-merged_set = sample_test.merged_set # to be passed on to ExtractionPreprocessing class
-
-sample_preprocessed = ExtractionPreprocessing(image, name, merged_set)
+current_object = ExtractionPreprocessing(image, name, current_object.merged_set)
 
 #get 4 lists from preprocess_extractions function
-ext_images, ext_data, ext_class_index, ext_class_name = sample_preprocessed.preprocess_extractions(wanted_w, wanted_h, export_w, export_h,
+ext_images, ext_data, ext_class_index, ext_class_name = current_object.preprocess_extractions(wanted_w, wanted_h, export_w, export_h,
                                                 max_piece_percent)
-sample_preprocessed.plot_bounding_boxes_with_names()
+#sample_test.plot_bounding_boxes_with_names()
+
+current_object = ExtractionLabelling(PATH,
+                                  ext_images, ext_data,ext_class_index, ext_class_name,
+                                  target_names, target_names_all, 
+                                  num_classes, img_rows, img_cols)
+#current_object.select_good_bounding_boxes(image,"all_"+str(image_index))
+current_object.plot_ground_truths(image,"all_"+str(image_index))
 
 
 
@@ -106,7 +118,7 @@ sample_preprocessed.plot_bounding_boxes_with_names()
 
 
 
- 
+ #%%
     # Create/reset list of images, coordinates (x,y,w,h) data, class indices, class names, and top three percentage matches
 ext_images=[]
 ext_data=[]

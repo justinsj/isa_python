@@ -275,7 +275,7 @@ class ComponentSegmentation(object):
             temp[:, :, 1] = cropped
             temp[:, :, 2] = cropped
             cropped = temp
-
+            if cropped.shape[1]<=0: continue
             # perform selective search on cropped region
             self.selective_search(cropped,left,up, scale_input, sigma_input, min_size_input)
 
