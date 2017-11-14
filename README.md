@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Overview
 
 Image-based Structural Analysis (ISA) is an application of studying the behavior of structural system from image domain using modern deep machine learning methods. The project was initiated by Cheng Ning Loong, a PhD student from HKUST, under the supervision of Prof. Chih-Chen Chang. This application includes three main parts: (i) segmentation; (ii) classification; and (iii) system reconstruction. The following are the contributors who involve in developing the application:
@@ -13,8 +12,7 @@ Image-based Structural Analysis (ISA) is an application of studying the behavior
 For further details, please contact: Cheng Ning Loong (cnloong@connect.ust.hk), Ng Zhi Yong Ignavier (zyingaa@connect.ust.hk), Justin San Juan (jdsanjuan@connect.ust.hk).
 
 
-=======
-# image_based_structural_analysis
+# Progress
 
  Code status:
  
@@ -45,4 +43,3 @@ For further details, please contact: Cheng Ning Loong (cnloong@connect.ust.hk), 
  ExtractionPreprocessing - ready, to be tested
  
  ComponentSegmentation - ready and tested
->>>>>>> master
