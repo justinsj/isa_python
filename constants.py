@@ -1,6 +1,9 @@
 """ All the constants """
 
+<<<<<<< HEAD
 # Correct indices
+=======
+>>>>>>> master
 target_names_all = [
     '0','1','2','3','4','5','6','7','8','9',
     'upwards force','downwards force','rightwards force','leftwards force',  # Start from 10
@@ -28,6 +31,7 @@ target_names=[
     'horizontal beam','vertical beam','downward diagonal beam', 'upward diagonal beam', # Start from 26
     'length','height','counter-clockwise angle','clockwise angle', # Start from 30
     'measure left','measure right', 'measure up','measure down', # Start from 34
+<<<<<<< HEAD
 ]
 
 target_names_dict = [
@@ -46,4 +50,6 @@ target_names_dict = [
     'beam': ['horizontal beam','vertical beam','downward diagonal beam', 'upward diagonal beam'], 
     'dimension': ['length','height','counter-clockwise angle','clockwise angle'],
     'measure': ['measure left','measure right','measure up','measure down']
+=======
+>>>>>>> master
 ]
