@@ -5,17 +5,18 @@ from extraction_preprocessing import ExtractionPreprocessing
 import time
 from keras import backend as K
 import numpy as np
+from component_classifier_predict import ComponentClassifierPredict
+from constants import target_names_all, target_names
+import os.path
 
 class ExtractionLabelling(object):
 
-    def __init__(self,PATH,ext_images,ext_data,ext_class_index,ext_class_name,target_names,target_names_all, num_classes, img_rows,img_cols):
+    def __init__(self,PATH,ext_images,ext_data,ext_class_index,ext_class_name, num_classes, img_rows,img_cols):
         self.PATH = PATH
         self.ext_images = ext_images
         self.ext_data = ext_data
         self.ext_class_index = ext_class_index
         self.ext_class_name = ext_class_name
-        self.target_names = target_names
-        self.target_names_all = target_names_all
         self.num_classes = num_classes
         self.img_rows = img_rows
         self.img_cols = img_cols
@@ -24,7 +25,12 @@ class ExtractionLabelling(object):
         #reset labeller answers
         self.answer = ''
         self.value = ''
+        self.check = ''
         self.delete = ''
+        
+        self.prediction_index = ''
+        self.x,self.y,self.w,self.h =0, 0, 0, 0
+        
 
 
         #create empty set of ground truth lines
@@ -35,7 +41,12 @@ class ExtractionLabelling(object):
         self.ext_class_name_temp=[]
         self.ext_images_temp=[]
         self.ext_data_temp=[]
+        
+        self.model = None
 
+    def define_model(self,model):
+        self.model = model
+        
     def print_problem_image(self,k=None):
         fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(15, 15))
         ax.imshow(self.image) #show problem image
@@ -72,16 +83,23 @@ class ExtractionLabelling(object):
 
         plt.show()
 
-    def print_extraction_image(self,k):
+    def print_extraction_image(self,k=None, x=None, y=None,w=None,h=None):
+        
         #plot only the extraction image (to show magnified)
         fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(1.5, 1.5))
-        x1=self.ext_data[k][0]
-        y1=self.ext_data[k][1]
-        x2=x1+self.ext_data[k][2]
-        y2=y1+self.ext_data[k][3]
-
-        ext_image_from_image = self.image[y1:y2,x1:x2]
-        ax.imshow(ext_image_from_image)
+        
+        if k == None or k =='coords':
+            rect = mpatches.Rectangle(
+                    (x, y), w, h, fill=False, edgecolor='red', linewidth=2)
+            ax.add_patch(rect)
+        else:
+            x1=self.ext_data[k][0]
+            y1=self.ext_data[k][1]
+            x2=x1+self.ext_data[k][2]
+            y2=y1+self.ext_data[k][3]
+    
+            ext_image_from_image = self.image[y1:y2,x1:x2]
+            ax.imshow(ext_image_from_image)
         plt.show()
 
     def request_answer(self,k):
@@ -107,7 +125,7 @@ class ExtractionLabelling(object):
     def answer_is_b(self,k):
         #create string based on answer as b for bad extraction
         self.ext_class_index_temp.append(int(23))
-        self.ext_class_name_temp.append(self.target_names_all[23])
+        self.ext_class_name_temp.append(target_names_all[23])
         self.ext_images_temp.append(self.ext_images[k])
         self.ext_data_temp.append(self.ext_data[k])
 
@@ -117,7 +135,7 @@ class ExtractionLabelling(object):
 
     def answer_is_number(self,k):
         self.ext_class_index_temp.append(int(self.answer))
-        self.ext_class_name_temp.append(self.target_names_all[int(self.answer)])
+        self.ext_class_name_temp.append(target_names_all[int(self.answer)])
         self.ext_images_temp.append(self.ext_images[k])
         self.ext_data_temp.append(self.ext_data[k])
             
@@ -172,13 +190,13 @@ class ExtractionLabelling(object):
         print(self.ext_data_temp)
         return exitcode
     
-    def request_value(self):
-        self.value = ''
-        self.value = input('If above figure captures all objects, press enter'+'\n'+'Otherwise, enter "a"'+'\n')
+    def request_complete(self):
+        self.complete = ''
+        self.complete = input('If above figure captures all objects, press enter'+'\n'+'Otherwise, enter "a"'+'\n')
 
-    def parse_value(self):
+    def parse_complete(self):
         exitcode = 1
-        if self.value == '' or self.value == ' ' or self.value =='c':
+        if self.complete == '' or self.complete == ' ' or self.complete =='c':
             self.f.writelines([item for item in self.lines])
             self.f.close()
             exitcode = 0 #stop the loop
@@ -188,72 +206,52 @@ class ExtractionLabelling(object):
             x2=int(input('Enter the bottom right corner x coordinate'+'\n'))
             y2=int(input('Enter the bottom right corner y coordinate'+'\n'))
             
-            x=x1
-            y=y1
-            w = x2-x1
-            h = y2-y1
+            self.x=x1
+            self.y=y1
+            self.w = x2-x1
+            self.h = y2-y1
             #do prediction
+            
             extraction=self.image[y1:y2,x1:x2]
-            ext = self.resize_extraction(extraction)
-            ext_im=ext[:,:]
+            extraction = ExtractionPreprocessing.resize_extraction(extraction)
+            self.extraction = extraction
+            
             num_channel = 3 # since we need RGB, then expand dimensions of extraction
-            
-            if num_channel==1: # if classifier only needs 1 channel
-                if K.image_dim_ordering()=='th': # modify data if using theano instead of tensorflow
-                    ext_im = np.expand_dims(ext_im, axis=0)
-                    ext_im = np.expand_dims(ext_im, axis=0)
-                else:
-                    ext_im = np.expand_dims(ext_im, axis=3) 
-                    ext_im = np.expand_dims(ext_im, axis=0)
-                    
-            else:
-                if K.image_dim_ordering()=='th': # modify data if using theano instead of tensorflow
-                    ext_im = np.rollaxis(ext_im,2,0)
-                    ext_im = np.expand_dims(ext_im, axis=0)
-                else:
-                    # expand dimensions as needed in classifier
-                    ext_im = np.expand_dims(ext_im, axis=3)
-                    ext_im = np.expand_dims(ext_im, axis=0)
+            prediction = ComponentClassifierPredict()
+            extraction = prediction.expand_dimension(extraction,num_channel)
+            index, first_max, second_max = prediction.predict_class(extraction, self.model)
+            self.prediction_index = int(prediction.use_entropy(index, first_mad, second_max))
 
-            '''
-            prediction=model.predict(ext_im)[0]
-            prediction_index = int(prediction.tolist().index(max(prediction)))
-         
-            fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(15, 15))
-            ax.imshow(self.image)
-            rect = mpatches.Rectangle(
-                (x, y), w, h, fill=False, edgecolor='red', linewidth=2)
-            ax.add_patch(rect)
-            plt.show()
-            
-            fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(1.5, 1.5))
-            ax.imshow(ext)
-            plt.show()
 
-            print('Prediction is ' +str(self.target_names_all[prediction_index]))
+            self.print_extraction_image('coords', self.x, self.y, self.w, self.h)
+            print('Prediction is ' +str(target_names_all[self.prediction_index]))
             #if labeller just pressed enter, then save predicted index
             #else, save the number entered as the class index
-            check= input('Please enter the class index if prediciton is incorrect'+'\n'
-                         + 'Otherwise, press enter to confirm prediction'+'\n')
-            if check == '' or check == ' ':
-                string = str(x1)+' '+str(y1)+' '+str(w)+' '+str(h)+' '+str(prediction_index)
-                self.lines.append(string+'\n')
-                self.ext_images_temp.append(ext)
-                data=(x1,y1,w,h)
-                self.ext_data_temp.append(data)
-                self.ext_class_index_temp.append(prediction_index)
-                self.ext_class_name.append(self.target_names_all[prediction_index])
-            else:
-                class_index = int(check)
-                string = str(x1)+' '+str(y1)+' '+str(w)+' '+str(h)+' '+str(class_index)
-                self.lines.append(string+'\n')
-                self.ext_images_temp.append(ext)
-                data=(x1,y1,w,h)
-                self.ext_data_temp.append(data)
-                self.ext_class_index_temp.append(class_index)
-                self.ext_class_name.append(self.target_names_all[class_index])
-                '''
+        
         return exitcode
+    
+    def request_check(self):
+        self.check= input('Please enter the class index if prediciton is incorrect'+'\n'
+                     + 'Otherwise, press enter to confirm prediction'+'\n')
+            
+    def parse_check(self):
+        data=(self.x, self.y, self.w, self.h)
+        self.ext_data_temp.append(data)
+        
+        if self.check == '' or self.check == ' ':
+            string = str(x1)+' '+str(y1)+' '+str(w)+' '+str(h)+' '+str(self.prediction_index)
+            self.lines.append(string+'\n')
+            self.ext_images_temp.append(self.extraction)
+            self.ext_class_index_temp.append(self.prediction_index)
+            self.ext_class_name.append(target_names_all[self.prediction_index])
+        else:
+            class_index = int(self.check)
+            string = str(self.x)+' '+str(self.y)+' '+str(self.w)+' '+str(self.h)+' '+str(class_index)
+            self.lines.append(string+'\n')
+            self.ext_images_temp.append(self.extraction)
+            self.ext_class_index_temp.append(class_index)
+            self.ext_class_name.append(target_names_all[class_index])
+    
     def request_delete(self):
         self.delete = input('If you want to delete the previous input, enter "y"'+'\n'+'To close: enter "c"'+'\n'+'To continue: press enter'+'\n')
     def parse_delete(self):
@@ -280,6 +278,12 @@ class ExtractionLabelling(object):
         
         filename = self.PATH +'GT/' + 'GT_'+str(imagename)
         mode = 'w+' #input('mode of file (w:write,a:append, include "+" to create if not there'+'\n'))
+        my_file = Path(PATH + 'GT_' + str(imagename)+ '.txt')
+        if my_file.is_file():
+            cancel=input("A text file is already there under the name: " + str(imagename) +'\n' + "Do you want to overwrite it? (y/n)" + '\n')
+        if cancel != 'y':
+            print('cancelling')
+            return
         self.f = open(str(filename)+'.txt',str(mode)) #f = file where ground truths will be saved
         self.lines.append(str(imagename)+'\n')
 
@@ -299,8 +303,8 @@ class ExtractionLabelling(object):
         while exitcode:
             self.print_problem_image('correct')
 
-            self.request_value()
-            exitcode = self.parse_value()
+            self.request_complete()
+            exitcode = self.parse_complete()
             if exitcode == 0:
                 break
             
@@ -310,7 +314,7 @@ class ExtractionLabelling(object):
             exitcode = self.parse_delete()
             if exitcode == 0:
                 break
-    def load_text(self,imagename):
+    def load_text(self,imagename): #imagename example = all_44
         filename = self.PATH +'GT/' + 'GT_'+str(imagename)
         f = open(str(filename)+'.txt')
         lines = [line.rstrip('\n') for line in f]

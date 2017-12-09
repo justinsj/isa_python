@@ -1,6 +1,9 @@
 from sklearn.metrics import confusion_matrix
 import itertools
 from random import sample
+from keras import backend as K
+import matplotlib.pyplot as plt
+import numpy as np
 
 from constants import target_names_all, target_names
 
@@ -8,71 +11,78 @@ class ComponentClassifierPredict(object):
     """
     Predict component obtained by segmentation process
     """
-    min_percent_match = 0 # set to 0.7, possiby set to 0.5
-    min_confidence = 0 # set to 0.6, possibly set to 0.3
+    
 
-    def __init__(self):
-        pass
+    def __init__(self, min_percent_match, min_confidence):
+        self.min_percent_match = min_percent_match # set to 0.7
+        self.min_confidence = min_confidence # set to 0.3
+    
+    @staticmethod
+    def expand_dimension(image, num_channel):
+        '''
+        Input: (100,100) image /matrix
+        Output: (None,100,100,1)
+        '''
 
-    def expand_dimension(self, image, num_channel):
+        expanded_image = image
         if num_channel == 1:
             # Classifier only needs 1 channel
             if K.image_dim_ordering() =='th':
                 # Classifier only needs 1 channel
-                expanded_image = np.expand_dims(image, axis=0)
-                expanded_image = np.expand_dims(image, axis=0)
+                expanded_image = np.expand_dims(expanded_image, axis=0)
+                expanded_image = np.expand_dims(expanded_image, axis=0)
             else:
-                expanded_image = np.expand_dims(image, axis=3) 
-                expanded_image = np.expand_dims(image, axis=0)
+                expanded_image = np.expand_dims(expanded_image, axis=3) 
+                expanded_image = np.expand_dims(expanded_image, axis=0)
         else:
             if K.image_dim_ordering()=='th':
                 # Modify data if using theano instead of tensorflow
-                expanded_image = np.rollaxis(image, 2,0)
-                expanded_image = np.expand_dims(image, axis=0)
+                expanded_image = np.rollaxis(expanded_image, 2,0)
+                expanded_image = np.expand_dims(expanded_image, axis=0)
             else:
                 # Expand dimensions as needed in classifier
-                expanded_image = np.expand_dims(image, axis=3)
-                expanded_image = np.expand_dims(image, axis=0)
-
+                expanded_image = np.expand_dims(expanded_image, axis=3)
+                expanded_image = np.expand_dims(expanded_image, axis=0)
+                
         return expanded_image
 
-    def get_max(self, image, model):
+    def predict_class(self, image, model):
+        if image.shape == (100,100):
+            image = self.expand_dimension(image,3)
+        
         prediction = model.predict(image)
-
+        first_max = max(prediction[0])
+        
         second_max = list(prediction[0])
         second_max.remove(max(second_max))
+        second_max = max(second_max)
 
         # Get first, second, and third maximum percentage matches
         # To be used for entropy calculations
-        first_max = max(prediction[0])
-        second_max = max(second_max)
+        
+        index = (prediction[0]).tolist().index(first_max)
+        
+        
+        
+        return index, first_max, second_max 
 
-        return first_max, second_max
-
-    def predict_class(self, first_max, second_max):
+    def use_entropy(self, index, first_max, second_max):
         """ Prediction for a single image """
 
         # If prediction is not confident or if confidence, as calculated by the
         # difference top two predictions is too hight, or if another third prediction
         # is close to the second prediction
         # Discard = raction as an 'unknown' class
-        if first_max < min_percent_match or first_max - second_max < min_confidence:
-            index = 17 # index 17 is class 18, the unknown class
-        # Otherwise, if prediciton is confident, record the index and class name
-        else:
-            index = (prediction[0]).tolist().index(first_max)
-
+        if first_max < self.min_percent_match or first_max - second_max < self.min_confidence:
+            index = 23 # index 23 is the unknown class
+        
+        # Otherwise, if prediciton is confident, return the original index
         return index
 
-    def predict_classes(self, ext_images, group, ext_next_round_index, model):
 
-        if group == 'numbers' or group =='all': 
-            indices = range(len(ext_images))
-        else: 
-            indices = ext_next_round_index[:]
+    def predict_classes(self, ext_images, model):
 
-        if len(indices) == 0:
-            continue
+        if len(ext_images) == 0: return
 
         # Initialization
         ext_class_index = []
@@ -80,13 +90,13 @@ class ComponentClassifierPredict(object):
         ext_match_first_max_percent = []
         ext_match_second_max_percent = []
 
-        for i in indices:
+        for i in range(len(ext_images)):
             image = ext_images[i]
-            expanded_image = self.expand_dimension(self, image, 3)
+            expanded_image = self.expand_dimension(image, 3)
     
             # Predict object class with entropy theory and record data
-            first_max, second_max = self.get_max(self, image, model)
-            index = self.predict_class(first_max, second_max)
+            index, first_max, second_max = self.predict_class(expanded_image, model)
+            index = self.use_entropy(index, first_max, second_max)
 
             # Save extractions
             ext_class_index.append(index)
@@ -96,8 +106,7 @@ class ComponentClassifierPredict(object):
             ext_match_first_max_percent.append(first_max)
             ext_match_second_max_percent.append(second_max)
 
-        return ext_class_index, ext_class_name, \
-                ext_match_first_max_percent, ext_match_second_max_percent
+        return ext_class_index, ext_class_name, ext_match_first_max_percent, ext_match_second_max_percent
 
     def get_confusion_matrix(self, y_pred_one_hot, y_test_one_hot):
         """ Input one hot """
@@ -140,7 +149,7 @@ class ComponentClassifierPredict(object):
         plt.xlabel('Predicted label')
         plt.show()
 
-    def mapping(self, index):
+    def map_index(self, index):
         """ Adjust all class index """
         mapped_index = None
 
@@ -178,7 +187,7 @@ class ComponentClassifierPredict(object):
         adjusted_ext_class_name = []
         for i in range(len(ext_class_index)):
             index = ext_class_index[i]
-            mapped_index = self.mapping(index)
+            mapped_index = self.map_index(index)
             adjusted_ext_class_index.append(mapped_index)
             adjusted_ext_class_name.append(target_names[mapped_index])
 

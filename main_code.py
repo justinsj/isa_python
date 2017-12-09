@@ -9,6 +9,8 @@ import keras
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
+from keras.models import model_from_json
+from keras.models import load_model
 from keras import backend as K
 
 import matplotlib.pyplot as plt
@@ -27,10 +29,14 @@ import time
 from component_segmentation import ComponentSegmentation
 from extraction_preprocessing import ExtractionPreprocessing
 from extraction_labelling import ExtractionLabelling
-import constants
+from component_classifier_training import ComponentClassifierTraining
+from component_classifier_predict import ComponentClassifierPredict
+from testing_class import TestingClass
+from constants import target_names_all, target_names
+#import helper_functions
 
 print('Done Importing...')
-#%%
+
 ###########################
 ##### HYPER-PARAMTERS #####
 ###########################
@@ -58,63 +64,84 @@ overlap_repeats = 8 #set to 8
 overlap_threshold = 0.3 #set to 0.3
 
 #removing unconnected pieces parameters
-max_piece_percent=0.30
-
+max_piece_percent=0.3  # set to 0.3
+min_percent_match = 0.7 # set to 0.7
+min_confidence = 0.3 # set to 0.3
 wanted_w, wanted_h, export_w, export_h = img_cols, img_rows, img_cols, img_rows
 
+num_classes = 64
+TRAINING_RATIO_TRAIN = 0.7
+TRAINING_RATIO_VAL = 0.15
+
 print('Done setting hyperparamters...')
-
-target_names = constants.target_names
-target_names_all = constants.target_names_all
-num_classes = 60
-
 #%%
 
-start = time.time()
+start = time.time() # Begin time measurement
 
 PATH = 'C:/Users/JustinSanJuan/Desktop/HKUST/UROP Deep Learning Image-based Structural Analysis/Code/Python/Testing Folder/'
-#image_set = np.load(PATH+'all_training_images.npy')
-name = 'sample_1_test'
+
+# image_set = np.load(PATH+'all_training_images.npy')
+name = 'Sketch-a-Net_64_classes_100x100_0.0_all_100epochs'
 image_index = 371
 image=np.load(PATH+'all_training_images.npy')[:,:,image_index]
-fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(15, 15))
-ax.imshow(image)
-plt.show()
-##############
+#fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(15, 15))
+#ax.imshow(image)
+#plt.show()
+
+############## Record time
 end = time.time()
-print('Loading image done... Time Elapsed : '+str(end-start)+' seconds...')
+print('Loading image done... Time Elapsed : '+ str(end-start) + ' seconds...')
 t1 = end-start
 start = time.time()
 ##############
 
-current_object = ComponentSegmentation(image, name, 
-                                      min_shape, min_height, min_width, 
-                                      buffer_zone, min_area, min_black, min_black_ratio,
-                                      overlap_repeats, overlap_threshold)
+############## ComponentSegmentation ################
+#Create object ComponentSegmentation, which will use the search function to perform segmentation and merging.
+segmentation_obj = ComponentSegmentation(image, name, 
+                            min_shape, min_height, min_width, 
+                            buffer_zone, min_area, min_black, min_black_ratio,
+                            overlap_repeats, overlap_threshold)
 
-current_object.search(scale_input, sigma_input, min_size_input) # run search (segmentation code)
+segmentation_obj.search(scale_input, sigma_input, min_size_input) # run search (segmentation code)
+merged_set = segmentation_obj.merged_set
+############### ExtractionPreprocessing ##################
 
-current_object = ExtractionPreprocessing(image, name, current_object.merged_set)
+#Transport data into ExtractionPreprocessing class, which will trim, remove unconnected parts, then trim, and resize
+extraction_obj = ExtractionPreprocessing(image, name, merged_set)
 
-#get 4 lists from preprocess_extractions function
-ext_images, ext_data, ext_class_index, ext_class_name = current_object.preprocess_extractions(wanted_w, wanted_h, export_w, export_h,
-                                                max_piece_percent)
-#sample_test.plot_bounding_boxes_with_names()
+# Get 4 lists from preprocess_extractions function
+ext_images, ext_data = extraction_obj.preprocess_extractions(wanted_w, wanted_h, export_w, export_h, max_piece_percent)
+#obj.plot_bounding_boxes_with_names()
 
-current_object = ExtractionLabelling(PATH,
-                                  ext_images, ext_data,ext_class_index, ext_class_name,
-                                  target_names, target_names_all, 
-                                  num_classes, img_rows, img_cols)
-#current_object.select_good_bounding_boxes(image,"all_"+str(image_index))
-current_object.plot_ground_truths(image,"all_"+str(image_index))
+########### ComponentClassifierTraining ################
+data_set_name = 'Training_Samples_64_classes_100x100_all'
+dropout = 0
+training_obj = ComponentClassifierTraining(PATH, data_set_name, num_classes, dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL)
+#training_obj.train(1)
+training_obj.model.load_weights(PATH+name+'.h5')
+
+trained_model = training_obj.model
+#training_obj.save(PATH+name)
+############### ComponentClassifierPredict ################
+prediction_obj = ComponentClassifierPredict(min_percent_match, min_confidence)
+
+ext_class_index, ext_class_name, \
+ext_match_first_max_percent, \
+ext_match_second_max_percent = prediction_obj.predict_classes(ext_images,trained_model)
+
+labelling_obj = ExtractionLabelling(PATH,
+                          ext_images, ext_data,ext_class_index, ext_class_name, 
+                          num_classes, img_rows, img_cols)
+
+labelling_obj.define_model(trained_model)
+labelling_obj.select_good_bounding_boxes(image, "all_" + str(image_index))
+labelling_obj.plot_ground_truths(image, "all_" + str(image_index))
+
+
 
 
 
 #%%   
-
-
-
-
 
 
 
