@@ -2,6 +2,8 @@ from adjustText import adjust_text
 import matplotlib.patheffects as PathEffects
 from scipy import interpolate
 from keras.utils import plot_model
+import numpy as np
+
 
 def dropout_search(dropout_ls):
     """
@@ -12,121 +14,120 @@ def dropout_search(dropout_ls):
 def plot_model_and_save(self):
     pass
 
-def plot_extractions_with_names(ext_images,ext_data,ext_class_name,ext_class_index,name,**kwargs):
+def calculate_accuracy(prediction_indices, ground_truth_indices):
     """ Should add here or in helper_functions ?? """
         #load kwarg ans, else leave ans variable as empty string
-    ans = kwargs.get('ans','')
-
+    if len(prediction_indices) != len(ground_truth_indices):
+        return 'invalid'
         #prepare figure size
-    num_of_samples=len(ext_data)
+#    num_of_samples=len(prediction_indices)
     #include all input data in title
-    subplot_num=int(np.ceil(np.sqrt(num_of_samples)))
-    fig=plt.figure(figsize=(num_of_samples,num_of_samples))
-    
+
     ##### Find Ground Truth Values if Available #####
-    if ans != '':
-
-        ans=np.array(ans)
-        ext_class_index = np.array(ext_class_index)
-        score_matrix = ans/ext_class_index
-            # Replace all incorrect predictions with 0
-        for i in range(0,len(ext_class_index)):
-            if ans[i]==0 and ext_class_index[i]==0: #fix case of 0/0
-                score_matrix[i]=1
-            if score_matrix[i] != 1: #else change all non-1's (incorrect) to 0
-                score_matrix[i] = 0
-                
-        li1= ['numbers','0','1','2','3','4','5','6','7','8','9']
-        li2= ['forces','up','down','right','left']
-        li3= ['moments','ctrcl_moments','cl_moments']
-        li4= ['random','noise','alphab']
-        li5= ['supports']
-        li6= ['fixed_supports','fixed_right','fixed_left','fixed_down','fixed_up']
-        li7= ['pinned_supports','pinned_down','pinned_up','pinned_left','pinned_right']
-        li8= ['roller_supports','roller_down','roller_up','roller_left','roller_right']
-        li9= ['distributed_loads', 'uniform_distributed','linear_distributed','quadratic_distributed','cubic_distributed']
-        li10=['beams','horizontal','vertical','downward_diagonal','upward_diagonal']
-        li11=['dimensions','length','height','ctrcl_angle','cl_angle']
-            #create empty group lists 
-        for j in (li1,li2,li3,li4,li5,li6,li7,li8,li9,li10,li11):
-            for l in j:
-                exec(str('acc_'+str(l))+'= []')
-
-            #include scores into individual categories
-        for i in range(1,len(ext_data)+1):
-            if ans[i-1]>=0 and ans[i-1]<=9:
-                exec('acc_'+'numbers'+'.append(score_matrix[i-1])')
-                
-                for j in range(1,len(li1)):
-                    exec('if ans[i-1]=='+str(j-1)+': '+'acc_'+str(li1[j])+'.append(score_matrix[i-1])')
-                        
-            if ans[i-1]>=10 and ans[i-1]<=13:
-                exec('acc_'+'forces'+'.append(score_matrix[i-1])')
-                
-                for j in range(1,len(li2)):
-                    exec('if ans[i-1]=='+str(j+9)+': '+'acc_'+str(li2[j])+'.append(score_matrix[i-1])')
-                    
-            if ans[i-1]>=14 and ans[i-1]<=15:
-                exec('acc_'+'moments'+'.append(score_matrix[i-1])')
-
-                
-                for j in range(1,len(li3)):
-                    exec('if ans[i-1]=='+str(j+13)+': acc_'+str(li3[j])+'.append(score_matrix[i-1])')
-            
-            if ans[i-1]>=16 and ans[i-1]<=17:
-                exec('acc_'+'random'+'.append(score_matrix[i-1])')
-                
-                for j in range(1,len(li4)):
-                    exec('if ans[i-1]=='+str(j+15)+': acc_'+str(li4[j])+'.append(score_matrix[i-1])')
-            
-            if ans[i-1]>=18 and ans[i-1]<=21:
-                exec('acc_'+'supports'+'.append(score_matrix[i-1])')
-                
-                if ans[i-1]==18:
-                    exec('acc_'+'fixed_supports'+'.append(score_matrix[i-1])')
-                if ans[i-1]==19:
-                    exec('acc_'+'pinned_supports'+'.append(score_matrix[i-1])')
-                if ans[i-1]==20 or ans[i-1]==21:
-                    exec('acc_'+'roller_supports'+'.append(score_matrix[i-1])')
-            if ans[i-1]>=22 and ans[i-1]<=25:
-                exec('acc_'+'distributed_loads'+'.append(score_matrix[i-1])')
-                
-                for j in range(1,len(li9)):
-                    exec('if ans[i-1]=='+str(j+21)+': acc_'+str(li9[j])+'.append(score_matrix[i-1])')
-            
-            if ans[i-1]>=26 and ans[i-1] <=29:
-                exec('acc_'+'beams'+'.append(score_matrix[i-1])')
-                
-                for j in range(1,len(li10)):
-                    exec('if ans[i-1]=='+str(j+25)+': acc_'+str(li10[j])+'.append(score_matrix[i-1])')
-            
-            if ans[i-1]>=30 and ans[i-1] <=33:
-                exec('acc_'+'dimensions'+'.append(score_matrix[i-1])')
-                
-                for j in range(1,len(li11)):
-                    exec('if ans[i-1]=='+str(j+29)+': acc_'+str(li11[j])+'.append(score_matrix[i-1])')
-            
-            #calculate accuracies by doing sum of 1's (correct answers) divided by number of entries in that category
-        for j in (li1,li2,li3,li4,li5,li6,li7,li8,li9,li10,li11):
-            for l in j:
-                exec('try: acc1_'+str(l)+'= str(round((sum(eval(str(acc_'+str(l)+')))/len(eval(str(acc_'+str(l)+'))))*100,2))'+'\n'+'except:acc1_'+str(l)+"='N/A'")
-            
-            #prepare a list of "accuracy_x = some value" strings
-        s=[]
-        for j in (li1,li2,li3,li4,li5,li6,li7,li8):
-            for l in j:
-                s.append("acc_"+str(l)+" = "+str(eval("acc1_" +str(l)))+"% ")
-            s.append("\n") #start new line after each category
-            # join accuracy strings with spaces
-        string=" ".join(s)
-
-        ##### Calculate Overall Accuracy #####
-        acc= sum(score_matrix)/len(score_matrix)
-        print('Accuracy is '+str(acc*100)+" %")
-        plt.title("Accuracy is "+str(acc*100)+" %" "\n" +string ,fontsize=20,color='blue')
-    else:
-        string='' #else, do anything useless
+    ground_truth_indices = np.array(ground_truth_indices)
+    prediction_indices = np.array(prediction_indices)
     
+    score_matrix = (ground_truth_indices == prediction_indices)
+    
+        # Replace all incorrect predictions with 0
+#    for i in range(0,len(ext_class_index)):
+#        if ans[i]==0 and ext_class_index[i]==0: #fix case of 0/0
+#            score_matrix[i]=1
+#        if score_matrix[i] != 1: #else change all non-1's (incorrect) to 0
+#            score_matrix[i] = 0
+#            
+#    li1= ['numbers','0','1','2','3','4','5','6','7','8','9']
+#    li2= ['forces','up','down','right','left']
+#    li3= ['moments','ctrcl_moments','cl_moments']
+#    li4= ['random','noise','alphab']
+#    li5= ['supports']
+#    li6= ['fixed_supports','fixed_right','fixed_left','fixed_down','fixed_up']
+#    li7= ['pinned_supports','pinned_down','pinned_up','pinned_left','pinned_right']
+#    li8= ['roller_supports','roller_down','roller_up','roller_left','roller_right']
+#    li9= ['distributed_loads', 'uniform_distributed','linear_distributed','quadratic_distributed','cubic_distributed']
+#    li10=['beams','horizontal','vertical','downward_diagonal','upward_diagonal']
+#    li11=['dimensions','length','height','ctrcl_angle','cl_angle']
+#        #create empty group lists 
+#    for j in (li1,li2,li3,li4,li5,li6,li7,li8,li9,li10,li11):
+#        for l in j:
+#            exec(str('acc_'+str(l))+'= []')
+#
+#        #include scores into individual categories
+#    for i in range(1,len(ext_data)+1):
+#        if ans[i-1]>=0 and ans[i-1]<=9:
+#            exec('acc_'+'numbers'+'.append(score_matrix[i-1])')
+#            
+#            for j in range(1,len(li1)):
+#                exec('if ans[i-1]=='+str(j-1)+': '+'acc_'+str(li1[j])+'.append(score_matrix[i-1])')
+#                    
+#        if ans[i-1]>=10 and ans[i-1]<=13:
+#            exec('acc_'+'forces'+'.append(score_matrix[i-1])')
+#            
+#            for j in range(1,len(li2)):
+#                exec('if ans[i-1]=='+str(j+9)+': '+'acc_'+str(li2[j])+'.append(score_matrix[i-1])')
+#                
+#        if ans[i-1]>=14 and ans[i-1]<=15:
+#            exec('acc_'+'moments'+'.append(score_matrix[i-1])')
+#
+#            
+#            for j in range(1,len(li3)):
+#                exec('if ans[i-1]=='+str(j+13)+': acc_'+str(li3[j])+'.append(score_matrix[i-1])')
+#        
+#        if ans[i-1]>=16 and ans[i-1]<=17:
+#            exec('acc_'+'random'+'.append(score_matrix[i-1])')
+#            
+#            for j in range(1,len(li4)):
+#                exec('if ans[i-1]=='+str(j+15)+': acc_'+str(li4[j])+'.append(score_matrix[i-1])')
+#        
+#        if ans[i-1]>=18 and ans[i-1]<=21:
+#            exec('acc_'+'supports'+'.append(score_matrix[i-1])')
+#            
+#            if ans[i-1]==18:
+#                exec('acc_'+'fixed_supports'+'.append(score_matrix[i-1])')
+#            if ans[i-1]==19:
+#                exec('acc_'+'pinned_supports'+'.append(score_matrix[i-1])')
+#            if ans[i-1]==20 or ans[i-1]==21:
+#                exec('acc_'+'roller_supports'+'.append(score_matrix[i-1])')
+#        if ans[i-1]>=22 and ans[i-1]<=25:
+#            exec('acc_'+'distributed_loads'+'.append(score_matrix[i-1])')
+#            
+#            for j in range(1,len(li9)):
+#                exec('if ans[i-1]=='+str(j+21)+': acc_'+str(li9[j])+'.append(score_matrix[i-1])')
+#        
+#        if ans[i-1]>=26 and ans[i-1] <=29:
+#            exec('acc_'+'beams'+'.append(score_matrix[i-1])')
+#            
+#            for j in range(1,len(li10)):
+#                exec('if ans[i-1]=='+str(j+25)+': acc_'+str(li10[j])+'.append(score_matrix[i-1])')
+#        
+#        if ans[i-1]>=30 and ans[i-1] <=33:
+#            exec('acc_'+'dimensions'+'.append(score_matrix[i-1])')
+#            
+#            for j in range(1,len(li11)):
+#                exec('if ans[i-1]=='+str(j+29)+': acc_'+str(li11[j])+'.append(score_matrix[i-1])')
+#        
+#        #calculate accuracies by doing sum of 1's (correct answers) divided by number of entries in that category
+#    for j in (li1,li2,li3,li4,li5,li6,li7,li8,li9,li10,li11):
+#        for l in j:
+#            exec('try: acc1_'+str(l)+'= str(round((sum(eval(str(acc_'+str(l)+')))/len(eval(str(acc_'+str(l)+'))))*100,2))'+'\n'+'except:acc1_'+str(l)+"='N/A'")
+#        
+#        #prepare a list of "accuracy_x = some value" strings
+#    s=[]
+#    for j in (li1,li2,li3,li4,li5,li6,li7,li8):
+#        for l in j:
+#            s.append("acc_"+str(l)+" = "+str(eval("acc1_" +str(l)))+"% ")
+#        s.append("\n") #start new line after each category
+#        # join accuracy strings with spaces
+#    string=" ".join(s)
+#
+#    ##### Calculate Overall Accuracy #####
+    accuracy= sum(score_matrix)/len(score_matrix)
+#    print('Accuracy is '+str(acc*100)+" %")
+#    plt.title("Accuracy is "+str(acc*100)+" %" "\n" +string ,fontsize=20,color='blue')
+#    else:
+#        string='' #else, do anything useless
+    return accuracy
+"""
         #plot images with matching percentages, change to red if incorrect
     for i in range(1,len(ext_data)+1):
         color='black'
@@ -215,3 +216,4 @@ def plot_extractions_with_names(ext_images,ext_data,ext_class_name,ext_class_ind
         fig1.savefig('C:/Users/JustinSanJuan/Desktop/HKUST/UROP Deep Learning Image-based Structural Analysis/Training Data Set/Output/print_'+str(name)+'.jpg')
     except: 
         fig1.savefig('/home/chloong/Desktop/Justin San Juan/Testing Folder/Output/print_'+str(name)+'.jpg')
+"""

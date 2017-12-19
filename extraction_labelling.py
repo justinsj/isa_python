@@ -8,6 +8,7 @@ import numpy as np
 from component_classifier_predict import ComponentClassifierPredict
 from constants import target_names_all, target_names
 import os.path
+import gc
 
 class ExtractionLabelling(object):
 
@@ -43,6 +44,7 @@ class ExtractionLabelling(object):
         self.ext_data_temp=[]
         
         self.model = None
+        gc.enable()
 
     def define_model(self,model):
         self.model = model
@@ -74,12 +76,12 @@ class ExtractionLabelling(object):
                         (x, y), w, h, fill=False, edgecolor='red', linewidth=2)
                     ax.add_patch(rect)
         else:
-            for k in range(len(self.ext_data)):
+#            for k in range(len(self.ext_data)):
                 #plot bounding box k on problem image
-                x, y, w, h = self.ext_data[k]
-                rect = mpatches.Rectangle(
-                    (x, y), w, h, fill=False, edgecolor='red', linewidth=1)
-                ax.add_patch(rect) #show bounding boxes from ext_data
+            x, y, w, h = self.ext_data[k]
+            rect = mpatches.Rectangle(
+                (x, y), w, h, fill=False, edgecolor='red', linewidth=1)
+            ax.add_patch(rect) #show bounding boxes from ext_data
 
         plt.show()
 
@@ -153,8 +155,8 @@ class ExtractionLabelling(object):
         - [class number] --> save extraction but with new class number as indicated 
 
         '''
-        exitcode = 1
-
+        continuecode = 1
+        
         if self.answer =='' or self.answer ==' ':
             string = self.answer_is_enter(k)
             
@@ -169,37 +171,49 @@ class ExtractionLabelling(object):
             self.ext_data_temp=self.ext_data_temp[0:-1]
             self.lines = self.lines[:-1]
             
+            self.print_problem_image(k-1)
+            self.print_extraction_image(k-1)
+            
             #ask for answer in previous k
             self.request_answer(k-1)
-            self.parse_answer(k-1)
-
+            continuecode = self.parse_answer(k-1)
+            if continuecode == 0:
+                return 0
             #ask for answer in current k again
-            self.request_answer(k)
-            self.parse_answer(k)
             
+            self.print_problem_image(k)
+            self.print_extraction_image(k)
+            
+            self.request_answer(k)
+            continuecode = self.parse_answer(k)
+            if continuecode == 0:
+                return 0
+            string=''
         elif self.answer =='c':
             #write currently recorded ground truths and end process
             self.f.writelines([item for item in self.lines])
             self.f.close()
-            exitcode = 0
+            print('saved and closed file')
+            continuecode = 0
+            return continuecode
         else:
             string = self.answer_is_number(k)
     
         if string != '':
             self.lines.append(string+'\n')
-        print(self.ext_data_temp)
-        return exitcode
+#        print(self.ext_data_temp)
+        return continuecode
     
     def request_complete(self):
         self.complete = ''
         self.complete = input('If above figure captures all objects, press enter'+'\n'+'Otherwise, enter "a"'+'\n')
 
     def parse_complete(self):
-        exitcode = 1
+        continuecode = 1
         if self.complete == '' or self.complete == ' ' or self.complete =='c':
             self.f.writelines([item for item in self.lines])
             self.f.close()
-            exitcode = 0 #stop the loop
+            continuecode = 0 #stop the loop
         else:
             x1=int(input('Enter the top left corner x coordinate'+'\n'))
             y1=int(input('Enter the top left corner y coordinate'+'\n'))
@@ -220,7 +234,7 @@ class ExtractionLabelling(object):
             prediction = ComponentClassifierPredict()
             extraction = prediction.expand_dimension(extraction,num_channel)
             index, first_max, second_max = prediction.predict_class(extraction, self.model)
-            self.prediction_index = int(prediction.use_entropy(index, first_mad, second_max))
+            self.prediction_index = int(prediction.use_entropy(index, first_max, second_max))
 
 
             self.print_extraction_image('coords', self.x, self.y, self.w, self.h)
@@ -228,7 +242,7 @@ class ExtractionLabelling(object):
             #if labeller just pressed enter, then save predicted index
             #else, save the number entered as the class index
         
-        return exitcode
+        return continuecode
     
     def request_check(self):
         self.check= input('Please enter the class index if prediciton is incorrect'+'\n'
@@ -255,14 +269,14 @@ class ExtractionLabelling(object):
     def request_delete(self):
         self.delete = input('If you want to delete the previous input, enter "y"'+'\n'+'To close: enter "c"'+'\n'+'To continue: press enter'+'\n')
     def parse_delete(self):
-        exitcode = 1
+        continuecode = 1
         if self.delete =='y' or self.delete=='"y"' or self.delete=="'y'":
             self.lines = self.lines[:-1]
         elif self.delete=='c'or self.delete=='"c"' or self.delete=="'c'":
             self.f.writelines([item for item in self.lines])
             self.f.close()
-            exitcode = 0
-        return exitcode
+            continuecode = 0
+        return continuecode
 
     def select_good_bounding_boxes(self,image,imagename):
         '''
@@ -272,57 +286,61 @@ class ExtractionLabelling(object):
         Inputs: Image, extraction data (image and coordinates from search function), extraction predictions (index and name), imagename
         Outputs: Saves text file of correct answers
         '''
-        
+        self.lines = []
         self.image = image
         self.imagename = imagename
         
         filename = self.PATH +'GT/' + 'GT_'+str(imagename)
-        mode = 'w+' #input('mode of file (w:write,a:append, include "+" to create if not there'+'\n'))
-        my_file = Path(PATH + 'GT_' + str(imagename)+ '.txt')
-        if my_file.is_file():
-            cancel=input("A text file is already there under the name: " + str(imagename) +'\n' + "Do you want to overwrite it? (y/n)" + '\n')
-        if cancel != 'y':
+        mode = 'w' #input('mode of file (w:write,a:append, include "+" to create if not there'+'\n'))
+        overwrite = 'y'
+        if os.path.isfile(self.PATH + 'GT_' + str(imagename)+ '.txt'):
+            overwrite=input("A text file is already there under the name: " + str(imagename) +'\n' + "Do you want to overwrite it? (y/n)" + '\n')
+        if overwrite != 'y':
             print('cancelling')
             return
         self.f = open(str(filename)+'.txt',str(mode)) #f = file where ground truths will be saved
         self.lines.append(str(imagename)+'\n')
-
-
+        print(self.lines)
+        
+        continuecode = 1
         #for each image in list of extraction data
         for k in range(len(self.ext_data)):
-
+        
             self.print_problem_image(k)
             self.print_extraction_image(k)
             
             #ask labeller to confirm if prediction is correct
             self.request_answer(k)
-            self.parse_answer(k)
+            continuecode = self.parse_answer(k)
+            if continuecode == 0:
+                return
 
-
-        exitcode = 1
-        while exitcode:
+        continuecode = 1
+        while continuecode:
             self.print_problem_image('correct')
 
             self.request_complete()
-            exitcode = self.parse_complete()
-            if exitcode == 0:
+            continuecode = self.parse_complete()
+            if continuecode == 0:
                 break
             
             self.print_problem_image('correct')
             
             self.request_delete()
-            exitcode = self.parse_delete()
-            if exitcode == 0:
+            continuecode = self.parse_delete()
+            if continuecode == 0:
                 break
     def load_text(self,imagename): #imagename example = all_44
         filename = self.PATH +'GT/' + 'GT_'+str(imagename)
-        f = open(str(filename)+'.txt')
-        lines = [line.rstrip('\n') for line in f]
-        lines = lines[1::] #remove header
-        self.gt = []
-        for l in lines:
-            self.gt.append(tuple(map(int,l.split(" "))))
-        print(self.gt)
+        if os.path.isfile(str(filename)+'.txt'):
+            f = open(str(filename)+'.txt')
+            lines = [line.rstrip('\n') for line in f]
+            lines = lines[1::] #remove header
+            self.gt = []
+            for l in lines:
+                if not(l == '' or l ==' ' or l =='\n'):
+                    self.gt.append(tuple(map(int,l.split(" "))))
+#            print(self.gt)
     def plot_ground_truths(self,image,imagename):
         self.image = image
         self.load_text(imagename) # create groundtruth array, modifies self.gt
@@ -391,18 +409,19 @@ class ExtractionLabelling(object):
         duration = end-start
         print('time elapsed updating answers vstack = ' + str(duration))
     
-    def update_training_set_image_as_list(self,image, imagename, max_piece_percent, wanted_w,wanted_h, export_w,export_h):
+    def update_training_set_from_image_as_list(self, data_all, image, imagename, max_piece_percent, wanted_w,wanted_h, export_w,export_h):
         start = time.time()
         print('Updating answers...')
         
         self.image = image
         self.load_text(imagename)
-        data_all = np.load(self.PATH+'Training_Samples_'+str(self.num_classes)+'_classes_'+str(self.img_rows)+'x'+str(self.img_cols)+'_all.npy')
-
+        
         answer_set = [(i[0], i[1], i[2], i[3]) for i in self.gt]
         extraction_to_be_preprocessed = ExtractionPreprocessing(image,'',answer_set)
         ext_images, ext_data, ext_class_index, ext_class_name = extraction_to_be_preprocessed.preprocess_extractions(wanted_w, wanted_h, export_w, export_h,
                                                                                                                     max_piece_percent)            
+        ext_images = np.reshape(np.asarray(ext_images),(len(ext_images),self.img_rows*self.img_cols))
+        
         #Load answers as a vertical column array
         answer_list = [i[4] for i in self.gt]
         y_ans = np.asarray(answer_list).reshape(len(answer_list),1)
@@ -418,12 +437,9 @@ class ExtractionLabelling(object):
         
         #Add new answers to old answers
         combined_data = []
-        for i in range(data_all.shape[0]):
-            data_line = data_all[i,:]
-            combined_data.append(data_line)
         for i in range(data_ans.shape[0]):
-            data_line = data_ans[i,:]
-            combined_data.append(data_line)
+            combined_data.append(data_ans[i,:])
+            
         data_all = np.asarray(combined_data)
         
         print('Final shape = '+ data_all.shape)

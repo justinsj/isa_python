@@ -5,8 +5,11 @@ from keras import backend as K
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D
 from keras.utils import to_categorical
+from keras import callbacks
 from random import sample
-
+import gc
+import random
+gc.enable()
 
 class ModelNotTrained(Exception):
     """
@@ -24,8 +27,6 @@ class ComponentClassifierTraining(object):
 
     [1]: https://arxiv.org/pdf/1501.07873.pdf
     """
-    batch_size = 200
-    img_rows, img_cols = 100, 100
 
     def __init__(self,PATH,name, num_classes, dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL):
         """
@@ -41,34 +42,37 @@ class ComponentClassifierTraining(object):
         self.TRAINING_RATIO_TRAIN = TRAINING_RATIO_TRAIN
         self.TRAINING_RATIO_VAL = TRAINING_RATIO_VAL
         self.num_classes = num_classes
-
-        data_set = self.load_data(PATH,name)
-        self.X_train, self.y_train, self.X_val, self.y_val, self.X_test, self.y_test = self.shuffle_data(data_set)
-        self.model = self.load_sketch_a_net_model(dropout, num_classes, self.X_train.shape[1:])
+        self.batch_size = 25
+        self.img_rows,self.img_cols = 100,100
 
     def load_data(self,PATH,name):
         """ Load data set from path and filename """
         data_set = np.load(PATH+name+'.npy')
         return data_set
     
-    def shuffle_data(self, data_set):
+    def shuffle_data(self, data_set,seed):
         """
         Split data set randomly
         Further optimization: Convert it into numpy
         """
+        random.seed(seed)
         l = data_set.shape[0]
         f = int(l * self.TRAINING_RATIO_TRAIN)
         train_indices = sample(range(l),f)
         val_and_test_indices = np.delete(np.array(range(0, l)), train_indices)
-        train_data = data_set[train_indices]
-        val_and_test_data = data_set[val_and_test_indices]
+        train_data = np.copy(data_set[train_indices])
+        val_and_test_data = np.copy(data_set[val_and_test_indices])
+        data_set = None #clear data_set
+        gc.collect()
         
         l = val_and_test_data.shape[0]
         f = int(l * (self.TRAINING_RATIO_VAL/(1-self.TRAINING_RATIO_TRAIN)))
         val_indices = sample(range(l),f)
         test_indices = np.delete(np.array(range(0, l)), val_indices)
-        val_data = val_and_test_data[val_indices]
-        test_data = val_and_test_data[test_indices]
+        val_data = np.copy(val_and_test_data[val_indices])
+        test_data = np.copy(val_and_test_data[test_indices])
+        val_and_test_data = None
+        gc.collect()
         
 #        train_data = np.random.shuffle(np.asarray(train_data))
 #        val_data = np.random.shuffle(np.asarray(val_data))
@@ -107,6 +111,7 @@ class ComponentClassifierTraining(object):
         y_val = to_categorical(y_val, self.num_classes)
         y_test = to_categorical(y_test, self.num_classes)
 
+        self.X_train, self.y_train, self.X_val, self.y_val, self.X_test, self.y_test = X_train, y_train, X_val, y_val, X_test, y_test
         return X_train, y_train, X_val, y_val, X_test, y_test
 
     @staticmethod
@@ -148,12 +153,26 @@ class ComponentClassifierTraining(object):
 
         return model
 
-    def train(self, epochs, verbose=1):
+    def train(self, epochs, seed, verbose=1):
         """ Train model with input number of epochs """
-        np.random.seed(2017)  # For reproducibility
+        np.random.seed(seed)  # For reproducibility
+
+
+        filename='model_train_new.csv'
+        
+        csv_log=callbacks.CSVLogger(filename, separator=',', append=False)
+        
+        early_stopping=callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=0, verbose=0, mode='min')
+        
+        filepath="Best-weights-my_model-{epoch:03d}-{loss:.4f}-{acc:.4f}.hdf5"
+        
+        checkpoint = callbacks.ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
+        
+        callbacks_list = [csv_log,early_stopping,checkpoint]
+        
         self.history = self.model.fit(self.X_train, self.y_train, batch_size=self.batch_size,
                                       epochs=epochs, verbose=verbose,
-                                      validation_data=(self.X_test, self.y_test))
+                                      validation_data=(self.X_val, self.y_val), callbacks=callbacks_list)
         self.is_trained = True
 
     def get_train_stats(self):

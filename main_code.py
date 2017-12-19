@@ -18,7 +18,7 @@ import matplotlib.patches as mpatches
 
 from skimage import filters
 from skimage.filters import threshold_local
-
+import random
 
 import selectivesearch
 
@@ -33,6 +33,10 @@ from component_classifier_training import ComponentClassifierTraining
 from component_classifier_predict import ComponentClassifierPredict
 from testing_class import TestingClass
 from constants import target_names_all, target_names
+
+import gc
+gc.enable()
+
 #import helper_functions
 
 print('Done Importing...')
@@ -65,8 +69,8 @@ overlap_threshold = 0.3 #set to 0.3
 
 #removing unconnected pieces parameters
 max_piece_percent=0.3  # set to 0.3
-min_percent_match = 0.7 # set to 0.7
-min_confidence = 0.3 # set to 0.3
+min_percent_match = 0 # set to 0.7
+min_confidence = 0 # set to 0.3
 wanted_w, wanted_h, export_w, export_h = img_cols, img_rows, img_cols, img_rows
 
 num_classes = 64
@@ -75,15 +79,20 @@ TRAINING_RATIO_VAL = 0.15
 
 print('Done setting hyperparamters...')
 #%%
-
 start = time.time() # Begin time measurement
+#print('Beginning loading of image...')
 
-PATH = 'C:/Users/JustinSanJuan/Desktop/HKUST/UROP Deep Learning Image-based Structural Analysis/Code/Python/Testing Folder/'
+PATH = '/home/chloong/Desktop/Justin San Juan/Testing Folder/'
 
 # image_set = np.load(PATH+'all_training_images.npy')
 name = 'Sketch-a-Net_64_classes_100x100_0.0_all_100epochs'
-image_index = 371
-image=np.load(PATH+'all_training_images.npy')[:,:,image_index]
+
+image_index = 0
+image_set = np.load(PATH+'all_training_images.npy')
+image = np.copy(image_set[:,:,image_index])
+image_set = None #clear image_set
+print('clearing unreferenced data...')
+gc.collect() #clear unused/unreferenced image_set data
 #fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(15, 15))
 #ax.imshow(image)
 #plt.show()
@@ -92,16 +101,15 @@ image=np.load(PATH+'all_training_images.npy')[:,:,image_index]
 end = time.time()
 print('Loading image done... Time Elapsed : '+ str(end-start) + ' seconds...')
 t1 = end-start
+
+
+#'''
 start = time.time()
 ##############
 
 ############## ComponentSegmentation ################
 #Create object ComponentSegmentation, which will use the search function to perform segmentation and merging.
-segmentation_obj = ComponentSegmentation(image, name, 
-                            min_shape, min_height, min_width, 
-                            buffer_zone, min_area, min_black, min_black_ratio,
-                            overlap_repeats, overlap_threshold)
-
+segmentation_obj = ComponentSegmentation(image, name, min_shape, min_height, min_width, buffer_zone, min_area, min_black, min_black_ratio, overlap_repeats, overlap_threshold)
 segmentation_obj.search(scale_input, sigma_input, min_size_input) # run search (segmentation code)
 merged_set = segmentation_obj.merged_set
 ############### ExtractionPreprocessing ##################
@@ -111,40 +119,120 @@ extraction_obj = ExtractionPreprocessing(image, name, merged_set)
 
 # Get 4 lists from preprocess_extractions function
 ext_images, ext_data = extraction_obj.preprocess_extractions(wanted_w, wanted_h, export_w, export_h, max_piece_percent)
-#obj.plot_bounding_boxes_with_names()
-
+#extraction_obj.plot_bounding_boxes_with_names()
+#'''
 ########### ComponentClassifierTraining ################
 data_set_name = 'Training_Samples_64_classes_100x100_all'
 dropout = 0
 training_obj = ComponentClassifierTraining(PATH, data_set_name, num_classes, dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL)
-#training_obj.train(1)
+training_obj.shuffle_data(training_obj.load_data(PATH,data_set_name),1000)
+training_obj.model = training_obj.load_sketch_a_net_model(dropout, num_classes, training_obj.X_train.shape[1:])
+
+#training_obj.train(100)
+#training_obj.save(name)
 training_obj.model.load_weights(PATH+name+'.h5')
 
 trained_model = training_obj.model
-#training_obj.save(PATH+name)
+
 ############### ComponentClassifierPredict ################
 prediction_obj = ComponentClassifierPredict(min_percent_match, min_confidence)
 
 ext_class_index, ext_class_name, \
 ext_match_first_max_percent, \
 ext_match_second_max_percent = prediction_obj.predict_classes(ext_images,trained_model)
-
+#'''
 labelling_obj = ExtractionLabelling(PATH,
                           ext_images, ext_data,ext_class_index, ext_class_name, 
                           num_classes, img_rows, img_cols)
 
-labelling_obj.define_model(trained_model)
-labelling_obj.select_good_bounding_boxes(image, "all_" + str(image_index))
+#labelling_obj.define_model(trained_model)
+#labelling_obj.select_good_bounding_boxes(image, "all_" + str(image_index))
 labelling_obj.plot_ground_truths(image, "all_" + str(image_index))
+'''
+data_set_name = 'Training_Samples_64_classes_100x100_all'
+start = 600 # smallest sample size to be tested
+end = 800 # largest sample size to be tested
+step = 100 # steps in sample sizes
+list_of_n = list(np.arange(start,end+1,step)) # list of sample sizes
+k = 50 # number of times the samples size is tested
+list_of_images = list(np.arange(0,200+1,5)) # list of images to be tested on
+iters = 50 # number of iterations in testing, also used for file naming
+testing_obj = TestingClass(PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
 
+for n in list_of_n:
+    for i in range(k):
+        
+        testing_obj = TestingClass(PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
+        gc.collect()
+        seed = 1000+n+i
+        testing_obj.test_classifier(PATH+data_set_name, 
+                                    TRAINING_RATIO_TRAIN, 1, 
+                                    n, iters, seed)
+        testing_obj=None
+        gc.collect()
+        
+'''
 
+#%% 
+PATH = '/home/chloong/Desktop/Justin San Juan/Testing Folder/'
 
+# image_set = np.load(PATH+'all_training_images.npy')
+name = 'Sketch-a-Net_64_classes_100x100_0.0_all_100epochs'
+  
+data_set_name = 'Training_Samples_64_classes_100x100_all'
+start = 20000 # smallest sample size to be tested
+end =21000 # largest sample size to be tested
+step = 1000 # steps in sample sizes
+list_of_n = list(np.arange(start,end+1,step)) # list of sample sizes
+k = 10 # number of times the samples size is tested
+#list of_images = list(np.arange(0,200+1,5)) # list of images to be tested on
+iters = 150 # number of iterations in testing, also used for file naming
+testing_obj = TestingClass(PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
 
+for n in list_of_n:
+    for i in range(k):
+        
+        testing_obj = TestingClass(PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
+        gc.collect()
+        seed = 1038+n+i
+        testing_obj.test_classifier_remapped(PATH+data_set_name, 
+                                    TRAINING_RATIO_TRAIN, 1, 
+                                    n, iters, seed)
+        testing_obj=None
+        gc.collect()
 
-#%%   
+#%%
+image = np.asarray(  
+        [[0,0,0,1,0,0,0,0,0,0],
+         [0,0,1,1,0,0,0,1,1,0],
+         [0,0,0,1,0,0,1,0,0,1],
+         [0,0,0,1,0,0,0,1,1,1],
+         [0,0,0,1,0,0,0,0,0,1],
+         [0,0,0,1,0,0,0,0,0,1],
+         [0,0,0,0,0,1,0,1,0,1],
+         [0,0,0,0,0,0,0,0,0,0],
+         [0,0,0,0,0,0,0,0,0,0]])
+data = [(1,0,4,7),(5,0,5,8)]
 
-
-
+extraction_obj = ExtractionPreprocessing(image, '', data)
+gt_extraction_list, gt_extraction_data = extraction_obj.preprocess_extractions(wanted_w, wanted_h, export_w, export_h,
+                                                max_piece_percent)
+b = np.asarray(
+        [[0,1],
+         [1,1],
+         [0,1],
+         [0,1],
+         [0,1],
+         [0,1]])
+c = np.asarray(
+        [[0,0,0,0,0],
+         [0,0,1,1,0],
+         [0,1,0,0,1],
+         [0,0,1,1,1],
+         [0,0,0,0,1],
+         [0,0,0,0,1],
+         [0,0,1,0,1],
+         [0,0,0,0,0]])
  #%%
     # Create/reset list of images, coordinates (x,y,w,h) data, class indices, class names, and top three percentage matches
 ext_images=[]

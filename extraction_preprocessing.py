@@ -4,6 +4,7 @@ from skimage import measure
 #import selectivesearch
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import gc
 
 class ExtractionPreprocessing(object):
     """
@@ -22,15 +23,15 @@ class ExtractionPreprocessing(object):
         self.ext_class_name = [None] # to be replaced by array of zeros
         self.temp_x = 0
         self.temp_y = 0
+        gc.enable()
 
     def resize_extraction(self, extraction, x, y, w, h, wanted_w, wanted_h, export_w, export_h):
         """
         resize an extraction by reducing its longest side to the most limiting length (width or height)
         then pads the extra space
         """
+
         subsample_length=max((w/wanted_w),(h/wanted_h))
-        if subsample_length == 0:
-            return
         extraction1 = np.zeros((int(np.ceil(h/subsample_length)),int(np.ceil(w/subsample_length))))
         extraction1 = np.asmatrix(extraction1)
         for u in range(int(h)):
@@ -74,50 +75,60 @@ class ExtractionPreprocessing(object):
     
     def trim_extraction(self, extraction, x, y, w, h):
     ############## Adjust extraction window to remove excess empty area ##############
-
         black = np.array(np.where(extraction == 1))
         if black.shape[1] == 0:
-            return
+            return []
         x1=min(black[1])
-        x2=max(black[1])
+        x2=max(black[1])+1
         y1=min(black[0])
-        y2=max(black[0])
+        y2=max(black[0])+1
         extraction = extraction[y1:y2,x1:x2]
-        extraciton = np.asmatrix(extraction)
+        extraction = np.asmatrix(extraction)
 
         self.x = int(x + x1)
         self.y = int(y + y1)
         self.w = int(x2-x1)
         self.h = int(y2-y1)
-
+#        print(x)
+#        print(y)
+#        print(w)
+#        print(h)
+#        print(self.x)
+#        print(self.y)
+#        print(self.w)
+#        print(self.h)
+#        
         return extraction
     
     def remove_unconnected_edge_pieces(self, extraction, max_piece_percent):
     ########################## Remove unconnected edge pieces #######################
         #####Get array of different connected components, and record highest label number in max_label
-        labelled_array, max_label = measure.label(extraction, background=0, connectivity=1, return_num=True)
+        extraction = np.asarray(extraction)
+        labelled_array, max_label = measure.label(extraction, background=0, connectivity=2, return_num=True)
             
         largest_array_index = 0
         largest_array_count = 0
         array_height = labelled_array.shape[0]
         array_width = labelled_array.shape[1]
-        total_pixels = len(np.where(labelled_array!=0))
+        total_pixels = len(np.where(labelled_array!=0)[0])
         ##### Parse through all labelled pieces to get largest piece
         for q in range(1,max_label+1):
             num_black = len(np.where(labelled_array == q)[0])
             if num_black > largest_array_count:
                 largest_array_count = num_black
                 largest_array_index = q
-
+        
         ##### Parse through all labelled pieces except largest piece again and delete piece if on edge and not part of largest object
         for q in range(1,max_label+1):
             array_coords = np.where(labelled_array==q)
-            piece_percent = len(array_coords)/total_pixels
+#            print(array_coords)
+#            print(total_pixels)
+            piece_percent = len(array_coords[0])/total_pixels
             if q != largest_array_index and (min(array_coords[0]) == 0 or min(array_coords[1]) == 0 or max(array_coords[0])==array_height-1 
                 or max(array_coords[1])==array_width-1) and piece_percent <= max_piece_percent:
                     # for all of the given coordinates of the labelled piece, change it to 0 (remove)
                 extraction[array_coords[0],array_coords[1]]=0
-    
+            
         return extraction
     # Edge-trim, remove unconnected edge pieces, then trim & resize
     def preprocess_extractions(self, wanted_w, wanted_h, export_w, export_h,
@@ -128,17 +139,47 @@ class ExtractionPreprocessing(object):
             self.x, self.y,self.w, self.h = 0,0,0,0 #reset self coordinates
             # Given x,y,w,h, store each extraction and coordinates in lists    
             extraction = np.copy(self.image[y:y+h,x:x+w])
+#            fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
+#            ax.imshow(extraction)
+#            plt.show()
             
-            labelled_array, max_label = measure.label(extraction, background=0, connectivity=1, return_num=True)
+            labelled_array, max_label = measure.label(extraction, background=False, connectivity=True, return_num=True)
             
             # skip if array is empty
-            if max_label == 0: continue 
-
+            if max_label == 0:
+                extraction = np.zeros((100,100))
+#                fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
+#                ax.imshow(extraction)
+#                plt.show()
+                self.ext_images.append(extraction)
+                self.ext_data.append((x,y,w,h))
+                continue
+            extraction = np.asarray(extraction)
+#            fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
+#            ax.imshow(extraction)
+#            plt.show()
+            
+            
             extraction = self.trim_extraction(extraction, x, y, w, h)
+#            fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
+#            ax.imshow(extraction)
+#            plt.show()
+            
             extraction = self.remove_unconnected_edge_pieces(extraction, max_piece_percent)
+#            fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
+#            ax.imshow(extraction)
+#            plt.show()
+            
             extraction = self.trim_extraction(extraction, self.x,self.y,self.w,self.h)
+#            fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
+#            ax.imshow(extraction)
+#            plt.show()
+            
             extraction = self.resize_extraction(extraction, self.x, self.y, self.w, self.h, wanted_w, wanted_h, export_w, export_h)
             
+#            fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
+#            ax.imshow(extraction)
+#            plt.show()
             self.ext_images.append(extraction) #record the image array in list with first index = 0
             self.ext_data.append((self.x,self.y,self.w,self.h)) #record the (x,y,w,h) coordinates as tuples with first index = 0, this list data will be used for the reconstruction of the system (since coordinates are saved here)
 

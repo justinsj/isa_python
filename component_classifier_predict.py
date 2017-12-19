@@ -63,9 +63,34 @@ class ComponentClassifierPredict(object):
         index = (prediction[0]).tolist().index(first_max)
         
         
-        
         return index, first_max, second_max 
-
+    def select_best_prediction(self,prediction_list,percentage_matches):
+        '''
+        Get the index of highest percentage match
+        Prediction list has list of indices predicted
+        Percentage matches has list of percent matches with indices in prediction list
+        '''
+        index = prediction_list[prediction_list.index(max(prediction_list))]
+        return index
+    
+    def mode(self,arr):
+        dict = {}
+        for x in range(0,len(arr)):
+            count = 1
+            if arr[x] in dict:
+                count = count + dict[arr[x]]
+            dict[arr[x]] = count
+        return max(dict, key=dict.get), arr.count(max(dict, key=dict.get))
+    
+    def select_most_common_prediction(self, prediction_list):
+        total_number_of_models = len(prediction_list)
+        needed_number_to_agree = int(np.ceil(total_number_of_models/2))
+        most_common_index, count = self.mode(prediction_list)
+        index = 23 #random class
+        if count >= needed_number_to_agree:
+            index = most_common_index
+        return index
+	
     def use_entropy(self, index, first_max, second_max):
         """ Prediction for a single image """
 
@@ -81,9 +106,11 @@ class ComponentClassifierPredict(object):
 
 
     def predict_classes(self, ext_images, model):
-
-        if len(ext_images) == 0: return
-
+        if type(ext_images) is list:
+            if len(ext_images) == 0: return
+        if type(ext_images) is np.ndarray:
+            if ext_images.shape[1] == 0: return
+        
         # Initialization
         ext_class_index = []
         ext_class_name = []
@@ -151,8 +178,9 @@ class ComponentClassifierPredict(object):
 
     def map_index(self, index):
         """ Adjust all class index """
-        mapped_index = None
+        mapped_index = index
 
+            #adjust predictions to merge clockwise moments
         if index >= 14 and index <= 17:
             mapped_index = 14    
         elif index >= 18 and index <= 21:
@@ -190,7 +218,6 @@ class ComponentClassifierPredict(object):
             mapped_index = self.map_index(index)
             adjusted_ext_class_index.append(mapped_index)
             adjusted_ext_class_name.append(target_names[mapped_index])
-
         return adjusted_ext_class_index, adjusted_ext_class_name
 
     def calculate_recall(self):
