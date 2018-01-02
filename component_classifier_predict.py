@@ -26,8 +26,8 @@ class ComponentClassifierPredict(object):
         Input: (100,100) image /matrix
         Output: (None,100,100,1)
         '''
-        if image.shape == (100,100):
-            expanded_image = image
+        expanded_image = image
+        if image.shape == (100,100):    
             if num_channel == 1:
                 # Classifier only needs 1 channel
                 if K.image_dim_ordering() =='th':

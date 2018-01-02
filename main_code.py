@@ -1,28 +1,13 @@
 #%%
-%load_ext autoreload
-%autoreload 2
+#%load_ext autoreload
+#%autoreload 2
 from __future__ import print_function
 import numpy as np
 
-from random import sample
-import keras
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Flatten
-from keras.layers import Conv2D, MaxPooling2D
-from keras.models import model_from_json
-from keras.models import load_model
-from keras import backend as K
 
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-
-from skimage import filters
-from skimage.filters import threshold_local
 import random
 
-import selectivesearch
-
-from skimage import measure
 import cv2
 import time
 
@@ -32,10 +17,6 @@ from extraction_labelling import ExtractionLabelling
 from component_classifier_training import ComponentClassifierTraining
 from component_classifier_predict import ComponentClassifierPredict
 from testing_class import TestingClass
-from constants import target_names_all, target_names
-from PIL import Image
-from helper_functions import print_image_bw
-
 
 import gc
 gc.enable()
@@ -249,7 +230,7 @@ for i in range(30):
     
     training_obj.train(200,seed)
     training_obj.model.load_weights(name+'_'+str(i)+'.h5')
-    training_obj.
+#    training_obj.
 #%%
 '''
 Test rotations
@@ -257,7 +238,6 @@ Test rotations
 import numpy as np
 import argparse
 import imutils
-import cv2
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True,
@@ -293,6 +273,7 @@ image = np.asarray(
 
     
 #%%
+from PIL import Image
 PATH = '/home/chloong/Desktop/Justin San Juan/Testing Folder/'
 src_im = Image.open(PATH + "sample01.JPG")
 angle = 5

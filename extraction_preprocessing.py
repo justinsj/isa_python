@@ -198,8 +198,8 @@ class ExtractionPreprocessing(object):
         Create fig1, ax1, create single subplot, then draw bounding boxes x, y, w, h and save figure with name of model
         """
         # Draw rectangles on the original image
-        fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(25, 25))
-        ax.imshow(self.image)
+        fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(15, 15))
+        ax.imshow(self.image, cmap = 'binary')
         for x, y, w, h in self.adjusted_set: #or in candidates
             rect = mpatches.Rectangle(
                 (x, y), w, h, fill=False, edgecolor='red', linewidth=1)

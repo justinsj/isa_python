@@ -227,6 +227,42 @@ class ComponentSegmentation(object):
                 self.premerged_set = list(merged_set)
             self.merged_set = list(merged_set)
 
+    def selective_search_on_image(self, scale_input, sigma_input, min_size_input):
+        self.premerged_set = []
+        image_temp = np.copy(self.image)
+        temp = np.zeros([image_temp.shape[0], image_temp.shape[1], 3])
+        temp[:, :, 0] = image_temp
+        temp[:, :, 1] = image_temp
+        temp[:, :, 2] = image_temp
+        image_temp = temp
+        img_lbl, regions = selectivesearch.selective_search(image_temp, scale_input, sigma_input, min_size_input)
+        # each r in regions is a dictionary (rect: x, y, w, h; size: n ...)
+        for r in regions:
+
+            # exclude regions smaller than min_area pixels, tuneable
+            if r['size'] < self.min_area:
+                continue
+            
+            x, y, w, h = r['rect']
+            x1 = x
+            x2 = x + w 
+            y1 = y
+            y2 = y + h
+
+            cropped_region = self.image[y1:y2, x1:x2] 
+
+            # get number of pixels in each connected component and store in black_spot
+            black_spot = np.array(np.where(cropped_region == 1))
+            
+            # filter those with very few black dots (noise)
+            if black_spot.shape[1] < self.min_black: continue
+            if float(black_spot.shape[1]) / (w * h) < self.min_black_ratio: continue
+            
+
+            ls = list(r['rect'])
+            
+                #add ls as list into self.premerged_set as tuple of (x,y,w,h) , which will be merged based on overlap
+            self.premerged_set.append(tuple(ls))
     def separate_unconnected_segments(self, scale_input, sigma_input, min_size_input):
         """
         a. Separate unconnected segments using measure.label.
@@ -327,8 +363,14 @@ class ComponentSegmentation(object):
             
                 #add ls as list into self.premerged_set as tuple of (x,y,w,h) , which will be merged based on overlap
             self.premerged_set.append(tuple(ls))
-            
-
+    def plot_bounding_boxes(self):
+        fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(15, 15))
+        ax.imshow(self.image, cmap = 'binary')
+        for x, y, w, h in self.merged_set: #or in candidates
+            rect = mpatches.Rectangle(
+                (x, y), w, h, fill=False, edgecolor='red', linewidth=1)
+            ax.add_patch(rect)
+        plt.show()
     def search(self, scale_input, sigma_input, min_size_input):
         """
         1.  a) Separate unconnected segments
@@ -344,4 +386,8 @@ class ComponentSegmentation(object):
         List of bounding boxes & extraction arrays self.merged_set
         """
         self.separate_unconnected_segments(scale_input, sigma_input, min_size_input) 
+#        self.selective_search_on_image(scale_input, sigma_input, min_size_input)
         self.merge_set()
+        self.plot_bounding_boxes()
+        
+    
