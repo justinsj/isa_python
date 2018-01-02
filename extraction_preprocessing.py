@@ -130,52 +130,58 @@ class ExtractionPreprocessing(object):
                 extraction[array_coords[0],array_coords[1]]=0
             
         return extraction
+    
+    def preprocess_extraction(self,extraction, wanted_w, wanted_h, export_w, export_h,
+                                                max_piece_percent, x, y, w, h):
+        self.x, self.y,self.w, self.h = 0,0,0,0
+        labelled_array, max_label = measure.label(extraction, background=False, connectivity=True, return_num=True)
+        
+        # skip if array is empty
+        if max_label == 0:
+            extraction = np.zeros((100,100))
+#                fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
+#                ax.imshow(extraction)
+#                plt.show()
+            return extraction
+        
+        extraction = np.asarray(extraction)
+#            fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
+#            ax.imshow(extraction)
+#            plt.show()
+                    
+        extraction = self.trim_extraction(extraction, x, y, w, h)
+#            fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
+#            ax.imshow(extraction)
+#            plt.show()
+        
+        extraction = self.remove_unconnected_edge_pieces(extraction, max_piece_percent)
+#            fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
+#            ax.imshow(extraction)
+#            plt.show()
+        
+        extraction = self.trim_extraction(extraction, self.x,self.y,self.w,self.h)
+#            fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
+#            ax.imshow(extraction)
+#            plt.show()
+        
+        extraction = self.resize_extraction(extraction, self.x, self.y, self.w, self.h, wanted_w, wanted_h, export_w, export_h)
+            
+        return extraction
+    
     # Edge-trim, remove unconnected edge pieces, then trim & resize
     def preprocess_extractions(self, wanted_w, wanted_h, export_w, export_h,
                                                 max_piece_percent):
+            
         self.ext_images = []
         self.ext_data = []
         for x, y, w, h in self.adjusted_set:
-            self.x, self.y,self.w, self.h = 0,0,0,0 #reset self coordinates
+             #reset self coordinates
             # Given x,y,w,h, store each extraction and coordinates in lists    
             extraction = np.copy(self.image[y:y+h,x:x+w])
 #            fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
 #            ax.imshow(extraction)
 #            plt.show()
-            
-            labelled_array, max_label = measure.label(extraction, background=False, connectivity=True, return_num=True)
-            
-            # skip if array is empty
-            if max_label == 0:
-                extraction = np.zeros((100,100))
-#                fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
-#                ax.imshow(extraction)
-#                plt.show()
-                self.ext_images.append(extraction)
-                self.ext_data.append((x,y,w,h))
-                continue
-            extraction = np.asarray(extraction)
-#            fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
-#            ax.imshow(extraction)
-#            plt.show()
-            
-            
-            extraction = self.trim_extraction(extraction, x, y, w, h)
-#            fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
-#            ax.imshow(extraction)
-#            plt.show()
-            
-            extraction = self.remove_unconnected_edge_pieces(extraction, max_piece_percent)
-#            fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
-#            ax.imshow(extraction)
-#            plt.show()
-            
-            extraction = self.trim_extraction(extraction, self.x,self.y,self.w,self.h)
-#            fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
-#            ax.imshow(extraction)
-#            plt.show()
-            
-            extraction = self.resize_extraction(extraction, self.x, self.y, self.w, self.h, wanted_w, wanted_h, export_w, export_h)
+            extraction = self.preprocess_extraction(extraction, wanted_w,wanted_h, export_w, export_h, max_piece_percent, x, y, w, h)
             
 #            fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
 #            ax.imshow(extraction)

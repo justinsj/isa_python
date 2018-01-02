@@ -89,9 +89,15 @@ class TestingClass(object):
         ext_match_first_max_percent, ext_match_second_max_percent = prediction_obj.predict_classes(ground_truth_images,trained_model)
         return ext_class_index
     
-    def predict_from_gt_image(self,ground_truth_image, trained_model):
+    def predict_from_gt_image(self,ground_truth_image, trained_model_1, trained_model_2=None, trained_model_3=None):
+        
         prediction_obj = ComponentClassifierPredict(0.7,0.3)
-        index, first_max, second_max = prediction_obj.predict_class(ground_truth_image,trained_model)
+        if trained_model_2 != None and trained_model_3 != None:
+            index_1, first_max_1, second_max_1, index_2, first_max_2, second_max_2, index_3, first_max_3, second_max_3 = prediction_obj.predict_class(ground_truth_image,trained_model_1, trained_model_2, trained_model_3)
+            index = prediction_obj.select_most_common_prediction([index_1,index_2,index_3])
+        else:
+#            index, first_max, second_max = prediction_obj.predict_class(ground_truth_image,trained_model_1)
+            index = prediction_obj.predict_class_with_rotations(ground_truth_image,trained_model_1)
         return index
     
     def load_gt_array(self,gt_image_num):
@@ -169,6 +175,25 @@ class TestingClass(object):
         duration = end-start
         print('time elapsed updating answers using list = ' + str(duration))
         
+    def mode(self,arr):
+        dict = {}
+        for x in range(0,len(arr)):
+            count = 1
+            if arr[x] in dict:
+                count = count + dict[arr[x]]
+            dict[arr[x]] = count
+        return max(dict, key=dict.get), arr.count(max(dict, key=dict.get))
+
+
+    def select_most_common_prediction(self, prediction_list):
+        total_number_of_models = len(prediction_list)
+        needed_number_to_agree = int(np.ceil(total_number_of_models/2))
+        most_common_index, count = self.mode(prediction_list)
+        index = 23 #random class
+        if count >= needed_number_to_agree:
+            index = most_common_index
+        return index
+    
     def test_classifier(self, training_dataset_filename, train_ratio, k,list_of_n,iters,seed): 
         #training_dataset_filename example: Training_Samples_64_classes_100x100_all
         # ground_truth_filename example: all_44
@@ -188,10 +213,9 @@ class TestingClass(object):
         if (type(list_of_n) is int) or (type(list_of_n) is np.int64) or (type(list_of_n) is float): 
             print('n was int')
             list_of_n = [list_of_n]
-#            n_was_list = False
         step = 5
         list_images = list(map(int,np.arange(0,150,step)))
-#        gt_image_set = np.load(self.PATH+'all_training_images.npy').astype(bool)[:,:,list_images]
+
         
         gc.collect()
         for n in list_of_n:
@@ -199,12 +223,11 @@ class TestingClass(object):
                 gc.collect()
                 prediction_indices = []
                 ground_truth_indices = []
-#                print(seed)
+
                 seed = int(random.random()*10000)
                 random.seed(seed)
                 f = open(self.PATH+'testing_results_'+str(iters)+'.txt','a')
                 print('n = ' + str(n) + ', k = ' +str(i+1))
-                # pick random training samples
                 # train model
                 training_obj = ComponentClassifierTraining(self.PATH, "Training_Samples_64_classes_100x100_all", 64, 0, train_ratio, 1-train_ratio)
                 training_obj.X_train, training_obj.y_train, training_obj.X_val, training_obj.y_val, training_obj.X_test, training_obj.y_test = training_obj.shuffle_data(self.pick_random_training_samples(training_dataset_filename, n,seed),seed)
@@ -224,10 +247,7 @@ class TestingClass(object):
                     if not(os.path.isfile(gt_data_path_string)): continue
                     
                     GT_array = self.load_gt_array(gt_image_num*5)
-#                        fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
-#                        ax.imshow(gt_image)
-#                        plt.show()
-#                    gt_image = gt_image_set[:,:,gt_image_num].astype(bool)
+
                     gt_image = np.load(self.PATH+'all_training_images_1.npy').astype(bool)[:,:,gt_image_num*step]
                     
                     gt_extraction_list_temp, gt_indices_list_temp = self.process_gt_image_extractions(gt_image, GT_array)
@@ -247,26 +267,12 @@ class TestingClass(object):
                         ground_truth_index = gt_indices_list[gt_extraction_num]
                         prediction_indices.append(prediction_index)
                         ground_truth_indices.append(ground_truth_index)
-                        
-#                        fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
-#                        ax.imshow(gt_extraction_list[gt_extraction_num])
-#                        plt.show()
-#
-#                        print('prediction_index')
-#                        print(prediction_index)
-#                        print('ground_truth_index')
-#                        print(ground_truth_index)
 
-                # calculate accuracy & return string
                 print(ground_truth_indices)
                 print(prediction_indices)
                 
                 accuracy = calculate_accuracy(prediction_indices, ground_truth_indices)
-                
-#                x.append(n)
-#                y.append(accuracy)
-#                print(accuracy)
-#                print(y)
+
                 gc.collect()
                     
                 f.writelines(str(n)+' '+str(accuracy)+'\n')
@@ -274,18 +280,7 @@ class TestingClass(object):
                 del training_obj
                 del trained_model
                 gc.collect()
-#        if n_was_list == True:
-#            #plot and save graph
-#            x = np.asarray(x)
-#            y = np.asarray(y)
-#            fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (15,15))
-#            ax.scatter(x,y)
-#            ax.set_xlabel("Training Samples Size")
-#            ax.set_ylabel("Accuracy")
-#            plt.show()
-#            ax.figure.savefig("Accuracy Scatterplot for "+str(k*int(len(list_of_n)))+'_'+" samples")
-        
-#        max_accuracy = max(y)
+
         del prediction_indices
         del ground_truth_indices
         gc.collect()
@@ -445,6 +440,265 @@ class TestingClass(object):
 #        max_accuracy = max(y)
         del prediction_indices
         del ground_truth_indices
+        gc.collect()
+        
+        return
+    def test_classifier_remapped_load_1_model(self, training_dataset_filename, train_ratio, k,list_of_n,iters,seed): 
+        #training_dataset_filename example: Training_Samples_64_classes_100x100_all
+        # ground_truth_filename example: all_44
+        #test n number of samples
+        #for k times
+        
+        '''
+        Inputs: image, ground_truth_data, ground_truth_index
+        Outputs: accuracy of model classifier only (using same segmentations of ground truth)
+        '''
+        random.seed(seed)
+#        x=[]
+#        y=[]
+        
+#        n_was_list = True
+        # load ground truth data        
+        if (type(list_of_n) is int) or (type(list_of_n) is np.int64) or (type(list_of_n) is float): 
+            print('n was int')
+            list_of_n = [list_of_n]
+#            n_was_list = False
+        step = 5
+        list_images = list(map(int,np.arange(0,150,step)))
+#        gt_image_set = np.load(self.PATH+'all_training_images.npy').astype(bool)[:,:,list_images]
+        
+        gc.collect()
+        for n in list_of_n:
+            gc.collect()
+            prediction_indices = []
+            ground_truth_indices = []
+#                print(seed)
+            seed = int(random.random()*10000)
+            random.seed(seed)
+            
+            f = open(self.PATH+'testing_results_'+str(iters)+'.txt','a')
+            print('n = ' + str(n) + ', k = ' +str(k+1))
+            # pick random training samples
+            # train model
+            training_obj = ComponentClassifierTraining(self.PATH, "Training_Samples_64_classes_100x100_all", 64, 0, train_ratio, 1-train_ratio)
+            training_obj.X_train, training_obj.y_train, training_obj.X_val, training_obj.y_val, training_obj.X_test, training_obj.y_test = training_obj.shuffle_data(self.pick_random_training_samples(training_dataset_filename, n,seed),seed)
+            training_obj.model = training_obj.load_sketch_a_net_model(0, 64, training_obj.X_train.shape[1:])
+            
+            training_obj.model.load_weights('Sketch-a-Net_64_classes_100x100_0.0_all_100epochs_21.h5')
+            trained_model_1 = training_obj.model
+            
+            training_obj = None
+            gc.collect()
+            # test on all samples
+            for gt_image_num in range(len(list_images)):
+                gc.collect()
+                print('testing on image number: ' + str(gt_image_num*step))
+                gt_data_path_string = self.PATH+'GT/'+'GT_all_'+str(gt_image_num*step)+'.txt'
+                
+                if not(os.path.isfile(gt_data_path_string)): continue
+                
+                GT_array = self.load_gt_array(gt_image_num*5)
+#                        fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
+#                        ax.imshow(gt_image)
+#                        plt.show()
+#                    gt_image = gt_image_set[:,:,gt_image_num].astype(bool)
+                gt_image = np.load(self.PATH+'all_training_images_1.npy').astype(bool)[:,:,gt_image_num*step]
+                
+                gt_extraction_list_temp, gt_indices_list_temp = self.process_gt_image_extractions(gt_image, GT_array)
+                
+                gt_indices_list = []
+                gt_extraction_list = []
+                #remove class 23's from extractions
+                for gt_list_index in range(len(gt_indices_list_temp)):
+                    if (int(gt_indices_list_temp[gt_list_index]) != 23) and (int(gt_indices_list_temp[gt_list_index]) < 48):
+                        gt_indices_list.append(gt_indices_list_temp[gt_list_index])
+                        gt_extraction_list.append(gt_extraction_list_temp[gt_list_index])
+                
+                for gt_extraction_num in range(len(gt_indices_list)):
+                    gc.collect()
+                    prediction_index = self.map_index(self.predict_from_gt_image(gt_extraction_list[gt_extraction_num], trained_model_1))
+                    ground_truth_index = self.map_index(gt_indices_list[gt_extraction_num])
+                    
+                    prediction_indices.append(prediction_index)
+                    ground_truth_indices.append(ground_truth_index)
+                    
+#                        fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
+#                        ax.imshow(gt_extraction_list[gt_extraction_num])
+#                        plt.show()
+#
+#                        print('prediction_index')
+#                        print(prediction_index)
+#                        print('ground_truth_index')
+#                        print(ground_truth_index)
+
+            # calculate accuracy & return string
+            print(ground_truth_indices)
+            print(prediction_indices)
+            
+            accuracy = calculate_accuracy(prediction_indices, ground_truth_indices)
+            
+#                x.append(n)
+#                y.append(accuracy)
+#                print(accuracy)
+#                print(y)
+            gc.collect()
+                
+            f.writelines(str(n)+' '+str(accuracy)+' '+str(k)+'\n')
+            f.close()
+
+            gc.collect()
+#        if n_was_list == True:
+#            #plot and save graph
+#            x = np.asarray(x)
+#            y = np.asarray(y)
+#            fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (15,15))
+#            ax.scatter(x,y)
+#            ax.set_xlabel("Training Samples Size")
+#            ax.set_ylabel("Accuracy")
+#            plt.show()
+#            ax.figure.savefig("Accuracy Scatterplot for "+str(k*int(len(list_of_n)))+'_'+" samples")
+        
+#        max_accuracy = max(y)
+
+        gc.collect()
+        
+        return
+    
+    def test_classifier_remapped_load_3_models(self, training_dataset_filename, train_ratio, k,list_of_n,iters,list_images,seed): 
+        #training_dataset_filename example: Training_Samples_64_classes_100x100_all
+        # ground_truth_filename example: all_44
+        #test n number of samples
+        #for k times
+        
+        '''
+        Inputs: image, ground_truth_data, ground_truth_index
+        Outputs: accuracy of model classifier only (using same segmentations of ground truth)
+        '''
+        random.seed(seed)
+#        x=[]
+#        y=[]
+        
+#        n_was_list = True
+        # load ground truth data        
+        if (type(list_of_n) is int) or (type(list_of_n) is np.int64) or (type(list_of_n) is float): 
+            print('n was int')
+            list_of_n = [list_of_n]
+#            n_was_list = False
+#        gt_image_set = np.load(self.PATH+'all_training_images.npy').astype(bool)[:,:,list_images]
+        
+        gc.collect()
+        for n in list_of_n:
+            gc.collect()
+            prediction_indices = []
+            ground_truth_indices = []
+#                print(seed)
+            seed = int(random.random()*10000)
+            random.seed(seed)
+            
+            f = open(self.PATH+'testing_results_'+str(iters)+'.txt','a')
+            print('n = ' + str(n) + ', k = ' +str(k+1))
+            # pick random training samples
+            # train model
+            training_obj = ComponentClassifierTraining(self.PATH, "Training_Samples_64_classes_100x100_all", 64, 0, train_ratio, 1-train_ratio)
+            training_obj.X_train, training_obj.y_train, training_obj.X_val, training_obj.y_val, training_obj.X_test, training_obj.y_test = training_obj.shuffle_data(self.pick_random_training_samples(training_dataset_filename, n,seed),seed)
+            training_obj.model = training_obj.load_sketch_a_net_model(0, 64, training_obj.X_train.shape[1:])
+            
+#            training_obj.model.load_weights('Sketch-a-Net_64_classes_100x100_0.0_all_100epochs_5.h5')
+#            trained_model_1 = training_obj.model
+
+            gc.collect()
+            # test on all samples
+            for gt_image_num in list_images:
+                gc.collect()
+                print('testing on image number: ' + str(gt_image_num))
+                gt_data_path_string = self.PATH+'GT/'+'GT_all_'+str(gt_image_num)+'.txt'
+                
+                if not(os.path.isfile(gt_data_path_string)): continue
+                
+                GT_array = self.load_gt_array(gt_image_num)
+#                        fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
+#                        ax.imshow(gt_image)
+#                        plt.show()
+#                    gt_image = gt_image_set[:,:,gt_image_num].astype(bool)
+                if gt_image_num <400:
+                    gt_image = np.load(self.PATH+'all_training_images_1.npy').astype(bool)[:,:,gt_image_num]
+                elif gt_image_num >=400 and gt_image_num <800:
+                    gt_image = np.load(self.PATH+'all_training_images_2.npy').astype(bool)[:,:,gt_image_num-400]
+                elif gt_image_num >=800 and gt_image_num <1200:
+                    gt_image = np.load(self.PATH+'all_training_images_3.npy').astype(bool)[:,:,gt_image_num-800]
+                elif gt_image_num >=1200 and gt_image_num <1600:
+                    gt_image = np.load(self.PATH+'all_training_images_4.npy').astype(bool)[:,:,gt_image_num-1200]
+                
+                gt_extraction_list_temp, gt_indices_list_temp = self.process_gt_image_extractions(gt_image, GT_array)
+                
+                gt_indices_list = []
+                gt_extraction_list = []
+                #remove class 23's from extractions
+                for gt_list_index in range(len(gt_indices_list_temp)):
+                    if (int(gt_indices_list_temp[gt_list_index]) != 23) and (int(gt_indices_list_temp[gt_list_index]) < 48):
+                        gt_indices_list.append(gt_indices_list_temp[gt_list_index])
+                        gt_extraction_list.append(gt_extraction_list_temp[gt_list_index])
+                
+                for gt_extraction_num in range(len(gt_indices_list)):
+                    gc.collect()
+                    
+                    training_obj.model.load_weights('Sketch-a-Net_64_classes_100x100_0.0_all_100epochs_5.h5')
+                    trained_model_1 = training_obj.model
+                    prediction_index_1 = self.map_index(self.predict_from_gt_image(gt_extraction_list[gt_extraction_num], trained_model_1))
+                    
+                    training_obj.model.load_weights('Sketch-a-Net_64_classes_100x100_0.0_all_100epochs_18.h5')
+                    trained_model_2 = training_obj.model
+                    prediction_index_2 = self.map_index(self.predict_from_gt_image(gt_extraction_list[gt_extraction_num], trained_model_2))
+                    
+                    training_obj.model.load_weights('Sketch-a-Net_64_classes_100x100_0.0_all_100epochs_21.h5')
+                    trained_model_3 = training_obj.model
+                    prediction_index_3 = self.map_index(self.predict_from_gt_image(gt_extraction_list[gt_extraction_num], trained_model_3))
+                    
+                    prediction_index = self.select_most_common_prediction([prediction_index_1,prediction_index_2,prediction_index_3])
+                    
+                    ground_truth_index = self.map_index(gt_indices_list[gt_extraction_num])
+                    
+                    prediction_indices.append(prediction_index)
+                    ground_truth_indices.append(ground_truth_index)
+                    
+#                        fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (5,5))
+#                        ax.imshow(gt_extraction_list[gt_extraction_num])
+#                        plt.show()
+#
+#                        print('prediction_index')
+#                        print(prediction_index)
+#                        print('ground_truth_index')
+#                        print(ground_truth_index)
+
+            # calculate accuracy & return string
+            print(ground_truth_indices)
+            print(prediction_indices)
+            
+            accuracy = calculate_accuracy(prediction_indices, ground_truth_indices)
+            
+#                x.append(n)
+#                y.append(accuracy)
+#                print(accuracy)
+#                print(y)
+            gc.collect()
+                
+            f.writelines(str(n)+' '+str(accuracy)+' '+str(k)+'\n')
+            f.close()
+
+            gc.collect()
+#        if n_was_list == True:
+#            #plot and save graph
+#            x = np.asarray(x)
+#            y = np.asarray(y)
+#            fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (15,15))
+#            ax.scatter(x,y)
+#            ax.set_xlabel("Training Samples Size")
+#            ax.set_ylabel("Accuracy")
+#            plt.show()
+#            ax.figure.savefig("Accuracy Scatterplot for "+str(k*int(len(list_of_n)))+'_'+" samples")
+        
+#        max_accuracy = max(y)
+
         gc.collect()
         
         return

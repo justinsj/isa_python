@@ -4,6 +4,9 @@ from random import sample
 from keras import backend as K
 import matplotlib.pyplot as plt
 import numpy as np
+from PIL import Image
+from extraction_preprocessing import ExtractionPreprocessing
+
 
 from constants import target_names_all, target_names
 
@@ -23,47 +26,95 @@ class ComponentClassifierPredict(object):
         Input: (100,100) image /matrix
         Output: (None,100,100,1)
         '''
-
-        expanded_image = image
-        if num_channel == 1:
-            # Classifier only needs 1 channel
-            if K.image_dim_ordering() =='th':
+        if image.shape == (100,100):
+            expanded_image = image
+            if num_channel == 1:
                 # Classifier only needs 1 channel
-                expanded_image = np.expand_dims(expanded_image, axis=0)
-                expanded_image = np.expand_dims(expanded_image, axis=0)
+                if K.image_dim_ordering() =='th':
+                    # Classifier only needs 1 channel
+                    expanded_image = np.expand_dims(expanded_image, axis=0)
+                    expanded_image = np.expand_dims(expanded_image, axis=0)
+                else:
+                    expanded_image = np.expand_dims(expanded_image, axis=3) 
+                    expanded_image = np.expand_dims(expanded_image, axis=0)
             else:
-                expanded_image = np.expand_dims(expanded_image, axis=3) 
-                expanded_image = np.expand_dims(expanded_image, axis=0)
-        else:
-            if K.image_dim_ordering()=='th':
-                # Modify data if using theano instead of tensorflow
-                expanded_image = np.rollaxis(expanded_image, 2,0)
-                expanded_image = np.expand_dims(expanded_image, axis=0)
-            else:
-                # Expand dimensions as needed in classifier
-                expanded_image = np.expand_dims(expanded_image, axis=3)
-                expanded_image = np.expand_dims(expanded_image, axis=0)
+                if K.image_dim_ordering()=='th':
+                    # Modify data if using theano instead of tensorflow
+                    expanded_image = np.rollaxis(expanded_image, 2,0)
+                    expanded_image = np.expand_dims(expanded_image, axis=0)
+                else:
+                    # Expand dimensions as needed in classifier
+                    expanded_image = np.expand_dims(expanded_image, axis=3)
+                    expanded_image = np.expand_dims(expanded_image, axis=0)
                 
         return expanded_image
 
-    def predict_class(self, image, model):
-        if image.shape == (100,100):
-            image = self.expand_dimension(image,3)
-        
-        prediction = model.predict(image)
-        first_max = max(prediction[0])
-        
-        second_max = list(prediction[0])
-        second_max.remove(max(second_max))
-        second_max = max(second_max)
+    def predict_class(self, image, model_1, model_2=None,model_3 = None):
 
+        image = self.expand_dimension(image,3)
+        
+        prediction_1 = model_1.predict(image)
+        first_max_1 = max(prediction_1[0])
+    
+        second_max_1 = list(prediction_1[0])
+        second_max_1.remove(max(second_max_1))
+        second_max_1 = max(second_max_1)
+        
+        index_1 = (prediction_1[0]).tolist().index(first_max_1)
+        
+        if model_2 != None and model_3 != None:
+            prediction_2 = model_2.predict(image)
+            first_max_2 = max(prediction_2[0])
+        
+            second_max_2 = list(prediction_2[0])
+            second_max_2.remove(max(second_max_2))
+            second_max_2 = max(second_max_2)
+            
+            prediction_3 = model_3.predict(image)
+            first_max_3 = max(prediction_3[0])
+        
+            second_max_3 = list(prediction_3[0])
+            second_max_3.remove(max(second_max_3))
+            second_max_3 = max(second_max_3)
+
+            index_2 = (prediction_2[0]).tolist().index(first_max_2)
+            index_3 = (prediction_3[0]).tolist().index(first_max_3)
+        
         # Get first, second, and third maximum percentage matches
         # To be used for entropy calculations
+            return index_1, first_max_1, second_max_1, index_2, first_max_2, second_max_2, index_3, first_max_3, second_max_3 
         
-        index = (prediction[0]).tolist().index(first_max)
+        return index_1, first_max_1, second_max_1
+    
+    
+    def predict_class_with_rotations(self,image,model_1, model_2=None, model_3=None):
+        min_angle = -5
+        max_angle = 5
+        step = 1
+        list_of_angles = list(np.arange(min_angle,max_angle,step))
+        predictions_list = []
+        prediction_percentages_list = []
         
+        for angle in list_of_angles:
+            rotated_image = Image.fromarray(image)
+            rotated_image = rotated_image.rotate(angle)
+            rotated_image_arr = np.array(rotated_image)
+            extraction_obj = ExtractionPreprocessing(rotated_image_arr,'', '')
+            extraction_obj.preprocess_extraction(rotated_image_arr, 100,100,100,100, 0.3, 0,0,0,0)
+            if model_2 != None and model_3 != None:
+                prediction = self.predict_class_3_models(rotated_image_arr,model_1,model_2,model_3)
+            else:
+                prediction,first_max, second_max = self.predict_class(rotated_image_arr, model_1)
+                
+            predictions_list.append(prediction)
+            prediction_percentages_list.append(first_max)
+            
+        index = predictions_list[prediction_percentages_list.index(max(prediction_percentages_list))]
         
-        return index, first_max, second_max 
+        return index
+            
+        # create list of predictions
+        
     def select_best_prediction(self,prediction_list,percentage_matches):
         '''
         Get the index of highest percentage match
@@ -90,6 +141,7 @@ class ComponentClassifierPredict(object):
         if count >= needed_number_to_agree:
             index = most_common_index
         return index
+    
 	
     def use_entropy(self, index, first_max, second_max):
         """ Prediction for a single image """
@@ -104,8 +156,25 @@ class ComponentClassifierPredict(object):
         # Otherwise, if prediciton is confident, return the original index
         return index
 
+    def predict_class_3_models(self, image, model_1, model_2, model_3):
+        expanded_image = self.expand_dimension(image, 3)
 
-    def predict_classes(self, ext_images, model):
+        index_1, first_max_1, second_max_1 = self.predict_class(expanded_image, model_1)
+        index_1 = self.use_entropy(index_1, first_max_1, second_max_1)
+        
+        index_2, first_max_2, second_max_2 = self.predict_class(expanded_image, model_2)
+        index_2 = self.use_entropy(index_2, first_max_2, second_max_2)
+        
+        index_3, first_max_3, second_max_3 = self.predict_class(expanded_image, model_3)
+        index_3 = self.use_entropy(index_3, first_max_3, second_max_3)
+        
+        index = self.select_most_common_prediction([index_1,index_2,index_3])
+            
+        return index
+        
+        
+    def predict_classes(self, ext_images, model_1, model_2 = None, model_3 = None):
+        
         if type(ext_images) is list:
             if len(ext_images) == 0: return
         if type(ext_images) is np.ndarray:
@@ -121,17 +190,34 @@ class ComponentClassifierPredict(object):
             image = ext_images[i]
             expanded_image = self.expand_dimension(image, 3)
     
-            # Predict object class with entropy theory and record data
-            index, first_max, second_max = self.predict_class(expanded_image, model)
-            index = self.use_entropy(index, first_max, second_max)
-
+    
+            if model_2 == None or model_3 == None:
+                # Predict object class with entropy theory and record data
+                index, first_max, second_max = self.predict_class(expanded_image, model_1)
+                index = self.use_entropy(index, first_max, second_max)
+                
+                # Attach percentages to lists (in range of 0 to 1.0, ex: 91% is recorded as 0.91)
+                ext_match_first_max_percent.append(first_max)
+                ext_match_second_max_percent.append(second_max)
+            else:
+                index_1, first_max_1, second_max_1 = self.predict_class(expanded_image, model_1)
+                index_1 = self.use_entropy(index_1, first_max_1, second_max_1)
+                
+                index_2, first_max_2, second_max_2 = self.predict_class(expanded_image, model_2)
+                index_2 = self.use_entropy(index_2, first_max_2, second_max_2)
+                
+                index_3, first_max_3, second_max_3 = self.predict_class(expanded_image, model_3)
+                index_3 = self.use_entropy(index_3, first_max_3, second_max_3)
+                
+                index, first_max, second_max = self.select_most_common_prediction([index_1,index_2,index_3],[first_max_1,first_max_2,first_max_3],[second_max_1, second_max_2, second_max_3])
+                
             # Save extractions
             ext_class_index.append(index)
             ext_class_name.append(target_names_all[index])
 
-            # Attach percentages to lists (in range of 0 to 1.0, ex: 91% is recorded as 0.91)
-            ext_match_first_max_percent.append(first_max)
-            ext_match_second_max_percent.append(second_max)
+        if not(model_2 == None or model_3 == None):
+            ext_match_first_max_percent = np.zeros(len(ext_images)).tolist()
+            ext_match_second_max_percent = np.zeros(len(ext_images)).tolist()
 
         return ext_class_index, ext_class_name, ext_match_first_max_percent, ext_match_second_max_percent
 

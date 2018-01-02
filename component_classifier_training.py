@@ -6,6 +6,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D
 from keras.utils import to_categorical
 from keras import callbacks
+from keras.optimizers import SGD, Adam, RMSprop, Adadelta
 from random import sample
 import gc
 import random
@@ -147,13 +148,25 @@ class ComponentClassifierTraining(object):
         model.add(Flatten())
         model.add(Dense(num_classes, activation='softmax'))
 
+
+        
+        
         model.compile(loss='categorical_crossentropy',
-                      optimizer='adam',
+                      optimizer=Adadelta(),
                       metrics=['accuracy'])
 
         return model
 
     def train(self, epochs, seed, verbose=1):
+        """ Train model with input number of epochs """
+        np.random.seed(seed)  # For reproducibility
+        
+        self.history = self.model.fit(self.X_train, self.y_train, batch_size=self.batch_size,
+                                      epochs=epochs, verbose=verbose,
+                                      validation_data=(self.X_val, self.y_val))
+        self.is_trained = True
+        
+    def train_with_callbacks(self, epochs, seed, verbose=1):
         """ Train model with input number of epochs """
         np.random.seed(seed)  # For reproducibility
 
@@ -241,8 +254,7 @@ class ComponentClassifierTraining(object):
             plt.show()
 
     def save(self, name):
-        """ name should end with .h5 """
         if not self.is_trained:
             raise ModelNotTrained('Model is not trained yet!')
         else:
-            self.model.save_weights(name)
+            self.model.save_weights(name+'.h5')

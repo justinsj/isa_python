@@ -3,7 +3,15 @@ import matplotlib.patheffects as PathEffects
 from scipy import interpolate
 from keras.utils import plot_model
 import numpy as np
+import matplotlib.pyplot as plt
+from constants import subset_dictionary
+from constants import specific_dictionary
 
+@staticmethod
+def print_image_bw(image,l,w):
+    fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (l,w))
+    ax.imshow(image,cmap = 'binary')
+    plt.show()
 
 def dropout_search(dropout_ls):
     """
@@ -14,119 +22,139 @@ def dropout_search(dropout_ls):
 def plot_model_and_save(self):
     pass
 
-def calculate_accuracy(prediction_indices, ground_truth_indices):
-    """ Should add here or in helper_functions ?? """
-        #load kwarg ans, else leave ans variable as empty string
-    if len(prediction_indices) != len(ground_truth_indices):
+def calculate_accuracy(prediction_list, ground_truth_list):
+    if len(prediction_list) != len(ground_truth_list):
         return 'invalid'
-        #prepare figure size
-#    num_of_samples=len(prediction_indices)
-    #include all input data in title
+    
+    ground_truth_list = np.array(ground_truth_list)
+    prediction_list = np.array(prediction_list)
+    
+    score_matrix = (ground_truth_list == prediction_list)
 
-    ##### Find Ground Truth Values if Available #####
-    ground_truth_indices = np.array(ground_truth_indices)
-    prediction_indices = np.array(prediction_indices)
-    
-    score_matrix = (ground_truth_indices == prediction_indices)
-    
-        # Replace all incorrect predictions with 0
-#    for i in range(0,len(ext_class_index)):
-#        if ans[i]==0 and ext_class_index[i]==0: #fix case of 0/0
-#            score_matrix[i]=1
-#        if score_matrix[i] != 1: #else change all non-1's (incorrect) to 0
-#            score_matrix[i] = 0
-#            
-#    li1= ['numbers','0','1','2','3','4','5','6','7','8','9']
-#    li2= ['forces','up','down','right','left']
-#    li3= ['moments','ctrcl_moments','cl_moments']
-#    li4= ['random','noise','alphab']
-#    li5= ['supports']
-#    li6= ['fixed_supports','fixed_right','fixed_left','fixed_down','fixed_up']
-#    li7= ['pinned_supports','pinned_down','pinned_up','pinned_left','pinned_right']
-#    li8= ['roller_supports','roller_down','roller_up','roller_left','roller_right']
-#    li9= ['distributed_loads', 'uniform_distributed','linear_distributed','quadratic_distributed','cubic_distributed']
-#    li10=['beams','horizontal','vertical','downward_diagonal','upward_diagonal']
-#    li11=['dimensions','length','height','ctrcl_angle','cl_angle']
-#        #create empty group lists 
-#    for j in (li1,li2,li3,li4,li5,li6,li7,li8,li9,li10,li11):
-#        for l in j:
-#            exec(str('acc_'+str(l))+'= []')
-#
-#        #include scores into individual categories
-#    for i in range(1,len(ext_data)+1):
-#        if ans[i-1]>=0 and ans[i-1]<=9:
-#            exec('acc_'+'numbers'+'.append(score_matrix[i-1])')
-#            
-#            for j in range(1,len(li1)):
-#                exec('if ans[i-1]=='+str(j-1)+': '+'acc_'+str(li1[j])+'.append(score_matrix[i-1])')
-#                    
-#        if ans[i-1]>=10 and ans[i-1]<=13:
-#            exec('acc_'+'forces'+'.append(score_matrix[i-1])')
-#            
-#            for j in range(1,len(li2)):
-#                exec('if ans[i-1]=='+str(j+9)+': '+'acc_'+str(li2[j])+'.append(score_matrix[i-1])')
-#                
-#        if ans[i-1]>=14 and ans[i-1]<=15:
-#            exec('acc_'+'moments'+'.append(score_matrix[i-1])')
-#
-#            
-#            for j in range(1,len(li3)):
-#                exec('if ans[i-1]=='+str(j+13)+': acc_'+str(li3[j])+'.append(score_matrix[i-1])')
-#        
-#        if ans[i-1]>=16 and ans[i-1]<=17:
-#            exec('acc_'+'random'+'.append(score_matrix[i-1])')
-#            
-#            for j in range(1,len(li4)):
-#                exec('if ans[i-1]=='+str(j+15)+': acc_'+str(li4[j])+'.append(score_matrix[i-1])')
-#        
-#        if ans[i-1]>=18 and ans[i-1]<=21:
-#            exec('acc_'+'supports'+'.append(score_matrix[i-1])')
-#            
-#            if ans[i-1]==18:
-#                exec('acc_'+'fixed_supports'+'.append(score_matrix[i-1])')
-#            if ans[i-1]==19:
-#                exec('acc_'+'pinned_supports'+'.append(score_matrix[i-1])')
-#            if ans[i-1]==20 or ans[i-1]==21:
-#                exec('acc_'+'roller_supports'+'.append(score_matrix[i-1])')
-#        if ans[i-1]>=22 and ans[i-1]<=25:
-#            exec('acc_'+'distributed_loads'+'.append(score_matrix[i-1])')
-#            
-#            for j in range(1,len(li9)):
-#                exec('if ans[i-1]=='+str(j+21)+': acc_'+str(li9[j])+'.append(score_matrix[i-1])')
-#        
-#        if ans[i-1]>=26 and ans[i-1] <=29:
-#            exec('acc_'+'beams'+'.append(score_matrix[i-1])')
-#            
-#            for j in range(1,len(li10)):
-#                exec('if ans[i-1]=='+str(j+25)+': acc_'+str(li10[j])+'.append(score_matrix[i-1])')
-#        
-#        if ans[i-1]>=30 and ans[i-1] <=33:
-#            exec('acc_'+'dimensions'+'.append(score_matrix[i-1])')
-#            
-#            for j in range(1,len(li11)):
-#                exec('if ans[i-1]=='+str(j+29)+': acc_'+str(li11[j])+'.append(score_matrix[i-1])')
-#        
-#        #calculate accuracies by doing sum of 1's (correct answers) divided by number of entries in that category
-#    for j in (li1,li2,li3,li4,li5,li6,li7,li8,li9,li10,li11):
-#        for l in j:
-#            exec('try: acc1_'+str(l)+'= str(round((sum(eval(str(acc_'+str(l)+')))/len(eval(str(acc_'+str(l)+'))))*100,2))'+'\n'+'except:acc1_'+str(l)+"='N/A'")
-#        
-#        #prepare a list of "accuracy_x = some value" strings
-#    s=[]
-#    for j in (li1,li2,li3,li4,li5,li6,li7,li8):
-#        for l in j:
-#            s.append("acc_"+str(l)+" = "+str(eval("acc1_" +str(l)))+"% ")
-#        s.append("\n") #start new line after each category
-#        # join accuracy strings with spaces
-#    string=" ".join(s)
-#
-#    ##### Calculate Overall Accuracy #####
-    accuracy= sum(score_matrix)/len(score_matrix)
-#    print('Accuracy is '+str(acc*100)+" %")
-#    plt.title("Accuracy is "+str(acc*100)+" %" "\n" +string ,fontsize=20,color='blue')
-#    else:
-#        string='' #else, do anything useless
+    ##### Calculate Overall Accuracy #####
+    if len(score_matrix) == 0:
+        accuracy = 'N/A'
+    else:
+        accuracy= (sum(score_matrix)/len(score_matrix))*100
+
+    print('Accuracy is '+str(accuracy)+" %")
+
     return accuracy
+
+def create_string_from_dict(accuracies_dict):
+    string = ''
+    for subset in accuracies_dict:
+        string = string + subset +' : '+ str(accuracies_dict[subset]) + '\n'
+            
+    return string
+
+def calculate_subset_accuracies(prediction_list, ground_truth_list):
+    
+    #test
+    
+    #initialize empty lists for each subset for predictions
+    subset_predictions_list_dict = {}
+    for subset in subset_dictionary:
+        extra = {subset:[]}
+        subset_predictions_list_dict.update(extra)
+            
+    print(subset_predictions_list_dict)
+    print(len(subset_predictions_list_dict))
+    #initialize empty lists for each subset for ground truths
+    subset_ground_truths_list_dict = subset_predictions_list_dict.copy()
+    
+    
+    #parse through each prediciton and ground_truth and save them into lists      
+    for index in range(len(prediction_list)):
+        prediction_index = prediction_list[index]
+        ground_truth_index = ground_truth_list[index]
+        
+        for subset in subset_dictionary:
+            if ground_truth_index in subset_dictionary[subset]:
+                subset_ground_truths_list_dict[subset].append(ground_truth_index)
+                subset_predictions_list_dict[subset].append(prediction_index)
+                        
+    #for each subset, calculate accuracy and add to subset_accuracies_dict
+    subset_accuracies_dict = {}
+    for subset in subset_dictionary:
+        subset_prediction_list = subset_predictions_list_dict[subset]
+        subset_ground_truth_list = subset_ground_truths_list_dict[subset]
+        subset_accuracy = (calculate_accuracy(subset_prediction_list,subset_ground_truth_list))
+        
+        extra = {subset:subset_accuracy}
+        
+        subset_accuracies_dict.update(extra)
+        
+    print(subset_accuracies_dict)
+        
+    return subset_accuracies_dict, subset_predictions_list_dict, subset_ground_truths_list_dict
+
+def calculate_specific_accuracies(prediction_list, ground_truth_list):
+    
+    
+    #initialize empty lists for each subset for predictions
+    specific_predictions_list_dict = {}
+    for specific in specific_dictionary:
+        extra = {specific:[]}
+        specific_predictions_list_dict.update(extra)
+            
+    print(specific_predictions_list_dict)
+    print(len(specific_predictions_list_dict))
+    #initialize empty lists for each specific for ground truths
+    specific_ground_truths_list_dict = specific_predictions_list_dict.copy()
+    
+    
+    #parse through each prediciton and ground_truth and save them into lists      
+    for index in range(len(prediction_list)):
+        prediction_index = prediction_list[index]
+        ground_truth_index = ground_truth_list[index]
+        
+        for specific in specific_dictionary:
+            if ground_truth_index in specific_dictionary[specific]:
+                specific_ground_truths_list_dict[specific].append(ground_truth_index)
+                specific_predictions_list_dict[specific].append(prediction_index)
+                    
+    
+    #for each specific, calculate accuracy and add to specific_accuracies_dict
+    specific_accuracies_dict = {}
+    for specific in specific_dictionary:
+        specific_prediction_list = specific_predictions_list_dict[specific]
+        specific_ground_truth_list = specific_ground_truths_list_dict[specific]
+        specific_accuracy = (calculate_accuracy(specific_prediction_list,specific_ground_truth_list))
+        
+        extra = {specific:specific_accuracy}
+        
+        specific_accuracies_dict.update(extra)
+        
+    print(specific_accuracies_dict)
+        
+    return specific_accuracies_dict, specific_predictions_list_dict, specific_ground_truths_list_dict
+
+def calculate_accuracies(prediction_list, ground_truth_list):
+    '''
+    Inputs: ground_truth_list, prediciton_list
+    Returns: overall_accuracy, subset_accuracies, specific_accuracies, string
+    '''
+    overall_accuracy = calculate_accuracy(prediction_list, ground_truth_list)
+    
+    subset_accuracies_dict, subset_prediciton_list_dict, subset_ground_truth_list_dict = calculate_subset_accuracies(prediction_list, ground_truth_list)
+    subset_string = create_string_from_dict(subset_accuracies_dict)
+    
+    specific_accuracies_dict, specific_prediction_list_dict, specific_ground_truth_list_dict = calculate_specific_accuracies(prediction_list, ground_truth_list)
+    specific_string = create_string_from_dict(specific_accuracies_dict)
+    string = subset_string + '\n' + '\n' + specific_string
+    
+    return overall_accuracy, subset_accuracies_dict, specific_accuracies_dict, string
+
+def print_confusion_matrix(prediction_list, ground_truth_list):
+    pass
+
+
+
+
+
+#%%
+################## OLD CODE #########################
 """
         #plot images with matching percentages, change to red if incorrect
     for i in range(1,len(ext_data)+1):
