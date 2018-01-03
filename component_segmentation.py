@@ -363,10 +363,10 @@ class ComponentSegmentation(object):
             
                 #add ls as list into self.premerged_set as tuple of (x,y,w,h) , which will be merged based on overlap
             self.premerged_set.append(tuple(ls))
-    def plot_bounding_boxes(self):
+    def plot_bounding_boxes(self,coordinates_set):
         fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(15, 15))
         ax.imshow(self.image, cmap = 'binary')
-        for x, y, w, h in self.merged_set: #or in candidates
+        for x, y, w, h in coordinates_set: #or in candidates
             rect = mpatches.Rectangle(
                 (x, y), w, h, fill=False, edgecolor='red', linewidth=1)
             ax.add_patch(rect)
@@ -387,7 +387,10 @@ class ComponentSegmentation(object):
         """
         self.separate_unconnected_segments(scale_input, sigma_input, min_size_input) 
 #        self.selective_search_on_image(scale_input, sigma_input, min_size_input)
+        print('Premerged Set')
+        self.plot_bounding_boxes(self.premerged_set)
         self.merge_set()
-        self.plot_bounding_boxes()
+        print('Merged Set')
+        self.plot_bounding_boxes(self.merged_set)
         
     
