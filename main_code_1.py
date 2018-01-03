@@ -42,7 +42,7 @@ from component_classifier_predict import ComponentClassifierPredict
 from extraction_labelling import ExtractionLabelling
 from testing_class import TestingClass
 from helper_functions import print_image_bw
-from helpter_functions import plot_model_results_and_save
+from helper_functions import plot_model_results_and_save
 
 import gc
 gc.enable()
@@ -281,7 +281,7 @@ start = time.time() # Begin time measurement
 
 prediction_obj = ComponentClassifierPredict(min_percent_match, min_confidence)
 
-ext_class_index_list, ext_class_name_list, ext_match_first_max_percent_list, ext_match_second_max_percent_list = prediction_obj.predict_classes(ext_images,trained_model)
+ext_class_index_list, ext_class_name_list, ext_match_first_max_percent_list, ext_match_second_max_percent_list = prediction_obj.predict_classes(ext_images_list,trained_model)
 
 end = time.time()#record time
 print('ComponentClassifierPredict done... Time Elapsed : '+ str(end-start) + ' seconds...')
@@ -292,7 +292,7 @@ t5 = end-start
 
 # In[ ]:
 
-
+ground_truth_index_list = ext_class_index_list
 plot_model_results_and_save(image,name, ext_data_list, ext_class_index_list, ext_class_name_list, ground_truth_index_list)
 
 
