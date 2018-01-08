@@ -9,6 +9,7 @@ from component_classifier_predict import ComponentClassifierPredict
 from constants import target_names_all, target_names
 import os.path
 import gc
+from helper_functions import print_image_bw
 
 class ExtractionLabelling(object):
 
@@ -347,141 +348,178 @@ class ExtractionLabelling(object):
         self.print_problem_image('review')
 
     #Stack new images and answers then add to training samples
-    def update_training_set(self,image, ext_images, ext_data, ans):
-
-        start = time.time()
+#    def update_training_set(self,image, ext_images, ext_data, ans):
+#
+#        start = time.time()
+#        print('Updating answers...')
+#        
+#        #Load answers as a vertical column array
+#        y_ans = np.transpose(np.asarray(ans).reshape(1,len(ans)))
+#        print('y array has shape: ' + str(y_ans.shape))
+#        
+#        #Load image data as x array
+#        x_ans = np.asarray(ext_images).reshape(len(ext_images),self.img_rows*self.img_cols)
+#        print('x array has shape: ' + str(x_ans.shape))
+#        
+#        #Put together x and y as single array
+#        data_ans = np.hstack((x_ans,y_ans))
+#        print('Adding ' + data_ans.shape[0] +' training samples to training set...')
+#        
+#        #Load current answers
+#        data_all=np.load('Training_Samples_'+str(self.num_classes)+'_classes_'+str(self.img_rows)+'x'+str(self.img_cols)+'_all.npy')
+#        print('Inital length = '+ len(data_all))
+#
+#        data_all = np.vstack((data_all,data_ans))
+#        print('Final shape = '+ data_all.shape)
+#        #Save data
+#        np.save('Training_Samples_'+str(self.num_classes)+'_classes_'+str(self.img_rows)+'x'+str(self.img_cols)+'_all',data_all)
+#        end = time.time()
+#        duration = end-start
+#        print('time elapsed updating answers vstack = ' + str(duration))
+#        
+#
+#    def update_training_set_image(self,image, imagename, max_piece_percent, wanted_w,wanted_h, export_w,export_h):
+#        start = time.time()
+#        print('Updating answers...')
+#        
+#        self.image = image
+#        self.load_text(imagename)
+#        data_all = np.load(self.PATH+'Training_Samples_'+str(self.num_classes)+'_classes_'+str(self.img_rows)+'x'+str(self.img_cols)+'_all.npy')
+#
+#        answer_set = [(i[0], i[1], i[2], i[3]) for i in self.gt]
+#        extraction_to_be_preprocessed = ExtractionPreprocessing(image,'',answer_set)
+#        ext_images, ext_data, ext_class_index, ext_class_name = extraction_to_be_preprocessed.preprocess_extractions(wanted_w, wanted_h, export_w, export_h,
+#                                                                                                                    max_piece_percent)            
+#        #Load answers as a vertical column array
+#        answer_list = [i[4] for i in self.gt]
+#        y_ans = np.asarray(answer_list).reshape(len(answer_list),1)
+#        print('y array has shape: ' + str(y_ans.shape))
+#        
+#        #Load image data as x array
+#        x_ans = np.asarray(ext_images).reshape(len(ext_images),self.img_rows*self.img_cols)
+#        print('x array has shape: ' + str(x_ans.shape))
+#        
+#        #Put together x and y as single array
+#        data_ans = np.hstack((x_ans,y_ans))
+#        print('Adding ' + data_ans.shape[0] +' training samples to training set...')
+#        
+#        data_all = np.vstack((data_all,data_ans))
+#        print('Final shape = '+ data_all.shape)
+#        #Save data
+#        np.save('Training_Samples_'+str(self.num_classes)+'_classes_'+str(self.img_rows)+'x'+str(self.img_cols)+'_all',data_all)
+#        end = time.time()
+#        duration = end-start
+#        print('time elapsed updating answers vstack = ' + str(duration))
+#    
+#    def update_training_set_from_image_as_list(self, data_all, image, imagename, max_piece_percent, wanted_w,wanted_h, export_w,export_h):
+#        start = time.time()
+#        print('Updating answers...')
+#        
+#        self.image = image
+#        self.load_text(imagename)
+#        
+#        answer_set = [(i[0], i[1], i[2], i[3]) for i in self.gt]
+#        extraction_to_be_preprocessed = ExtractionPreprocessing(image,'',answer_set)
+#        ext_images, ext_data, ext_class_index, ext_class_name = extraction_to_be_preprocessed.preprocess_extractions(wanted_w, wanted_h, export_w, export_h,
+#                                                                                                                    max_piece_percent)            
+#        ext_images = np.reshape(np.asarray(ext_images),(len(ext_images),self.img_rows*self.img_cols))
+#        
+#        #Load answers as a vertical column array
+#        answer_list = [i[4] for i in self.gt]
+#        y_ans = np.asarray(answer_list).reshape(len(answer_list),1)
+#        print('y array has shape: ' + str(y_ans.shape))
+#        
+#        #Load image data as x array
+#        x_ans = np.asarray(ext_images).reshape(len(ext_images),self.img_rows*self.img_cols)
+#        print('x array has shape: ' + str(x_ans.shape))
+#        
+#        #Put together x and y as single array
+#        data_ans = np.hstack((x_ans,y_ans))
+#        print('Adding ' + data_ans.shape[0] +' training samples to training set...')
+#        
+#        #Add new answers to old answers
+#        combined_data = []
+#        for i in range(data_ans.shape[0]):
+#            print(i)
+#            combined_data.append(data_ans[i,:])
+#            
+#        data_all = np.asarray(combined_data)
+#        
+#        print('Final shape = '+ data_all.shape)
+#        #Save data
+#        np.save('Training_Samples_'+str(self.num_classes)+'_classes_'+str(self.img_rows)+'x'+str(self.img_cols)+'_all',data_all)
+#        end = time.time()
+#        duration = end-start
+#        print('time elapsed updating answers vstack = ' + str(duration))
+    def update_answers_list(self, PATH, name, start, end):
+        
         print('Updating answers...')
+        #load gt_list
         
-        #Load answers as a vertical column array
-        y_ans = np.transpose(np.asarray(ans).reshape(1,len(ans)))
-        print('y array has shape: ' + str(y_ans.shape))
+        start = int(start)
+        end = int(end)
         
-        #Load image data as x array
-        x_ans = np.asarray(ext_images).reshape(len(ext_images),self.img_rows*self.img_cols)
-        print('x array has shape: ' + str(x_ans.shape))
-        
-        #Put together x and y as single array
-        data_ans = np.hstack((x_ans,y_ans))
-        print('Adding ' + data_ans.shape[0] +' training samples to training set...')
-        
-        #Load current answers
-        data_all=np.load('Training_Samples_'+str(self.num_classes)+'_classes_'+str(self.img_rows)+'x'+str(self.img_cols)+'_all.npy')
-        print('Inital length = '+ len(data_all))
-
-        data_all = np.vstack((data_all,data_ans))
-        print('Final shape = '+ data_all.shape)
-        #Save data
-        np.save('Training_Samples_'+str(self.num_classes)+'_classes_'+str(self.img_rows)+'x'+str(self.img_cols)+'_all',data_all)
-        end = time.time()
-        duration = end-start
-        print('time elapsed updating answers vstack = ' + str(duration))
-        
-    def update_training_set_image(self,image, imagename, max_piece_percent, wanted_w,wanted_h, export_w,export_h):
-        start = time.time()
-        print('Updating answers...')
-        
-        self.image = image
-        self.load_text(imagename)
-        data_all = np.load(self.PATH+'Training_Samples_'+str(self.num_classes)+'_classes_'+str(self.img_rows)+'x'+str(self.img_cols)+'_all.npy')
-
-        answer_set = [(i[0], i[1], i[2], i[3]) for i in self.gt]
-        extraction_to_be_preprocessed = ExtractionPreprocessing(image,'',answer_set)
-        ext_images, ext_data, ext_class_index, ext_class_name = extraction_to_be_preprocessed.preprocess_extractions(wanted_w, wanted_h, export_w, export_h,
-                                                                                                                    max_piece_percent)            
-        #Load answers as a vertical column array
-        answer_list = [i[4] for i in self.gt]
-        y_ans = np.asarray(answer_list).reshape(len(answer_list),1)
-        print('y array has shape: ' + str(y_ans.shape))
-        
-        #Load image data as x array
-        x_ans = np.asarray(ext_images).reshape(len(ext_images),self.img_rows*self.img_cols)
-        print('x array has shape: ' + str(x_ans.shape))
-        
-        #Put together x and y as single array
-        data_ans = np.hstack((x_ans,y_ans))
-        print('Adding ' + data_ans.shape[0] +' training samples to training set...')
-        
-        data_all = np.vstack((data_all,data_ans))
-        print('Final shape = '+ data_all.shape)
-        #Save data
-        np.save('Training_Samples_'+str(self.num_classes)+'_classes_'+str(self.img_rows)+'x'+str(self.img_cols)+'_all',data_all)
-        end = time.time()
-        duration = end-start
-        print('time elapsed updating answers vstack = ' + str(duration))
+        #get ans
+        data_ans = []
+#        ans = []
+#        ext_images = []
+        print('loading imageset')
+        imageset = np.load(PATH+"all_training_images.npy")
+        print('loaded imageset')
+        self.gt = []
+        for j in range(start, end):
+            self.gt=[]
+            imagename =  "all_"+str(int(j))
+            print('imagename = '+ str(imagename))
+            self.load_text(imagename)
+            print(self.gt)
+            image = imageset[:,:,j]
+#            self.plot_ground_truths(image,imagename)
+            for i in range(len(self.gt)):
+          #load ext_images
+#                print_image_bw(image,5,5)
+#                print(1)
+                x, y, w, h, c = self.gt[i]
+                print(c)
+                x1 = x
+                x2 = x+w
+                y1 = y
+                y2 = y+h
+                extraction = image[y1:y2,x1:x2]
+#                print_image_bw(extraction,5,5)
+                extraction_obj = ExtractionPreprocessing(image, '', '')
+                extraction = extraction_obj.preprocess_extraction(extraction, 100,100,100,100, 0.3, x, y, w, h)
+#                extraction = ExtractionPreprocessing.resize_extraction(extraction)
+                print_image_bw(extraction,5,5)
     
-    def update_training_set_from_image_as_list(self, data_all, image, imagename, max_piece_percent, wanted_w,wanted_h, export_w,export_h):
-        start = time.time()
-        print('Updating answers...')
+                #preprocess
+                data_line = np.reshape(extraction,(100*100))
+                ans_line = np.asarray(int(c))
+                new_data_line = np.hstack((data_line,ans_line))
+                
+                data_ans.append(new_data_line)
+        print(data_ans)
         
-        self.image = image
-        self.load_text(imagename)
         
-        answer_set = [(i[0], i[1], i[2], i[3]) for i in self.gt]
-        extraction_to_be_preprocessed = ExtractionPreprocessing(image,'',answer_set)
-        ext_images, ext_data, ext_class_index, ext_class_name = extraction_to_be_preprocessed.preprocess_extractions(wanted_w, wanted_h, export_w, export_h,
-                                                                                                                    max_piece_percent)            
-        ext_images = np.reshape(np.asarray(ext_images),(len(ext_images),self.img_rows*self.img_cols))
-        
-        #Load answers as a vertical column array
-        answer_list = [i[4] for i in self.gt]
-        y_ans = np.asarray(answer_list).reshape(len(answer_list),1)
-        print('y array has shape: ' + str(y_ans.shape))
-        
-        #Load image data as x array
-        x_ans = np.asarray(ext_images).reshape(len(ext_images),self.img_rows*self.img_cols)
-        print('x array has shape: ' + str(x_ans.shape))
-        
-        #Put together x and y as single array
-        data_ans = np.hstack((x_ans,y_ans))
-        print('Adding ' + data_ans.shape[0] +' training samples to training set...')
-        
-        #Add new answers to old answers
-        combined_data = []
-        for i in range(data_ans.shape[0]):
-            combined_data.append(data_ans[i,:])
-            
-        data_all = np.asarray(combined_data)
-        
-        print('Final shape = '+ data_all.shape)
-        #Save data
-        np.save('Training_Samples_'+str(self.num_classes)+'_classes_'+str(self.img_rows)+'x'+str(self.img_cols)+'_all',data_all)
-        end = time.time()
-        duration = end-start
-        print('time elapsed updating answers vstack = ' + str(duration))
-        
-    def update_answers_list(self,ext_images, ext_data, ans):
-        start = time.time()
-
-        print('Updating answers...')
-        
-        #Load answers as a vertical column array
-        y_ans = np.transpose(np.asarray(ans).reshape(1,len(ans)))
-        print('y array has shape: ' + str(y_ans.shape))
-        
-        #Load image data as x array
-        x_ans = np.asarray(ext_images).reshape(len(ext_images),self.img_rows*self.img_cols)
-        print('x array has shape: ' + str(x_ans.shape))
-        
-        #Put together x and y as single array
-        data_ans = np.hstack((x_ans,y_ans))
-        print('Adding ' + data_ans.shape[0] +' training samples to training set...')
+        print('Adding ' + str(len(data_ans)) +' training samples to training set...')
         
         #Load current answers
-        data_all=np.load('Training_Samples_'+str(self.num_classes)+'_classes_'+str(self.img_rows)+'x'+str(self.img_cols)+'_all.npy')
-        print('Inital length = '+ len(data_all))
+        data_all=np.load(PATH+name+'.npy')
+        print('Inital length = '+ str(data_all.shape[0]))
 
         #Add new answers to old answers
         combined_data = []
         for i in range(data_all.shape[0]):
-            data_line = data_all[i,:]
+            print(str(i)+' / ' +str(data_all.shape[0])+ ' of data_all')
+            data_line = data_all[i]
             combined_data.append(data_line)
-        for i in range(data_ans.shape[0]):
-            data_line = data_ans[i,:]
+        for i in range(len(data_ans)):
+            print(str(i)+' / ' +str(len(data_ans))+' of data_ans')
+#            if not(data_ans[i,:] in data_all):
+            data_line = data_ans[i]
             combined_data.append(data_line)
         data_all = np.asarray(combined_data)
-        print('Final shape = '+ data_all.shape)
+        print('Final shape = '+ str(data_all.shape))
         #Save data
-        np.save('Training_Samples_'+str(self.num_classes)+'_classes_'+str(self.img_rows)+'x'+str(self.img_cols)+'_all',data_all)
-        end = time.time()
-        duration = end-start
-        print('time elapsed updating answers list = ' + str(duration))
+        np.save(PATH+'Training_Samples_'+str(self.num_classes)+'_classes_'+str(self.img_rows)+'x'+str(self.img_cols)+'_all_cleaned_updated_'+str(data_all.shape[0]),data_all)
+        print('saved as: '+'Training_Samples_'+str(self.num_classes)+'_classes_'+str(self.img_rows)+'x'+str(self.img_cols)+'_all_cleaned_updated_'+str(data_all.shape[0])+'.npy')

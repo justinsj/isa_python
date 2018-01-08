@@ -205,27 +205,20 @@ def calculate_accuracies(prediction_list, ground_truth_list):
     return overall_accuracy, subset_accuracies_dict, specific_accuracies_dict, string
 
 
-def get_confusion_matrix(self, y_pred_one_hot, y_test_one_hot):
-    from sklearn.metrics import confusion_matrix
-    """ Input one hot """
-    y_pred_reverse = np.argmax(y_pred_one_hot, axis=1)
-    y_test_reverse = np.argmax(y_test_one_hot, axis=1)
-
-    return confusion_matrix(y_test_reverse, y_pred_reverse)
-
-def plot_confusion_matrix(self, cm, classes,
+# Plotting the confusion matrix
+def plot_confusion_matrix(cm, classes,
                           normalize=False,
                           title='Confusion matrix',
                           cmap=plt.cm.Blues):
+    
+    import matplotlib.pyplot as plt
+    plt.subplots(ncols=1, nrows=1, figsize=(40, 40))
+    
+    import itertools
     """
-    This function plots the confusion matrix.
+    This function prints and plots the confusion matrix.
     Normalization can be applied by setting `normalize=True`.
     """
-    # Configuration
-    np.set_printoptions(precision=2)
-    plt.figure(figsize=(30, 30))
-
-    # Plot
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
     plt.colorbar()
@@ -235,6 +228,11 @@ def plot_confusion_matrix(self, cm, classes,
 
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
+
+    print(cm)
 
     thresh = cm.max() / 2.
     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
@@ -242,9 +240,11 @@ def plot_confusion_matrix(self, cm, classes,
                  horizontalalignment="center",
                  color="white" if cm[i, j] > thresh else "black")
 
-    plt.tight_layout()
+    
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
+    plt.subplots_adjust(bottom=.15)
+    plt.tight_layout()
     plt.show()
 
 

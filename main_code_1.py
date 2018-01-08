@@ -2,7 +2,10 @@
 # coding: utf-8
 
 # # Image-Based Structural Analysis
-# ### Code created and maintained by Justin David Q. SAN JUAN, <br>email: jdqsj1997@yahoo.com, <br> website: justinsj.weebly.com
+# ### Code created and maintained by Justin David Q. SAN JUAN, <br>email: jdqsj1997@yahoo.com, <br> personal website: justinsj.weebly.com
+# 
+# #### This code focuses in the segmentation and classification processes (except reconstruction) of the complete project pipeline as described below:
+# <img src="https://justinsj.weebly.com/uploads/6/4/9/2/64923303/process-flowchart_orig.jpg" alt="Drawing" style="width: 800px;"/>
 
 # # Import Dependencies
 # #### Dependencies:
@@ -22,7 +25,7 @@
 # print_image_bw is used to print a simple 2-D array<br>
 # gc: for clearing up space after acquiring data from larger datasets
 
-# In[2]:
+# In[1]:
 
 
 from __future__ import print_function
@@ -87,7 +90,7 @@ print('Done Importing...')
 # (higher difference means less ambiguity between first and second highest match, which means less likelihood of random object)<br>
 # ##### The directory is also defined in the PATH variable.<br>The name of the CNN model data is defined in the name variable.<br>The training data set name for the CNN is defined in the data_set_name variable.
 
-# In[ ]:
+# In[2]:
 
 
 #selective search parameters
@@ -133,13 +136,17 @@ name = 'Sketch-a-Net_64_classes_100x100_0.0_all_100epochs'
 
 data_set_name = 'Training_Samples_64_classes_100x100_all'
 
+dataset_PATH = 'C:/Users/JustinSanJuan/Desktop/HKUST/UROP Deep Learning Image-based Structural Analysis/Code/Python/Testing Folder/'
+dataset_name = 'Training_Samples_64_classes_100x100_all'
+new_dataset_name = 'Training_Samples_64_classes_100x100_all_cleaned'
+
 print('Done setting hyperparamters...')
 
 
 # # Load Image
 # Image (binary, grayscale, 2D, numpy array) for regions of interest proposals is loaded.
 
-# In[ ]:
+# In[3]:
 
 
 start = time.time() # Begin time measurement
@@ -173,7 +180,7 @@ print_image_bw(image,l,w)
 #     - min_size_input
 # ##### Then, the merging algorithm is applied within the search function, and a merged_set is retrieved.
 
-# In[ ]:
+# In[4]:
 
 
 start = time.time() # Begin time measurement
@@ -202,7 +209,7 @@ t2 = end-start
 # #### The preprocess_extractions function is called and the extraction images and extraction data are acquired.
 # #### The plot_bounding_boxes_with_names function is then used to display the bounding boxes on the original image.
 
-# In[ ]:
+# In[5]:
 
 
 start = time.time() # Begin time measurement
@@ -238,14 +245,14 @@ t3 = end-start
 # ##### The shuffle_data is then called to shuffle the training data using a seed<br>The Sketch_A_Net model is then loaded<br>Then the model is trained with 100 epochs<br>Then the model weights are saved<br>Finally the trained model is stored in trained_model to be passed onto a ComponentClassifierPredict object
 # #### If model weights have been trained before, the training and saving is not required, and the load_weights function has to be called instead.
 
-# In[ ]:
+# In[6]:
 
 
 start = time.time() # Begin time measurement
 
 seed = 1000
 i = 1234
-training_obj = ComponentClassifierTraining(PATH, data_set_name, num_classes, dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL)
+training_obj = ComponentClassifierTraining(PATH, new_dataset_name, num_classes, dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL)
 training_obj.shuffle_data(training_obj.load_data(PATH,data_set_name),seed)
 
 #Model is Sketch_a_net
@@ -256,6 +263,10 @@ training_obj.model = training_obj.load_sketch_a_net_model(dropout, num_classes, 
 training_obj.model.load_weights(PATH+name+'.h5')
 
 trained_model = training_obj.model
+dataset_PATH = 'C:/Users/JustinSanJuan/Desktop/HKUST/UROP Deep Learning Image-based Structural Analysis/Code/Python/Testing Folder/'
+dataset_name = 'Training_Samples_64_classes_100x100_all'
+new_dataset_name = 'Training_Samples_64_classes_100x100_all_cleaned_updated_29757'
+#training_obj.plot_training_data_all(dataset_PATH,new_dataset_name,297)
 
 end = time.time()#record time
 print('ComponentClassifierTraining done... Time Elapsed : '+ str(end-start) + ' seconds...')
@@ -274,7 +285,7 @@ t4 = end-start
 #     - ext_match_first_max_percent_list: ordered list of corresponding first-highest match percentage
 #     - ext_match_second_max_percent_list: ordered list of corresponding second-highest match percentage
 
-# In[ ]:
+# In[7]:
 
 
 start = time.time() # Begin time measurement
@@ -283,33 +294,154 @@ prediction_obj = ComponentClassifierPredict(min_percent_match, min_confidence)
 
 ext_class_index_list, ext_class_name_list, ext_match_first_max_percent_list, ext_match_second_max_percent_list = prediction_obj.predict_classes(ext_images_list,trained_model)
 
+#y_pred_one_hot = prediction_obj.get_one_hot(prediction_list)
+#y_test_one_hot = prediciton_obj.get_one_hot(ground_truth_list)
+
+#from helper_functions import get_confusion_matrix
+from helper_functions import plot_confusion_matrix
+
+from sklearn.metrics import classification_report,confusion_matrix
+import itertools
+
+Y_pred = trained_model.predict(training_obj.X_test)
+print(Y_pred)
+y_pred = np.argmax(Y_pred, axis=1)
+print(y_pred)
+### if y_pred and y_test is a list:
+for i in range(num_classes):
+    y_pred = np.hstack((y_pred,i))
+    values = [i]
+    n_values = 64
+    one_hot_correct = np.eye(n_values)[values]
+    training_obj.y_test = np.vstack((training_obj.y_test,one_hot_correct))
+
+#y_pred = model.predict_classes(X_test)
+#print(y_pred)
+
+# Compute confusion matrix
+#confusion_matrix(ground_truth_list,prediction_list)
+from constants import target_names_all
+one_hot_correct_array = training_obj.y_test
+print(np.argmax(one_hot_correct_array,axis=1)) #horizontal correct ans
+predictions_vector = y_pred
+#
+cnf_matrix = (confusion_matrix(np.argmax(one_hot_correct_array,axis=1), predictions_vector))
+#print(cnf_matrix)
+#print(cnf_matrix.shape)
+
+
+
+
+# Plot non-normalized confusion matrix
+plot_confusion_matrix(cnf_matrix, classes=target_names_all,
+                      title='Confusion matrix')
+#plt.figure()
+# Plot normalized confusion matrix
+#plot_confusion_matrix(cnf_matrix, classes=target_names, normalize=True,
+#                      title='Normalized confusion matrix')
+#plt.figure()
+
+
+
 end = time.time()#record time
 print('ComponentClassifierPredict done... Time Elapsed : '+ str(end-start) + ' seconds...')
 t5 = end-start
 
 
 # # Printing Results
+# #### Results are plotted on the original image using:
+#     - image: for background
+#     - name: for saving
+#     - ext_data_list: list of x, y, w, h coordinates for each bounding box
+#     - ext_class_index_list: list of predicted class indices
+#     - ext_class_name_list: list of corresponding class names per predicted index
+#     - ground_truth_index_list: list of ground truth class indices (currently set as the predicted classes.)*
+# ##### Each bounding box is labelled with two items separated by a colon:
+#     - First: index of that object in the full list.
+#     - Second: predicted class name of that object.
+# ##### If the predicted class matches with the ground truth class, <br> then the predicted label is coloured green, otherwise it is red. <br> * For this example, the ground truth labels were set as the predicted classes, so all labels are green.
 
-# In[ ]:
 
-ground_truth_index_list = ext_class_index_list
+
+'''
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+'''
+# In[8]:
+
+
+start = time.time() # Begin time measurement
+
+ground_truth_index_list = ext_class_index_list # set all answers as correct answers for now
 plot_model_results_and_save(image,name, ext_data_list, ext_class_index_list, ext_class_name_list, ground_truth_index_list)
+
+end = time.time()#record time
+print('Printing Results done... Time Elapsed : '+ str(end-start) + ' seconds...')
+t6 = end-start
 
 
 # # ExtractionLabelling
+# #### The ExtractionLabelling class is used to label the problem image with ground truths in the form of x, y, w, h, c <br>where x, y, w, h are the coordinates of the bounding box, and c is the class of the object in the box.
+# #### The class is an interactive program where the user will be asked to verify the correctness <br> of the bounding box regions and classes predicted by the current best segmentation + classification algorithm.
+# ##### The class is initialized using:
+#     - PATH: working directory
+#     - ext_images_list: list of extraction images
+#     - ext_data_list: list of extraction image coordinates (x, y, w, h)
+#     - ext_class_index_list: list of predicted class indices (c)
+#     - ext_class_name_list: list of predicted class names
+#     - num_classes, img_rows, img_cols: selected CNN model parameters
+# ##### The define_model function is then called to load the model (from the trained_model variable). <br> Then the select_good_bounding_boxes function is called to allow the user to verify the bounding boxes and predicted classes. <br> Finally, after all the objects have been segmented and classified and saved in a text file, the data is plotted on the original image.
+# ##### The process of the interactive program is described in the diagram below:
+# <img src="https://justinsj.weebly.com/uploads/6/4/9/2/64923303/extraction-labelling-flowchart_orig.jpg" alt="Drawing" style="width: 800px;"/>
+start = time.time() # Begin time measurement
 
-# In[ ]:
+labelling_obj = ExtractionLabelling(dataset_PATH,
+                          ext_images_list, ext_data_list,ext_class_index_list, ext_class_name_list, 
+                          num_classes, img_rows, img_cols)
+#labelling_obj.update_answers_list(dataset_PATH, new_dataset_name,0,1000)
+
+labelling_obj.define_model(trained_model)
+#labelling_obj.select_good_bounding_boxes(image, PATH+"GT/"+"easy_" + str(image_index))
+labelling_obj.plot_ground_truths(labelling_obj.image, "all_2")
+
+end = time.time()#record time
+print('Acquiring and Printing Ground Truth Data done... Time Elapsed : '+ str(end-start) + ' seconds...')
+t7 = end-start
+# # Active Learning
+# #### Ground Truth Data (from ExtractionLabelling) is added into the training dataset for improvement in accuracy
+start = time.time() # Begin time measurement
 
 
-#labelling_obj = ExtractionLabelling(PATH,
-#                          ext_images, ext_data,ext_class_index, ext_class_name, 
-#                          num_classes, img_rows, img_cols)
-#
-##labelling_obj.define_model(trained_model)
-##labelling_obj.select_good_bounding_boxes(image, "all_" + str(image_index))
-#labelling_obj.plot_ground_truths(image, "all_" + str(image_index))
 
-
+end = time.time()#record time
+print('Acquiring and Printing Ground Truth Data done... Time Elapsed : '+ str(end-start) + ' seconds...')
+t8 = end-start
 # # TestingClass
 #%% 
 '''
@@ -347,24 +479,14 @@ for n in list_of_n:
         testing_obj=None
         gc.collect()
 
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
+# # Time Cost Analysis
+print('Loading image : ' + str(t1) + '\n'
+      'ComponentSegmentation : ' + str(t2) + '\n'
+      'ExtractionPreprocessing : ' + str(t3) + '\n'
+      'ComponentClassifierTraining : ' + str(t4) + '\n'
+      'ComponentClassifierPredict : ' + str(t5) + '\n'
+      'Printing Results : ' + str(t6) + '\n'
+      'Plot extractions with names : ' + str(t7) + '\n')###### OLD CODE ######
 
 
 
@@ -422,7 +544,7 @@ for i in range(30):
     
     training_obj.train(200,seed)
     training_obj.model.load_weights(name+'_'+str(i)+'.h5')
-    training_obj.
+#    training_obj.
 #%%
 '''
 Test rotations
@@ -509,127 +631,3 @@ c = np.asarray(
          [0,0,0,0,1],
          [0,0,1,0,1],
          [0,0,0,0,0]])
- #%%
-    # Create/reset list of images, coordinates (x,y,w,h) data, class indices, class names, and top three percentage matches
-ext_images=[]
-ext_data=[]
-ext_class_index=[]
-ext_class_name=[]
-ext_match_percent=[]
-ext_match_percent2=[]
-ext_next_round=[]
-ext_next_round_index=[]
-
-    # define wanted_w, and wanted_h, which is the are where the extraction is limited to
-    # define export_w and export_h as required by the classifier
-wanted_w=img_cols
-wanted_h=img_rows
-export_w=img_cols
-export_h=img_rows
-
-    # prepare extractions to be sent to classifier
-    # ext_class_index and _name are empty
-
-name = 'Sketch-a-Net_Single_Model_'+str(t)
-
-##############
-end = time.time()
-print('Segmentation done... Time Elapsed : '+str(end-start)+' seconds...')
-t2=end-start
-start = time.time()
-##############
-name = 'TestGaussian'+'_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_'+str(a)#+'_gaussian'
-
-    # plot bounding boxes on original image
-plot_bounding_boxes_with_names(image,candidates, name) 
-
-##############
-end = time.time()
-print('Plotting bounding boxes done... Time Elapsed : '+str(end-start)+' seconds...')
-t3=end-start
-start = time.time()
-##############
-    #load data only if not yet loaded, or update data if number of samples in data_all does not match current y_train number of data samples
-try: y_train
-except: 
-    try:
-        data_all=np.load('Training_Samples_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_all.npy')
-        if y_train.shape[0]==data_all.shape[0]:
-            y_train=y_train
-        else:
-            x_train, y_train, x_test, y_test,input_shape,data_all=load_data()
-    except:
-        x_train, y_train, x_test, y_test,input_shape,data_all=load_data()
-#data_all=np.load('Training_Samples_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_all.npy')
-#x_train, y_train, x_test, y_test,input_shape,data_all=load_data()
-
-##############
-end = time.time()
-print('Loading training data done... Time Elapsed : '+str(end-start)+' seconds...')
-t4=end-start
-start = time.time()
-##############
-
-epochs=100
-group='all'
-    #list of dropout values to be tested
-#di=[0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7]
-di=[0.0]
-for d in di:
-
-    name = 'Sketch-a-Net'+'_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_'+str(d)#+'_gaussian'
-    print('name = '+name)
-    model = Sequential() #model needs to be defined as a global variable before using load_model_layers, train_model, or load_model_weights
-    
-    load_model_layers(d)
-#    train_model(epochs)
-#    save_model_weights(name,epochs)
-    print('loading model weights...')
-    load_model_weights(name,epochs)
-    score = model.evaluate(x_test, y_test, verbose=0)
-    print('Test loss:', score[0])
-    print('Test accuracy:', score[1]) 
-    name = 'TestGaussian'+'_'+str(num_classes)+'_classes_'+str(img_rows)+'x'+str(img_cols)+'_'+str(d)+'_'+str(a)#+'_gaussian'
-
-    ##############
-    end = time.time()
-    print('Loading/training model done... Time Elapsed : '+str(end-start)+' seconds...')
-    t5 = end-start
-    start = time.time()
-    ##############
-    
-    print('predicting classes...')
-    predict_classes(ext_images,group,ext_class_index,ext_class_name,ext_next_round,ext_next_round_index)
-    
-    ##############
-    end = time.time()
-    print('predict classes done... Time Elapsed : '+str(end-start)+' seconds...')
-    t6 = end-start
-    start = time.time()
-    ##############
-    
-   
-        #create figure with all extractions and percent matches if no answers
-    
-    select_good_bounding_boxes(image,imagename,ext_images,ext_data,ext_class_index,ext_class_name,target_names)
-    
-    print('plotting extractions with names...')
-#    plot_extractions_with_names(ext_images, ext_data, ext_class_name, ext_class_index, name) 
-#    plot_extractions_with_names(ext_images, ext_data, ext_class_name, ext_class_index, name, ans = adjusted_ans) 
-
-    ##############
-    end = time.time()
-    print('plot extractions with names done... Time Elapsed : '+str(end-start)+' seconds...')
-    t7 = end-start
-    start = time.time()
-    ##############
-    #update answers if necessary
-#update_answers(ext_images,ans) 
-
-print('Loading image : ' + str(t1) + '\n'
-      'ComponentSegmentation : ' + str(t2) + '\n'
-      'ExtractionPreprocessing : ' + str(t3) + '\n'
-      'ComponentClassifierTraining : ' + str(t4) + '\n'
-      'ComponentClassifierPredict : ' + str(t5) + '\n'
-      'Predict classes : ' + str(t6) + '\n'
-      'Plot extractions with names : ' + str(t7) + '\n')
