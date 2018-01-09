@@ -334,11 +334,11 @@ cnf_matrix = (confusion_matrix(np.argmax(one_hot_correct_array,axis=1), predicti
 
 # Plot non-normalized confusion matrix
 plot_confusion_matrix(cnf_matrix, classes=target_names_all,
-                      title='Confusion matrix')
+                      title='Confusion matrix',dataset_PATH, "confusion_matrix_4")
 #plt.figure()
 # Plot normalized confusion matrix
-#plot_confusion_matrix(cnf_matrix, classes=target_names, normalize=True,
-#                      title='Normalized confusion matrix')
+plot_confusion_matrix(cnf_matrix, classes=target_names, normalize=True,
+                      title='Normalized confusion matrix')
 #plt.figure()
 
 
@@ -396,7 +396,7 @@ t5 = end-start
 
 '''
 # In[8]:
-seed = 1000
+seed = 1234
     
 testing_obj = TestingClass(PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
 testing_obj.test_classifier_all(dataset_PATH, dataset_name, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,200,seed,400) 
