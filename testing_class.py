@@ -215,7 +215,7 @@ class TestingClass(object):
         prediction_indices = []
         ground_truth_indices = []
 
-        f = open(self.PATH+'testing_results_'+str(iters)+'.txt','a')
+        f = open(dataset_PATH+'testing_results_'+str(iters)+'.txt','a')
         # train model
         training_obj = ComponentClassifierTraining(dataset_PATH, "Training_Samples_64_classes_100x100_all", 64, 0, TRAIN_RATIO_TRAIN, TRAIN_RATIO_VAL)
         training_obj.X_train, training_obj.y_train, training_obj.X_val, training_obj.y_val, training_obj.X_test, training_obj.y_test = training_obj.shuffle_data(np.load(dataset_PATH+dataset_name+'.npy'),seed)
@@ -240,6 +240,7 @@ class TestingClass(object):
             if not(os.path.isfile(gt_data_path_string)): continue
             
             GT_array = self.load_gt_array(gt_image_num)
+            if len(GT_array) == 0: continue
             if gt_image_num <400:
                 gt_image = np.load(self.PATH+'all_training_images_1.npy').astype(bool)[:,:,gt_image_num]
             elif gt_image_num >=400 and gt_image_num <800:
@@ -279,8 +280,10 @@ class TestingClass(object):
 
         from helper_functions import plot_confusion_matrix
         from constants import target_names_all
-        cnf_matrix = confusion_matrix(np.reshape(np.asarray(ground_truth_indices),
-                    (1,len(ground_truth_indices))), np.reshape(np.asarray(prediction_indices),(len(prediction_indices),1)))
+        from sklearn.metrics import confusion_matrix
+#        import itertools
+        cnf_matrix = confusion_matrix(np.asarray(ground_truth_indices),
+                    np.asarray(prediction_indices))
         plot_confusion_matrix(cnf_matrix, classes=target_names_all,
                       title='Confusion matrix')
         del prediction_indices
