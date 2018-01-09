@@ -264,9 +264,9 @@ training_obj.model.load_weights(PATH+name+'.h5')
 
 trained_model = training_obj.model
 dataset_PATH = 'C:/Users/JustinSanJuan/Desktop/HKUST/UROP Deep Learning Image-based Structural Analysis/Code/Python/Testing Folder/'
-dataset_name = 'Training_Samples_64_classes_100x100_all'
-new_dataset_name = 'Training_Samples_64_classes_100x100_all_cleaned_updated_29757'
-#training_obj.plot_training_data_all(dataset_PATH,new_dataset_name,297)
+dataset_name = 'Training_Samples_64_classes_100x100_all_cleaned_updated_29739'
+new_dataset_name = 'Training_Samples_64_classes_100x100_all_cleaned_updated_13301'
+#training_obj.plot_training_data_all(dataset_PATH,new_dataset_name,105)
 
 end = time.time()#record time
 print('ComponentClassifierTraining done... Time Elapsed : '+ str(end-start) + ' seconds...')
@@ -287,13 +287,13 @@ t4 = end-start
 
 # In[7]:
 
-
+"""
 start = time.time() # Begin time measurement
-
+"""
 prediction_obj = ComponentClassifierPredict(min_percent_match, min_confidence)
 
 ext_class_index_list, ext_class_name_list, ext_match_first_max_percent_list, ext_match_second_max_percent_list = prediction_obj.predict_classes(ext_images_list,trained_model)
-
+"""
 #y_pred_one_hot = prediction_obj.get_one_hot(prediction_list)
 #y_test_one_hot = prediciton_obj.get_one_hot(ground_truth_list)
 
@@ -348,6 +348,8 @@ print('ComponentClassifierPredict done... Time Elapsed : '+ str(end-start) + ' s
 t5 = end-start
 
 
+
+
 # # Printing Results
 # #### Results are plotted on the original image using:
 #     - image: for background
@@ -361,7 +363,7 @@ t5 = end-start
 #     - Second: predicted class name of that object.
 # ##### If the predicted class matches with the ground truth class, <br> then the predicted label is coloured green, otherwise it is red. <br> * For this example, the ground truth labels were set as the predicted classes, so all labels are green.
 
-
+"""
 
 '''
 
@@ -394,7 +396,11 @@ t5 = end-start
 
 '''
 # In[8]:
-
+seed = 1000
+    
+testing_obj = TestingClass(PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
+testing_obj.test_classifier_all(dataset_PATH, dataset_name, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,200,seed,400) 
+#%%
 
 start = time.time() # Begin time measurement
 
@@ -424,7 +430,8 @@ start = time.time() # Begin time measurement
 labelling_obj = ExtractionLabelling(dataset_PATH,
                           ext_images_list, ext_data_list,ext_class_index_list, ext_class_name_list, 
                           num_classes, img_rows, img_cols)
-#labelling_obj.update_answers_list(dataset_PATH, new_dataset_name,0,1000)
+new_dataset_name = labelling_obj.update_answers_list(dataset_PATH, new_dataset_name,0,706)
+labelling_obj.clean_dataset(dataset_PATH,new_dataset_name)
 
 labelling_obj.define_model(trained_model)
 #labelling_obj.select_good_bounding_boxes(image, PATH+"GT/"+"easy_" + str(image_index))
@@ -443,6 +450,9 @@ end = time.time()#record time
 print('Acquiring and Printing Ground Truth Data done... Time Elapsed : '+ str(end-start) + ' seconds...')
 t8 = end-start
 # # TestingClass
+
+
+
 #%% 
 '''
 Test different sample sizes using Testing Class by loading data

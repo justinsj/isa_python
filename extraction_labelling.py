@@ -470,6 +470,10 @@ class ExtractionLabelling(object):
         for j in range(start, end):
             self.gt=[]
             imagename =  "all_"+str(int(j))
+            print(PATH+'GT/GT_'+str(imagename)+'.txt')
+            # don't add if missing GT data
+            if not(os.path.isfile(PATH+'GT/GT_'+str(imagename)+'.txt')):
+                continue
             print('imagename = '+ str(imagename))
             self.load_text(imagename)
             print(self.gt)
@@ -490,36 +494,87 @@ class ExtractionLabelling(object):
                 extraction_obj = ExtractionPreprocessing(image, '', '')
                 extraction = extraction_obj.preprocess_extraction(extraction, 100,100,100,100, 0.3, x, y, w, h)
 #                extraction = ExtractionPreprocessing.resize_extraction(extraction)
-                print_image_bw(extraction,5,5)
+#                print_image_bw(extraction,5,5)
     
                 #preprocess
                 data_line = np.reshape(extraction,(100*100))
                 ans_line = np.asarray(int(c))
                 new_data_line = np.hstack((data_line,ans_line))
                 
-                data_ans.append(new_data_line)
-        print(data_ans)
-        
+                data_ans.append(new_data_line.astype(np.int).tolist())
+#        print(data_ans)
+        del image
+        del imageset
+        gc.collect()
         
         print('Adding ' + str(len(data_ans)) +' training samples to training set...')
         
         #Load current answers
-        data_all=np.load(PATH+name+'.npy')
-        print('Inital length = '+ str(data_all.shape[0]))
-
+#        data_all=np.load(PATH+name+'.npy')
+#        print('Inital length = '+ str(data_all.shape[0]))
+        
         #Add new answers to old answers
         combined_data = []
-        for i in range(data_all.shape[0]):
-            print(str(i)+' / ' +str(data_all.shape[0])+ ' of data_all')
-            data_line = data_all[i]
-            combined_data.append(data_line)
+#        for i in range(data_all.shape[0]):
+#            print(str(i)+' / ' +str(data_all.shape[0])+ ' of data_all')
+#            data_line = data_all[i].astype(np.int)
+#            combined_data.append(data_line.tolist())
+#        del data_all
         for i in range(len(data_ans)):
             print(str(i)+' / ' +str(len(data_ans))+' of data_ans')
-#            if not(data_ans[i,:] in data_all):
+            #if duplicate, skip
+#            print(data_ans[i])
+#            print(combined_data)
+            if data_ans[i] in combined_data:
+                continue
             data_line = data_ans[i]
             combined_data.append(data_line)
-        data_all = np.asarray(combined_data)
-        print('Final shape = '+ str(data_all.shape))
+        del data_ans
+        
+        gc.collect()
+        new_dataset_shape = len(combined_data)
+        print('Final shape = '+ str(new_dataset_shape))
         #Save data
-        np.save(PATH+'Training_Samples_'+str(self.num_classes)+'_classes_'+str(self.img_rows)+'x'+str(self.img_cols)+'_all_cleaned_updated_'+str(data_all.shape[0]),data_all)
-        print('saved as: '+'Training_Samples_'+str(self.num_classes)+'_classes_'+str(self.img_rows)+'x'+str(self.img_cols)+'_all_cleaned_updated_'+str(data_all.shape[0])+'.npy')
+        new_dataset_name = 'Training_Samples_'+str(self.num_classes)+'_classes_'+str(self.img_rows)+'x'+str(self.img_cols)+'_all_cleaned_updated_'+str(new_dataset_shape)
+        np.save(PATH+new_dataset_name,np.asarray(combined_data))
+        print('saved as: '+PATH+new_dataset_name+'.npy')
+        
+        return new_dataset_name
+    def clean_dataset(self,PATH,name):
+#        from constants import target_names_all
+        from skimage import measure
+        complete_data_set = np.load(PATH+name+'.npy')
+        label_set = complete_data_set[:,-1]#get correct answer labels
+        data_set = complete_data_set[:,:-1] # remove correct answer labels
+        temp_complete_data_set = []
+        delete_list = []
+        resize_list = []
+        swap_list = []
+        for i in range(data_set.shape[0]):
+            print(i)
+            if i in delete_list:
+                continue
+            elif i in resize_list:
+                continue #originally fix it
+            elif i in swap_list:
+                continue #
+                new_index = ''
+                #add data with new index
+                data_set_line = data_set[i,:]
+                label_set_line = np.asarray(new_index)
+                new_data_line = np.hstack((data_set_line,label_set_line))
+                temp_complete_data_set.append(new_data_line)
+            else:
+                #check if empty
+                extraction = np.reshape(data_set[i,:],(100,100))
+                labelled_array, max_label = measure.label(extraction, background=0, connectivity=2, return_num=True)
+                if max_label == 0:
+                    continue
+                data_set_line = data_set[i,:]
+                label_set_line = label_set[i]
+                new_data_line = np.hstack((data_set_line,label_set_line))
+                temp_complete_data_set.append(new_data_line)
+        #change back to array
+        complete_data_set = np.asarray(temp_complete_data_set)
+        np.save(PATH+"Training_Samples_64_classes_100x100_all_cleaned_"+str(complete_data_set.shape[0]), complete_data_set)
+        print('saved as :'+ str(PATH) + "Training_Samples_64_classes_100x100_all_cleaned_"+str(complete_data_set.shape[0]))

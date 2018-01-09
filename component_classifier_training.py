@@ -148,14 +148,12 @@ class ComponentClassifierTraining(object):
         # Layer 8
         model.add(Flatten())
         model.add(Dense(num_classes, activation='softmax'))
-
-
         
         
         model.compile(loss='categorical_crossentropy',
                       optimizer=Adadelta(),
                       metrics=['accuracy'])
-
+        model.summary()
         return model
 
     def train(self, epochs, seed, verbose=1):
@@ -303,7 +301,7 @@ class ComponentClassifierTraining(object):
             fig.savefig(PATH + 'complete_data_set'+str(name)+'_'+str(j)+'.jpg')
             print('Saved extractions figure as' + PATH+ 'complete_data_set_'+str(name)+'_'+str(j)+'.jpg')
 #            fig.close()
-    def edit_dataset(self,PATH,name):
+    def clean_dataset(self,PATH,name):
 #        from constants import target_names_all
         from skimage import measure
 
@@ -375,11 +373,32 @@ class ComponentClassifierTraining(object):
                 labelled_array, max_label = measure.label(extraction, background=0, connectivity=2, return_num=True)
                 if max_label == 0:
                     continue
+                #check if duplicate
+                
+                
                 data_set_line = data_set[i,:]
                 label_set_line = label_set[i]
                 new_data_line = np.hstack((data_set_line,label_set_line))
                 temp_complete_data_set.append(new_data_line)
         #change back to array
         complete_data_set = np.asarray(temp_complete_data_set)
-        np.save(PATH+"Training_Samples_64_classes_100x100_all_cleaned", complete_data_set)
-        print('saved as :'+ str(PATH) + "Training_Samples_64_classes_100x100_all_cleaned")
+        np.save(PATH+"Training_Samples_64_classes_100x100_all_cleaned_"+str(complete_data_set.shape[0]), complete_data_set)
+        print('saved as :'+ str(PATH) + "Training_Samples_64_classes_100x100_all_cleaned_"+str(complete_data_set.shape[0]))
+    def count_dataset(self, dataset_PATH, dataset_name, num_classes):
+        data_all = self.load_data(dataset_PATH, dataset_name)
+        label_list = data_all[:,-1]
+        count_list = np.zeros(num_classes).astype(np.int).tolist()
+        x_list = np.arange(num_classes).tolist()
+        for i in label_list:
+            count_list[i] += 1
+            
+        fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(25, 25))
+        plt.bar(x_list,count_list)
+        plt.title("Dataset Count")
+        plt.xlabel("Class index")
+        plt.ylabel("Count")
+        plt.show()
+        fig.savefig(dataset_PATH+dataset_name+'dataset_count')
+        print(count_list)
+        return count_list
+        

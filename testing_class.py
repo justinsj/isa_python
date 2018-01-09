@@ -193,7 +193,99 @@ class TestingClass(object):
         if count >= needed_number_to_agree:
             index = most_common_index
         return index
-    
+    def test_classifier_all(self, dataset_PATH, dataset_name, TRAIN_RATIO_TRAIN, TRAIN_RATIO_VAL,iters,seed,max_problem_images): 
+        #training_dataset_filename example: Training_Samples_64_classes_100x100_all
+        # ground_truth_filename example: all_44
+        #test n number of samples
+        #for k times
+        
+        '''
+        Inputs: image, ground_truth_data, ground_truth_index
+        Outputs: accuracy of model classifier only (using same segmentations of ground truth)
+        '''
+        random.seed(seed)
+#        x=[]
+#        y=[]
+        
+#        n_was_list = True
+        # load ground truth data        
+
+
+        gc.collect()
+        prediction_indices = []
+        ground_truth_indices = []
+
+        f = open(self.PATH+'testing_results_'+str(iters)+'.txt','a')
+        # train model
+        training_obj = ComponentClassifierTraining(dataset_PATH, "Training_Samples_64_classes_100x100_all", 64, 0, TRAIN_RATIO_TRAIN, TRAIN_RATIO_VAL)
+        training_obj.X_train, training_obj.y_train, training_obj.X_val, training_obj.y_val, training_obj.X_test, training_obj.y_test = training_obj.shuffle_data(np.load(dataset_PATH+dataset_name+'.npy'),seed)
+        training_obj.model = training_obj.load_sketch_a_net_model(0, 64, training_obj.X_train.shape[1:])
+        
+#        training_obj.train(iters,seed)
+        PATH = 'C:/Users/JustinSanJuan/Desktop/Workspace/python/Testing Folder/' #must have "/" at the end
+        
+        name = 'Sketch-a-Net_64_classes_100x100_0.0_all_100epochs'
+        training_obj.model.load_weights(PATH+name+'.h5')
+
+        
+        trained_model = training_obj.model
+#        del training_obj
+        gc.collect()
+        # test on all samples
+        for gt_image_num in range(max_problem_images):
+            gc.collect()
+            print('testing on image number: ' + str(gt_image_num))
+            gt_data_path_string = dataset_PATH+'GT/'+'GT_all_'+str(gt_image_num)+'.txt'
+            
+            if not(os.path.isfile(gt_data_path_string)): continue
+            
+            GT_array = self.load_gt_array(gt_image_num)
+            if gt_image_num <400:
+                gt_image = np.load(self.PATH+'all_training_images_1.npy').astype(bool)[:,:,gt_image_num]
+            elif gt_image_num >=400 and gt_image_num <800:
+                gt_image = np.load(self.PATH+'all_training_images_2.npy').astype(bool)[:,:,gt_image_num-400]
+
+            gt_extraction_list_temp, gt_indices_list_temp = self.process_gt_image_extractions(gt_image, GT_array)
+            
+            gt_indices_list = []
+            gt_extraction_list = []
+            #remove class 23's from extractions
+            for gt_list_index in range(len(gt_indices_list_temp)):
+                if (int(gt_indices_list_temp[gt_list_index]) != 23):# and (int(gt_indices_list_temp[gt_list_index]) < 48):
+                    gt_indices_list.append(gt_indices_list_temp[gt_list_index]) 
+                    gt_extraction_list.append(gt_extraction_list_temp[gt_list_index])
+            
+            for gt_extraction_num in range(len(gt_indices_list)):
+                gc.collect()
+                prediction_index = (self.predict_from_gt_image(gt_extraction_list[gt_extraction_num], trained_model))
+                
+                ground_truth_index = gt_indices_list[gt_extraction_num]
+                prediction_indices.append(prediction_index)
+                ground_truth_indices.append(ground_truth_index)
+
+            print(ground_truth_indices)
+            print(prediction_indices)
+            
+        accuracy = calculate_accuracy(prediction_indices, ground_truth_indices)
+
+        gc.collect()
+            
+        f.writelines(str(accuracy)+'\n')
+        f.close()
+        del trained_model
+        gc.collect()
+
+        from helper_functions import plot_confusion_matrix
+        from constants import target_names_all
+        cnf_matrix = confusion_matrix(np.reshape(np.asarray(ground_truth_indices),
+                    (1,len(ground_truth_indices))), np.reshape(np.asarray(prediction_indices),(len(prediction_indices),1)))
+        plot_confusion_matrix(cnf_matrix, classes=target_names_all,
+                      title='Confusion matrix')
+#        del prediction_indices
+#        del ground_truth_indices
+        gc.collect()
+        
+        return return prediction_indices, ground_truth_indices
     def test_classifier(self, training_dataset_filename, train_ratio, k,list_of_n,iters,seed): 
         #training_dataset_filename example: Training_Samples_64_classes_100x100_all
         # ground_truth_filename example: all_44
@@ -213,13 +305,12 @@ class TestingClass(object):
         if (type(list_of_n) is int) or (type(list_of_n) is np.int64) or (type(list_of_n) is float): 
             print('n was int')
             list_of_n = [list_of_n]
-        step = 5
-        list_images = list(map(int,np.arange(0,150,step)))
+#        step = 1
+#        list_images = list(map(int,np.arange(0,150,step)))
 
-        
         gc.collect()
         for n in list_of_n:
-            for i in range(k):
+            for i in range(k): #number of iterations
                 gc.collect()
                 prediction_indices = []
                 ground_truth_indices = []
