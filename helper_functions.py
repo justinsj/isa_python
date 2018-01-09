@@ -209,45 +209,88 @@ def calculate_accuracies(prediction_list, ground_truth_list):
 def plot_confusion_matrix(cm, classes,
                           normalize=False,
                           title='Confusion matrix',
-                          cmap=plt.cm.Blues):
+                          cmap=plt.cm.Blues, PATH='', name='confusion_matrix', verbose = False):
     
     import matplotlib.pyplot as plt
-    plt.subplots(ncols=1, nrows=1, figsize=(40, 40))
+    fig,ax = plt.subplots(ncols=1, nrows=1, figsize=(25, 25))
     
     import itertools
-    """
-    This function prints and plots the confusion matrix.
-    Normalization can be applied by setting `normalize=True`.
-    """
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
     plt.colorbar()
     tick_marks = np.arange(len(classes))
-    plt.xticks(tick_marks, classes, rotation=45)
+    plt.xticks(tick_marks, classes, rotation=90)
     plt.yticks(tick_marks, classes)
-
+    
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-        print("Normalized confusion matrix")
+        if verbose:
+            print("Normalized confusion matrix")
     else:
-        print('Confusion matrix, without normalization')
-
-    print(cm)
-
+        if verbose:
+            print('Confusion matrix, without normalization')
+    
+#    print(cm)
+    
     thresh = cm.max() / 2.
     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
         plt.text(j, i, cm[i, j],
                  horizontalalignment="center",
                  color="white" if cm[i, j] > thresh else "black")
-
+    
     
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
-    plt.subplots_adjust(bottom=.15)
     plt.tight_layout()
     plt.show()
+    fig.savefig(PATH+name)
+    print('Figure is saved as: ' +PATH+name+'.png')
 
-
+def confusion_matrix_analysis(cm, dataset_PATH, name, min_count, verbose = False):
+    count = 0
+    string_counts_list = []
+    string_entries_list = [] #list of entries in dictionary
+    
+    f = open(dataset_PATH+name+'.txt','w+')
+    from constants import target_names_all
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            string = ''
+            if i == j: continue
+            count = cm[i][j]
+            if count == 0: continue
+            if count < min_count: continue
+            true_label = target_names_all[i]
+            predicted_label = target_names_all[j]
+            string = str(true_label) + ' --> ' + str(predicted_label)
+            
+            string_entries_list.append(string)
+            string_counts_list.append(count)
+    
+    string_list = [] #list of strings to be added
+    for k in range(len(string_counts_list)):
+        if verbose:
+            print(k)
+        #get max count
+        max_count = max(string_counts_list)
+        #get index of max_count
+        max_index = string_counts_list.index(max_count)
+        #create string
+        string_line = '['+str(string_counts_list[max_index])+'] '+ str(string_entries_list[max_index]) + '\n'
+        #add string to string_list
+        string_list.append(string_line)
+        #remove max entries
+        string_counts_list.remove(string_counts_list[max_index])
+        string_entries_list.remove(string_entries_list[max_index])
+        
+    #write each string
+    for line in string_list:
+        f.writelines(line)
+    f.close()
+    if verbose:
+        return string_list
+    print('Data saved as: ' + dataset_PATH+name+'.txt')
+    return
 
 #%%
 ################## OLD CODE #########################
