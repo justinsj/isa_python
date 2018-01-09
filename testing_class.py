@@ -271,6 +271,8 @@ class TestingClass(object):
         gc.collect()
             
         f.writelines(str(accuracy)+'\n')
+        f.writelines(str(prediction_indices)+'\n')
+        f.writelines(str(ground_truth_indices)+'\n')
         f.close()
         del trained_model
         gc.collect()
@@ -281,11 +283,11 @@ class TestingClass(object):
                     (1,len(ground_truth_indices))), np.reshape(np.asarray(prediction_indices),(len(prediction_indices),1)))
         plot_confusion_matrix(cnf_matrix, classes=target_names_all,
                       title='Confusion matrix')
-#        del prediction_indices
-#        del ground_truth_indices
+        del prediction_indices
+        del ground_truth_indices
         gc.collect()
         
-        return return prediction_indices, ground_truth_indices
+        return 
     def test_classifier(self, training_dataset_filename, train_ratio, k,list_of_n,iters,seed): 
         #training_dataset_filename example: Training_Samples_64_classes_100x100_all
         # ground_truth_filename example: all_44
