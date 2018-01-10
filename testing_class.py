@@ -274,9 +274,9 @@ class TestingClass(object):
                 prediction_indices.append(prediction_index)
                 ground_truth_indices.append(ground_truth_index)
 
-            print(ground_truth_indices)
-            print(prediction_indices)
-            
+#            print(ground_truth_indices)
+#            print(prediction_indices)
+#            
         accuracy = calculate_accuracy(prediction_indices, ground_truth_indices)
 
         gc.collect()
@@ -375,8 +375,8 @@ class TestingClass(object):
                     prediction_indices.append(prediction_index)
                     ground_truth_indices.append(ground_truth_index)
 
-        print(ground_truth_indices)
-        print(prediction_indices)
+#        print(ground_truth_indices)
+#        print(prediction_indices)
         
         accuracy = calculate_accuracy(prediction_indices, ground_truth_indices)
 
@@ -477,8 +477,8 @@ class TestingClass(object):
                     prediction_indices.append(prediction_index)
                     ground_truth_indices.append(ground_truth_index)
 
-            print(ground_truth_indices)
-            print(prediction_indices)
+#            print(ground_truth_indices)
+#            print(prediction_indices)
             
         accuracy = calculate_accuracy(prediction_indices, ground_truth_indices)
 
