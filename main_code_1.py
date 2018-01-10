@@ -130,6 +130,7 @@ min_percent_match = 0 # set to 0.7
 min_confidence = 0 # set to 0.3
 
 #Paths and names
+'''
 PATH = 'C:/Users/JustinSanJuan/Desktop/Workspace/python/Testing Folder/' #must have "/" at the end
 
 name = 'Sketch-a-Net_64_classes_100x100_0.0_all_100epochs'
@@ -139,12 +140,84 @@ data_set_name = 'Training_Samples_64_classes_100x100_all'
 dataset_PATH = 'C:/Users/JustinSanJuan/Desktop/HKUST/UROP Deep Learning Image-based Structural Analysis/Code/Python/Testing Folder/'
 dataset_name = 'Training_Samples_64_classes_100x100_all'
 new_dataset_name = 'Training_Samples_64_classes_100x100_all_cleaned'
+'''
+
+PATH = '/home/chloong/Desktop/Justin San Juan/isa_python/'
+name = 'Sketch-a-Net_64_classes_100x100_0.0_all_100epochs'
+data_set_name = 'Training_Samples_64_classes_100x100_all'
+dataset_PATH = '/home/chloong/Desktop/Justin San Juan/Testing Folder/'
+dataset_name = 'Training_Samples_64_classes_100x100_all'
+new_dataset_name = 'Training_Samples_64_classes_100x100_all_cleaned'
 
 print('Done setting hyperparamters...')
 
 
 # # Load Image
 # Image (binary, grayscale, 2D, numpy array) for regions of interest proposals is loaded.
+# In[6]:
+
+
+start = time.time() # Begin time measurement
+
+seed = 1000
+i = 1234
+training_obj = ComponentClassifierTraining(num_classes, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL)
+'''
+#To get model shape = (100, 100,1)
+training_obj.shuffle_data(training_obj.load_data(dataset_PATH,data_set_name),seed)
+print(training_obj.X_train.shape[1:])
+'''
+#Model is Sketch_a_net
+training_obj.model = training_obj.load_sketch_a_net_model(dropout, num_classes,(100,100,1))
+
+dataset_name_1 = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739"
+dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_updated_13301_all_problem_images"
+dataset_name_list = [dataset_name_1, dataset_name_2]
+data_count = training_obj.count_dataset(dataset_PATH, dataset_name_list,num_classes)
+
+training_obj.train_from_multiple_files(100,seed,dataset_PATH,dataset_name_list,verbose = 1)
+weights_name = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739+13301"
+training_obj.save(dataset_PATH+weights_name)
+#training_obj.train(100,seed)
+#training_obj.save(name+'_'+str(i))
+#training_obj.model.load_weights(PATH+name+'.h5')
+
+trained_model = training_obj.model
+
+#training_obj.plot_training_data_all(dataset_PATH,new_dataset_name,0)
+
+end = time.time()#record time
+print('ComponentClassifierTraining done... Time Elapsed : '+ str(end-start) + ' seconds...')
+t4 = end-start
+
+
+# # ComponentClassifierPredict
+# ### The ComponentClassifierPredict object is first initialized with the entropy-based hyperparameters:
+#     - min_percent_match
+#     - min_confidence
+# These parameters were explained in the Hyperparameters section above.
+# ### The predict_classes function produces the following:
+#     - ext_class_index_list: ordered list of highest % match class predictions for each
+# The entropy-based modifications are applied to the above (such that if any of the two criteria are not satisfied, the prediction is classified as random)
+#     - ext_class_name_list: ordered list of corresponding names to ext_class_index_list
+#     - ext_match_first_max_percent_list: ordered list of corresponding first-highest match percentage
+#     - ext_match_second_max_percent_list: ordered list of corresponding second-highest match percentage
+# In[8]:
+seed = 1000
+
+weights_name = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739+7500(0-350)"
+
+dataset_name_1 = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739"
+dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_updated_7500_0-350"
+dataset_name_list = [dataset_name_1, dataset_name_2]
+
+testing_obj = TestingClass(dataset_PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
+testing_obj.test_classifier_multiple_slow(dataset_PATH, dataset_name_list,
+                                     num_classes,dropout, 
+                                     TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,
+                                     100,seed,350,706,
+                                     weights_name = weights_name)
+#testing_obj.test_classifier_all(dataset_PATH, dataset_name, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,200,seed,400) 
 
 # In[3]:
 
@@ -245,45 +318,7 @@ t3 = end-start
 # ##### The shuffle_data is then called to shuffle the training data using a seed<br>The Sketch_A_Net model is then loaded<br>Then the model is trained with 100 epochs<br>Then the model weights are saved<br>Finally the trained model is stored in trained_model to be passed onto a ComponentClassifierPredict object
 # #### If model weights have been trained before, the training and saving is not required, and the load_weights function has to be called instead.
 
-# In[6]:
 
-
-start = time.time() # Begin time measurement
-
-seed = 1000
-i = 1234
-training_obj = ComponentClassifierTraining(PATH, new_dataset_name, num_classes, dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL)
-training_obj.shuffle_data(training_obj.load_data(PATH,data_set_name),seed)
-
-#Model is Sketch_a_net
-training_obj.model = training_obj.load_sketch_a_net_model(dropout, num_classes, training_obj.X_train.shape[1:])
-
-#training_obj.train(100,seed)
-#training_obj.save(name+'_'+str(i))
-training_obj.model.load_weights(PATH+name+'.h5')
-
-trained_model = training_obj.model
-dataset_PATH = 'C:/Users/JustinSanJuan/Desktop/HKUST/UROP Deep Learning Image-based Structural Analysis/Code/Python/Testing Folder/'
-dataset_name = 'Training_Samples_64_classes_100x100_all_cleaned_updated_29739'
-new_dataset_name = 'Training_Samples_64_classes_100x100_all_cleaned_updated_13301'
-#training_obj.plot_training_data_all(dataset_PATH,new_dataset_name,105)
-
-end = time.time()#record time
-print('ComponentClassifierTraining done... Time Elapsed : '+ str(end-start) + ' seconds...')
-t4 = end-start
-
-
-# # ComponentClassifierPredict
-# ### The ComponentClassifierPredict object is first initialized with the entropy-based hyperparameters:
-#     - min_percent_match
-#     - min_confidence
-# These parameters were explained in the Hyperparameters section above.
-# ### The predict_classes function produces the following:
-#     - ext_class_index_list: ordered list of highest % match class predictions for each
-# The entropy-based modifications are applied to the above (such that if any of the two criteria are not satisfied, the prediction is classified as random)
-#     - ext_class_name_list: ordered list of corresponding names to ext_class_index_list
-#     - ext_match_first_max_percent_list: ordered list of corresponding first-highest match percentage
-#     - ext_match_second_max_percent_list: ordered list of corresponding second-highest match percentage
 
 # In[7]:
 
@@ -395,11 +430,7 @@ t5 = end-start
 
 
 '''
-# In[8]:
-seed = 1234
-    
-testing_obj = TestingClass(PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
-testing_obj.test_classifier_all(dataset_PATH, dataset_name, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,200,seed,400) 
+
 #%%
 
 start = time.time() # Begin time measurement
@@ -431,7 +462,7 @@ labelling_obj = ExtractionLabelling(dataset_PATH,
                           ext_images_list, ext_data_list,ext_class_index_list, ext_class_name_list, 
                           num_classes, img_rows, img_cols)
 labelling_obj = ExtractionLabelling(dataset_PATH, [],[],[],[],64,100,100)
-new_dataset_name = labelling_obj.update_answers_list(dataset_PATH, new_dataset_name,350,710)
+new_dataset_name = labelling_obj.update_answers_list(dataset_PATH, new_dataset_name,0,350)
 labelling_obj.clean_dataset(dataset_PATH,new_dataset_name)
 
 labelling_obj.define_model(trained_model)
