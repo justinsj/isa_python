@@ -412,18 +412,23 @@ class ComponentClassifierTraining(object):
             data_all = self.load_data(dataset_PATH, dataset_name)
             label_list = data_all[:,-1]
             for i in label_list:
-                print(i)
+#                print(i)
                 count_list[int(i)] += 1
                 
         fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(25, 25))
         plt.bar(x_list,count_list)
         plt.title("Dataset Count")
-        tick_spacing = 1
-        ax.xaxis.set_minor_locator(ticker.MultipleLocator(tick_spacing))
-        ax.yaxis.set_minor_locator(ticker.MultipleLocator(tick_spacing))
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+        ax.yaxis.set_major_locator(ticker.MultipleLocator(200))
         plt.xlabel("Class index")
         plt.ylabel("Count")
+        xmin = -0.5
+        xmax = num_classes-1+0.5
+        plt.xlim(xmin, xmax)
+        plt.grid()
+        plt.tight_layout()
         plt.show()
         fig.savefig(dataset_PATH+dataset_name+'dataset_count')
-        print(count_list)
+#        print(count_list)
         return count_list
+    
