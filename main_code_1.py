@@ -27,7 +27,8 @@
 
 # In[1]:
 
-
+%load_ext autoreload
+%autoreload 2
 from __future__ import print_function
 import numpy as np
 
@@ -176,8 +177,9 @@ training_obj.model = training_obj.load_sketch_a_net_model(dropout, num_classes,(
 dataset_name_1 = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739"
 dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_updated_13301_all_problem_images"
 dataset_name_list = [dataset_name_1, dataset_name_2]
-#data_count = training_obj.count_dataset(dataset_PATH, dataset_name_list,num_classes)
+data_count = training_obj.count_dataset(dataset_PATH, dataset_name_list,num_classes)
 
+#%%
 training_obj.train_from_multiple_files(200,seed,dataset_PATH,dataset_name_list,verbose = 1)
 weights_name = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739+13301_121epochs"
 #training_obj.is_trained = True
