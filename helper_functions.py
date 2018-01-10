@@ -276,7 +276,7 @@ def confusion_matrix_analysis(cm, dataset_PATH, name, min_count, verbose = False
         #get index of max_count
         max_index = string_counts_list.index(max_count)
         #create string
-        string_line = '['+str(string_counts_list[max_index])+'] '+ str(string_entries_list[max_index]) + '\n'
+        string_line = '['+str(string_counts_list[max_index])+'] '+ str(string_entries_list[max_index])
         #add string to string_list
         string_list.append(string_line)
         #remove max entries
@@ -285,7 +285,7 @@ def confusion_matrix_analysis(cm, dataset_PATH, name, min_count, verbose = False
         
     #write each string
     for line in string_list:
-        f.writelines(line)
+        f.writelines(line + '\n')
     f.close()
     if verbose:
         return string_list

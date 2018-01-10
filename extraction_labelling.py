@@ -254,7 +254,7 @@ class ExtractionLabelling(object):
         self.ext_data_temp.append(data)
         
         if self.check == '' or self.check == ' ':
-            string = str(x1)+' '+str(y1)+' '+str(w)+' '+str(h)+' '+str(self.prediction_index)
+            string = str(self.x)+' '+str(self.y)+' '+str(self.w)+' '+str(self.h)+' '+str(self.prediction_index)
             self.lines.append(string+'\n')
             self.ext_images_temp.append(self.extraction)
             self.ext_class_index_temp.append(self.prediction_index)
@@ -463,12 +463,32 @@ class ExtractionLabelling(object):
         data_ans = []
 #        ans = []
 #        ext_images = []
-        print('loading imageset')
-        imageset = np.load(PATH+"all_training_images.npy")
-        print('loaded imageset')
+        
         self.gt = []
+        loaded_image_name = ''
         for j in range(start, end):
             self.gt=[]
+            if j < 400 and loaded_image_name != 'all_training_images_1':
+                print('loading imageset')
+                loaded_image_name = 'all_training_images_1'
+                imageset = np.load(PATH+loaded_image_name+".npy")
+                print('loaded imageset')
+            elif j < 800 and j >=400 and loaded_image_name != 'all_training_images_2':
+                print('loading imageset')
+                loaded_image_name = 'all_training_images_2'
+                imageset = np.load(PATH+loaded_image_name+".npy")
+                print('loaded imageset')
+            elif j < 1200 and j >= 800 and loaded_image_name != 'all_training_images_3':
+                print('loading imageset')
+                loaded_image_name = 'all_training_images_3'
+                imageset = np.load(PATH+loaded_image_name+".npy")
+                print('loaded imageset')
+            elif j < 1440 and j >= 1200 and loaded_image_name != 'all_training_images_4':
+                print('loading imageset')
+                loaded_image_name = 'all_training_images_4'
+                imageset = np.load(PATH+loaded_image_name+".npy")
+                print('loaded imageset')
+
             imagename =  "all_"+str(int(j))
             print(PATH+'GT/GT_'+str(imagename)+'.txt')
             # don't add if missing GT data
@@ -510,16 +530,16 @@ class ExtractionLabelling(object):
         print('Adding ' + str(len(data_ans)) +' training samples to training set...')
         
         #Load current answers
-#        data_all=np.load(PATH+name+'.npy')
-#        print('Inital length = '+ str(data_all.shape[0]))
+        data_all=np.load(PATH+name+'.npy')
+        print('Inital length = '+ str(data_all.shape[0]))
         
         #Add new answers to old answers
         combined_data = []
-#        for i in range(data_all.shape[0]):
-#            print(str(i)+' / ' +str(data_all.shape[0])+ ' of data_all')
-#            data_line = data_all[i].astype(np.int)
-#            combined_data.append(data_line.tolist())
-#        del data_all
+        for i in range(data_all.shape[0]):
+            print(str(i)+' / ' +str(data_all.shape[0])+ ' of data_all')
+            data_line = data_all[i].astype(np.int)
+            combined_data.append(data_line.tolist())
+        del data_all
         for i in range(len(data_ans)):
             print(str(i)+' / ' +str(len(data_ans))+' of data_ans')
             #if duplicate, skip
