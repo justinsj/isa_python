@@ -328,7 +328,7 @@ start = time.time() # Begin time measurement
 prediction_obj = ComponentClassifierPredict(min_percent_match, min_confidence)
 
 ext_class_index_list, ext_class_name_list, ext_match_first_max_percent_list, ext_match_second_max_percent_list = prediction_obj.predict_classes(ext_images_list,trained_model)
-"""
+""
 #y_pred_one_hot = prediction_obj.get_one_hot(prediction_list)
 #y_test_one_hot = prediciton_obj.get_one_hot(ground_truth_list)
 
@@ -398,7 +398,7 @@ t5 = end-start
 #     - Second: predicted class name of that object.
 # ##### If the predicted class matches with the ground truth class, <br> then the predicted label is coloured green, otherwise it is red. <br> * For this example, the ground truth labels were set as the predicted classes, so all labels are green.
 
-"""
+""
 
 '''
 
