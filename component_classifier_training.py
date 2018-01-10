@@ -43,7 +43,7 @@ class ComponentClassifierTraining(object):
         self.TRAINING_RATIO_TRAIN = TRAINING_RATIO_TRAIN
         self.TRAINING_RATIO_VAL = TRAINING_RATIO_VAL
         self.num_classes = num_classes
-        self.batch_size = 25
+        self.batch_size = 32
         self.img_rows,self.img_cols = 100,100
 
     def load_data(self,PATH,name):
@@ -162,6 +162,18 @@ class ComponentClassifierTraining(object):
         
         self.history = self.model.fit(self.X_train, self.y_train, batch_size=self.batch_size,
                                       epochs=epochs, verbose=verbose,
+                                      validation_data=(self.X_val, self.y_val))
+        self.is_trained = True
+    def train_from_multiple_files(self, epochs, seed, verbose=1, dataset_PATH, dataset_name_1, dataset_name_2):
+        """ Train model with input number of epochs """
+        np.random.seed(seed)  # For reproducibility
+        # create BatchGenerator using dataset_PATH, and dataset_names
+        
+        #run training
+        for e in range(epochs):
+            for X_train,y_train,X_val,y_val in BatchGenerator():
+                self.history = self.model.fit(self.X_train, self.y_train, batch_size=self.batch_size,
+                                      epochs=1, verbose=verbose,
                                       validation_data=(self.X_val, self.y_val))
         self.is_trained = True
         

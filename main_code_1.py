@@ -430,7 +430,8 @@ start = time.time() # Begin time measurement
 labelling_obj = ExtractionLabelling(dataset_PATH,
                           ext_images_list, ext_data_list,ext_class_index_list, ext_class_name_list, 
                           num_classes, img_rows, img_cols)
-new_dataset_name = labelling_obj.update_answers_list(dataset_PATH, new_dataset_name,0,706)
+labelling_obj = ExtractionLabelling(dataset_PATH, [],[],[],[],64,100,100)
+new_dataset_name = labelling_obj.update_answers_list(dataset_PATH, new_dataset_name,350,710)
 labelling_obj.clean_dataset(dataset_PATH,new_dataset_name)
 
 labelling_obj.define_model(trained_model)
