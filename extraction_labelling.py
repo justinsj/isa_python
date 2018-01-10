@@ -451,7 +451,7 @@ class ExtractionLabelling(object):
 #        end = time.time()
 #        duration = end-start
 #        print('time elapsed updating answers vstack = ' + str(duration))
-    def update_answers_list(self, PATH, name, start, end):
+    def update_answers_list(self, PATH, name, start, end, exclude = []):
         
         print('Updating answers...')
         #load gt_list
@@ -488,6 +488,15 @@ class ExtractionLabelling(object):
                 loaded_image_name = 'all_training_images_4'
                 imageset = np.load(PATH+loaded_image_name+".npy")
                 print('loaded imageset')
+                
+            if j < 400:
+                image = imageset[:,:,j]
+            elif j < 800 and j >= 400:
+                image = imageset[:,:,j-400]
+            elif j < 1200 and j >= 800:
+                image = imageset[:,:,j-800]
+            elif j < 1440 and j >= 1200:
+                image = imageset[:,:,j-1200]
 
             imagename =  "all_"+str(int(j))
             print(PATH+'GT/GT_'+str(imagename)+'.txt')
@@ -496,15 +505,17 @@ class ExtractionLabelling(object):
                 continue
             print('imagename = '+ str(imagename))
             self.load_text(imagename)
-            print(self.gt)
-            image = imageset[:,:,j]
+#            print(self.gt)
+            
 #            self.plot_ground_truths(image,imagename)
             for i in range(len(self.gt)):
           #load ext_images
 #                print_image_bw(image,5,5)
 #                print(1)
                 x, y, w, h, c = self.gt[i]
-                print(c)
+                if exclude != []:
+                   if c in exclude: continue
+#                print(c)
                 x1 = x
                 x2 = x+w
                 y1 = y
@@ -547,6 +558,7 @@ class ExtractionLabelling(object):
 #            print(combined_data)
             if data_ans[i] in combined_data:
                 continue
+
             data_line = data_ans[i]
             combined_data.append(data_line)
         del data_ans
@@ -555,30 +567,28 @@ class ExtractionLabelling(object):
         new_dataset_shape = len(combined_data)
         print('Final shape = '+ str(new_dataset_shape))
         #Save data
-        new_dataset_name = 'Training_Samples_'+str(self.num_classes)+'_classes_'+str(self.img_rows)+'x'+str(self.img_cols)+'_all_cleaned_updated_'+str(new_dataset_shape)
+        new_dataset_name = 'Training_Samples_'+str(self.num_classes)+'_classes_'+str(self.img_rows)+'x'+\
+            str(self.img_cols)+'_all_cleaned_updated_'+str(new_dataset_shape)+"_("+str(start)+"-"+str(end)+")"        
         np.save(PATH+new_dataset_name,np.asarray(combined_data))
         print('saved as: '+PATH+new_dataset_name+'.npy')
         
         return new_dataset_name
-    def clean_dataset(self,PATH,name):
+    def clean_dataset(self,PATH,name,delete_list=[], resize_list = [], swap_list = [],swap_index_list=[]):
 #        from constants import target_names_all
         from skimage import measure
         complete_data_set = np.load(PATH+name+'.npy')
         label_set = complete_data_set[:,-1]#get correct answer labels
         data_set = complete_data_set[:,:-1] # remove correct answer labels
         temp_complete_data_set = []
-        delete_list = []
-        resize_list = []
-        swap_list = []
         for i in range(data_set.shape[0]):
             print(i)
             if i in delete_list:
-                continue
+                    continue
             elif i in resize_list:
                 continue #originally fix it
             elif i in swap_list:
-                continue #
-                new_index = ''
+                list_index = swap_list.index(i)
+                new_index = swap_index_list[list_index]
                 #add data with new index
                 data_set_line = data_set[i,:]
                 label_set_line = np.asarray(new_index)
@@ -590,11 +600,14 @@ class ExtractionLabelling(object):
                 labelled_array, max_label = measure.label(extraction, background=0, connectivity=2, return_num=True)
                 if max_label == 0:
                     continue
+                
                 data_set_line = data_set[i,:]
                 label_set_line = label_set[i]
                 new_data_line = np.hstack((data_set_line,label_set_line))
                 temp_complete_data_set.append(new_data_line)
         #change back to array
         complete_data_set = np.asarray(temp_complete_data_set)
-        np.save(PATH+"Training_Samples_64_classes_100x100_all_cleaned_"+str(complete_data_set.shape[0]), complete_data_set)
-        print('saved as :'+ str(PATH) + "Training_Samples_64_classes_100x100_all_cleaned_"+str(complete_data_set.shape[0]))
+        final_dataset_name = "Training_Samples_64_classes_100x100_all_cleaned_"+str(complete_data_set.shape[0])
+        np.save(PATH+final_dataset_name, complete_data_set)
+        print('saved as :'+ str(PATH) + final_dataset_name)
+        return final_dataset_name
