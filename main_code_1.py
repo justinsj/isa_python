@@ -136,19 +136,20 @@ PATH = 'C:/Users/JustinSanJuan/Desktop/Workspace/python/Testing Folder/' #must h
 
 name = 'Sketch-a-Net_64_classes_100x100_0.0_all_100epochs'
 
-data_set_name = 'Training_Samples_64_classes_100x100_all'
+base_dataset_name = 'Training_Samples_64_classes_100x100_all'
 
 dataset_PATH = 'C:/Users/JustinSanJuan/Desktop/HKUST/UROP Deep Learning Image-based Structural Analysis/Code/Python/Testing Folder/'
-dataset_name = 'Training_Samples_64_classes_100x100_all'
-new_dataset_name = 'Training_Samples_64_classes_100x100_all_cleaned'
+dataset_name = 'Training_Samples_64_classes_100x100_all_cleaned_32898'
+new_dataset_name = 'Training_Samples_64_classes_100x100_all_cleaned_32898'
+
 '''
 
 PATH = '/home/chloong/Desktop/Justin San Juan/isa_python/'
 name = 'Sketch-a-Net_64_classes_100x100_0.0_all_100epochs'
-data_set_name = 'Training_Samples_64_classes_100x100_all'
+base_dataset_name = 'Training_Samples_64_classes_100x100_all'
 dataset_PATH = '/home/chloong/Desktop/Justin San Juan/Testing Folder/'
-dataset_name = 'Training_Samples_64_classes_100x100_all'
-new_dataset_name = 'Training_Samples_64_classes_100x100_all_cleaned'
+dataset_name = 'Training_Samples_64_classes_100x100_all_cleaned_32898'
+new_dataset_name = 'Training_Samples_64_classes_100x100_all_cleaned_32898'
 '''
 print('Done setting hyperparamters...')
 
@@ -166,7 +167,7 @@ i = 1234
 training_obj = ComponentClassifierTraining(num_classes, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL)
 '''
 #To get model shape = (100, 100,1)
-training_obj.shuffle_data(training_obj.load_data(dataset_PATH,data_set_name),seed)
+training_obj.shuffle_data(training_obj.load_data(dataset_PATH,base_dataset_name),seed)
 print(training_obj.X_train.shape[1:])
 '''
 #Model is Sketch_a_net
@@ -208,18 +209,18 @@ t4 = end-start
 # In[8]:
 seed = 1000
 
-weights_name = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739+7500(0-350)"
-
-dataset_name_1 = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739"
-dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_updated_7500_0-350"
-dataset_name_list = [dataset_name_1, dataset_name_2]
+#weights_name = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739+7500(0-350)"
+weights_name = dataset_name
+#dataset_name_1 = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739"
+#dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_updated_7500_0-350"
+dataset_name_list = [dataset_name]
 
 testing_obj = TestingClass(dataset_PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
 testing_obj.test_classifier_multiple_slow(dataset_PATH, dataset_name_list,
                                      num_classes,dropout, 
                                      TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,
-                                     100,seed,350,706,
-                                     weights_name = weights_name)
+                                     200,seed,350,706)
+#, weights_name = weights_name
 #testing_obj.test_classifier_all(dataset_PATH, dataset_name, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,200,seed,400) 
 
 # In[3]:
@@ -307,15 +308,15 @@ t3 = end-start
 # ### Then the train and save functions should be replaced with:
 # training_obj.model.load_weights(PATH+name+'.h5')
 # ### Such that the below code is the following:
-# training_obj = ComponentClassifierTraining(PATH, data_set_name, num_classes, dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL)<br>
-# training_obj.shuffle_data(training_obj.load_data(PATH,data_set_name),1000)<br>
+# training_obj = ComponentClassifierTraining(PATH, base_dataset_name, num_classes, dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL)<br>
+# training_obj.shuffle_data(training_obj.load_data(PATH,base_dataset_name),1000)<br>
 # <br>
 # #Model is Sketch_a_net<br>
 # training_obj.model = training_obj.load_sketch_a_net_model(dropout, num_classes, training_obj.X_train.shape[1:])<br>
 # training_obj.model.load_weights(PATH+name+'.h5')<br>
 # ##### The ComponentClassifierTraining object is first initialized with:
 #     - PATH: working directory
-#     - data_set_name: for loading training data set
+#     - base_dataset_name: for loading training data set
 #     - num_classes, dropout: CNN model parameters
 #     - TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL: training parameters
 # ##### The shuffle_data is then called to shuffle the training data using a seed<br>The Sketch_A_Net model is then loaded<br>Then the model is trained with 100 epochs<br>Then the model weights are saved<br>Finally the trained model is stored in trained_model to be passed onto a ComponentClassifierPredict object
@@ -331,7 +332,7 @@ i = 1234
 training_obj = ComponentClassifierTraining(num_classes, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL)
 '''
 #To get model shape = (100, 100,1)
-training_obj.shuffle_data(training_obj.load_data(dataset_PATH,data_set_name),seed)
+training_obj.shuffle_data(training_obj.load_data(dataset_PATH,base_dataset_name),seed)
 print(training_obj.X_train.shape[1:])
 '''
 #Model is Sketch_a_net
@@ -512,8 +513,8 @@ labelling_obj = ExtractionLabelling(dataset_PATH,
                           ext_images_list, ext_data_list,ext_class_index_list, ext_class_name_list, 
                           num_classes, img_rows, img_cols)
 labelling_obj = ExtractionLabelling(dataset_PATH, [],[],[],[],64,100,100)
-new_dataset_name = labelling_obj.update_answers_list(dataset_PATH, new_dataset_name,0,350)
-labelling_obj.clean_dataset(dataset_PATH,new_dataset_name)
+new_dataset_name = labelling_obj.update_answers_list(dataset_PATH, dataset_name,350,706,exclude=[23])
+final_dataset_name = labelling_obj.clean_dataset(dataset_PATH,new_dataset_name)
 
 labelling_obj.define_model(trained_model)
 #labelling_obj.select_good_bounding_boxes(image, PATH+"GT/"+"easy_" + str(image_index))
