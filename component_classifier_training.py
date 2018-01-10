@@ -29,7 +29,7 @@ class ComponentClassifierTraining(object):
     [1]: https://arxiv.org/pdf/1501.07873.pdf
     """
 
-    def __init__(self,PATH,name, num_classes, dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL):
+    def __init__(self, num_classes, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL):
         """
         Input:
         - training_data is in shape(num_train, 100*100+1), where the last values in
@@ -164,14 +164,20 @@ class ComponentClassifierTraining(object):
                                       epochs=epochs, verbose=verbose,
                                       validation_data=(self.X_val, self.y_val))
         self.is_trained = True
-    def train_from_multiple_files(self, epochs, seed, verbose=1, dataset_PATH, dataset_name_1, dataset_name_2):
+    def LoadBatch(self,dataset_PATH, dataset_name,seed):
+        data_all = self.load_data(dataset_PATH,dataset_name)
+        X_train, y_train, X_val, y_val, X_test, y_test = self.shuffle_data(data_all,seed)
+        return X_train,y_train, X_val, y_val
+    def train_from_multiple_files(self, epochs, seed, dataset_PATH, dataset_name_list, verbose=1):
         """ Train model with input number of epochs """
         np.random.seed(seed)  # For reproducibility
         # create BatchGenerator using dataset_PATH, and dataset_names
         
         #run training
         for e in range(epochs):
-            for X_train,y_train,X_val,y_val in BatchGenerator():
+            print('Main Epoch : ' +str(e)+'/'+str(epochs))
+            for dataset_name in dataset_name_list:
+                X_train,y_train,X_val,y_val = self.LoadBatch(dataset_PATH,dataset_name,seed)
                 self.history = self.model.fit(self.X_train, self.y_train, batch_size=self.batch_size,
                                       epochs=1, verbose=verbose,
                                       validation_data=(self.X_val, self.y_val))
@@ -396,17 +402,25 @@ class ComponentClassifierTraining(object):
         complete_data_set = np.asarray(temp_complete_data_set)
         np.save(PATH+"Training_Samples_64_classes_100x100_all_cleaned_"+str(complete_data_set.shape[0]), complete_data_set)
         print('saved as :'+ str(PATH) + "Training_Samples_64_classes_100x100_all_cleaned_"+str(complete_data_set.shape[0]))
-    def count_dataset(self, dataset_PATH, dataset_name, num_classes):
-        data_all = self.load_data(dataset_PATH, dataset_name)
-        label_list = data_all[:,-1]
+    def count_dataset(self, dataset_PATH, dataset_name_list,num_classes):
+        import matplotlib.ticker as ticker
+
         count_list = np.zeros(num_classes).astype(np.int).tolist()
         x_list = np.arange(num_classes).tolist()
-        for i in label_list:
-            count_list[i] += 1
-            
+        
+        for dataset_name in dataset_name_list:
+            data_all = self.load_data(dataset_PATH, dataset_name)
+            label_list = data_all[:,-1]
+            for i in label_list:
+                print(i)
+                count_list[int(i)] += 1
+                
         fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(25, 25))
         plt.bar(x_list,count_list)
         plt.title("Dataset Count")
+        tick_spacing = 1
+        ax.xaxis.set_minor_locator(ticker.MultipleLocator(tick_spacing))
+        ax.yaxis.set_minor_locator(ticker.MultipleLocator(tick_spacing))
         plt.xlabel("Class index")
         plt.ylabel("Count")
         plt.show()
