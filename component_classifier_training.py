@@ -419,7 +419,10 @@ class ComponentClassifierTraining(object):
         plt.bar(x_list,count_list)
         plt.title("Dataset Count")
         ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
-        ax.yaxis.set_major_locator(ticker.MultipleLocator(200))
+        if max(count_list) >= 200:
+            ax.yaxis.set_major_locator(ticker.MultipleLocator(200))
+        else:
+            ax.yaxis.set_major_locator(ticker.MultipleLocator(int(max(count_list)/2)))
         plt.xlabel("Class index")
         plt.ylabel("Count")
         xmin = -0.5
@@ -431,4 +434,27 @@ class ComponentClassifierTraining(object):
         fig.savefig(dataset_PATH+dataset_name+'dataset_count')
 #        print(count_list)
         return count_list
-    
+    def control_dataset(self, dataset_PATH, dataset_name_list,num_classes,max_samples):
+        #load data
+        
+        count_list = np.zeros(num_classes).astype(np.int).tolist()
+        controlled_dataset = []
+        for dataset_name in dataset_name_list:
+            data_all = np.load(dataset_PATH+dataset_name+'.npy')
+            label_list = data_all[:,-1]
+            #get indices of samples
+            for i in range(len(label_list)):
+                index = label_list[i]
+#                print(count_list)
+                if count_list[int(index)] < max_samples:
+                    count_list[int(index)] += 1
+                    controlled_dataset.append(data_all[i,:])
+        controlled_dataset = np.asarray(controlled_dataset)
+        controlled_dataset_name = "Training_Samples_64_classes_100x100_all_controlled_"+str(controlled_dataset.shape[0])
+        print(controlled_dataset_name)
+        np.save(dataset_PATH+controlled_dataset_name, controlled_dataset)
+        print('saved as :'+ str(dataset_PATH) + controlled_dataset_name)
+        self.count_dataset(dataset_PATH, [controlled_dataset_name], num_classes)
+        return controlled_dataset_name
+        
+        #recreate dataset
