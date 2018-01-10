@@ -115,7 +115,14 @@ class TestingClass(object):
         return GT_array#, gt_image
     
     def process_gt_image_extractions(self, gt_image, GT_array):
-        GT_data = list(map(tuple,GT_array[:,:-1])) # change list of tuples of (x,y,w,h,c) in GT to array, truncate last column, then change back to list of tuples
+        try:
+            GT_data = list(map(tuple,GT_array[:,:-1])) # change list of tuples of (x,y,w,h,c) in GT to array, truncate last column, then change back to list of tuples
+        except IndexError:
+            x = GT_array[0]
+            y = GT_array[1]
+            w = GT_array[2]
+            h = GT_array[3]
+            GT_data =[(x,y,w,h)]
         extraction_obj = ExtractionPreprocessing(gt_image, '', GT_data)
         gt_extraction_list, gt_extraction_data = extraction_obj.preprocess_extractions(self.wanted_w, self.wanted_h, self.export_w, self.export_h,
                                                 self.max_piece_percent)
@@ -124,7 +131,10 @@ class TestingClass(object):
 #        ax.imshow(gt_extraction_list[0])
 #        plt.show()
 #        print(GT_array)
-        gt_indices_list = list(map(int,GT_array[:,-1]))
+        try:
+            gt_indices_list = list(map(int,GT_array[:,-1]))
+        except IndexError:
+            gt_indices_list = [GT_array[-1]]
 #        print('gt_extraction_list')
 #        print(gt_extraction_list)
 #        print('gt_indices_list')
@@ -193,7 +203,7 @@ class TestingClass(object):
         if count >= needed_number_to_agree:
             index = most_common_index
         return index
-    def test_classifier_all(self, dataset_PATH, dataset_name, TRAIN_RATIO_TRAIN, TRAIN_RATIO_VAL,iters,seed,max_problem_images): 
+    def test_classifier_all(self, dataset_PATH, dataset_name, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,iters,seed,max_problem_images): 
         #training_dataset_filename example: Training_Samples_64_classes_100x100_all
         # ground_truth_filename example: all_44
         #test n number of samples
@@ -217,7 +227,7 @@ class TestingClass(object):
 
         f = open(dataset_PATH+'testing_results_'+str(iters)+'.txt','a')
         # train model
-        training_obj = ComponentClassifierTraining(dataset_PATH, "Training_Samples_64_classes_100x100_all", 64, 0, TRAIN_RATIO_TRAIN, TRAIN_RATIO_VAL)
+        training_obj = ComponentClassifierTraining(dataset_PATH, "Training_Samples_64_classes_100x100_all", 64, 0, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL)
         training_obj.X_train, training_obj.y_train, training_obj.X_val, training_obj.y_val, training_obj.X_test, training_obj.y_test = training_obj.shuffle_data(np.load(dataset_PATH+dataset_name+'.npy'),seed)
         training_obj.model = training_obj.load_sketch_a_net_model(0, 64, training_obj.X_train.shape[1:])
         
@@ -291,6 +301,209 @@ class TestingClass(object):
         gc.collect()
         
         return 
+    def test_classifier_multiple(self, dataset_PATH, dataset_name_list, num_classes,dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,iters,seed,start,end,weights_name = None): 
+        #training_dataset_filename example: Training_Samples_64_classes_100x100_all
+        # ground_truth_filename example: all_44
+        #test n number of samples
+        #for k times
+        
+        '''
+        Inputs: image, ground_truth_data, ground_truth_index
+        Outputs: accuracy of model classifier only (using same segmentations of ground truth)
+        '''
+        random.seed(seed)
+#        x=[]
+#        y=[]
+        
+#        n_was_list = True
+        # load ground truth data        
+
+
+        gc.collect()
+        prediction_indices = []
+        ground_truth_indices = []
+
+        f = open(dataset_PATH+'testing_results_'+str(iters)+'.txt','a')
+
+        seed = 1000
+        training_obj = ComponentClassifierTraining(num_classes, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL)
+        #Model is Sketch_a_net
+        training_obj.model = training_obj.load_sketch_a_net_model(dropout, num_classes,(100,100,1))
+        if weights_name == None:
+            training_obj.train_from_multiple_files(100,seed,dataset_PATH,dataset_name_list,verbose = 1)
+        else:
+            training_obj.model.load_weights(dataset_PATH+weights_name+'.h5')
+
+        trained_model = training_obj.model
+#        del training_obj
+        gc.collect()
+        # test on all samples
+        for gt_image_num in range(start,end):
+            gc.collect()
+            print('testing on image number: ' + str(gt_image_num))
+            gt_data_path_string = dataset_PATH+'GT/'+'GT_all_'+str(gt_image_num)+'.txt'
+            
+            if not(os.path.isfile(gt_data_path_string)): continue
+            
+            GT_array = self.load_gt_array(gt_image_num)
+            if len(GT_array) == 0: continue
+            if gt_image_num <400:
+                gt_image = np.load(self.PATH+'all_training_images_1.npy').astype(bool)[:,:,gt_image_num]
+            elif gt_image_num >=400 and gt_image_num <800:
+                gt_image = np.load(self.PATH+'all_training_images_2.npy').astype(bool)[:,:,gt_image_num-400]
+            elif gt_image_num >=800 and gt_image_num <1200:
+                gt_image = np.load(self.PATH+'all_training_images_3.npy').astype(bool)[:,:,gt_image_num-800]
+            elif gt_image_num >=1200 and gt_image_num <1440:
+                gt_image = np.load(self.PATH+'all_training_images_4.npy').astype(bool)[:,:,gt_image_num-1200]
+
+
+            
+            gt_extraction_list_temp, gt_indices_list_temp = self.process_gt_image_extractions(gt_image, GT_array)
+            del gt_image
+#            gt_indices_list = []
+#            gt_extraction_list = []
+            #remove class 23's from extractions
+            for gt_list_index in range(len(gt_indices_list_temp)):
+                if (int(gt_indices_list_temp[gt_list_index]) != 23):# and (int(gt_indices_list_temp[gt_list_index]) < 48):
+#                    gt_indices_list.append(gt_indices_list_temp[gt_list_index]) 
+#                    gt_extraction_list.append(gt_extraction_list_temp[gt_list_index])
+            
+                    gc.collect()
+                    prediction_index = (self.predict_from_gt_image(gt_extraction_list_temp[gt_list_index], trained_model))
+                
+                    ground_truth_index = gt_indices_list_temp[gt_list_index]
+                    prediction_indices.append(prediction_index)
+                    ground_truth_indices.append(ground_truth_index)
+
+        print(ground_truth_indices)
+        print(prediction_indices)
+        
+        accuracy = calculate_accuracy(prediction_indices, ground_truth_indices)
+
+        gc.collect()
+            
+        f.writelines(str(accuracy)+'\n')
+        f.writelines(str(prediction_indices)+'\n')
+        f.writelines(str(ground_truth_indices)+'\n')
+        f.close()
+        del trained_model
+        gc.collect()
+
+        from helper_functions import plot_confusion_matrix
+        from constants import target_names_all
+        from sklearn.metrics import confusion_matrix
+#        import itertools
+        cnf_matrix = confusion_matrix(np.asarray(ground_truth_indices),
+                    np.asarray(prediction_indices))
+        plot_confusion_matrix(cnf_matrix, classes=target_names_all,
+                      title='Confusion matrix')
+        del prediction_indices
+        del ground_truth_indices
+        gc.collect()
+        
+        return 
+    def test_classifier_multiple_slow(self, dataset_PATH, dataset_name_list, num_classes,dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,iters,seed,start,end,weights_name = None): 
+        #training_dataset_filename example: Training_Samples_64_classes_100x100_all
+        # ground_truth_filename example: all_44
+        #test n number of samples
+        #for k times
+        
+        '''
+        Inputs: image, ground_truth_data, ground_truth_index
+        Outputs: accuracy of model classifier only (using same segmentations of ground truth)
+        '''
+        random.seed(seed)
+#        x=[]
+#        y=[]
+        
+#        n_was_list = True
+        # load ground truth data        
+
+
+        gc.collect()
+        prediction_indices = []
+        ground_truth_indices = []
+
+        f = open(dataset_PATH+'testing_results_'+str(iters)+'.txt','a')
+
+        seed = 1000
+        training_obj = ComponentClassifierTraining(num_classes, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL)
+        #Model is Sketch_a_net
+        training_obj.model = training_obj.load_sketch_a_net_model(dropout, num_classes,(100,100,1))
+        if weights_name == None:
+            training_obj.train_from_multiple_files(100,seed,dataset_PATH,dataset_name_list,verbose = 1)
+        else:
+            training_obj.model.load_weights(dataset_PATH+weights_name+'.h5')
+
+        trained_model = training_obj.model
+#        del training_obj
+        gc.collect()
+        # test on all samples
+        for gt_image_num in range(start,end):
+            gc.collect()
+            print('testing on image number: ' + str(gt_image_num))
+            gt_data_path_string = dataset_PATH+'GT/'+'GT_all_'+str(gt_image_num)+'.txt'
+            
+            if not(os.path.isfile(gt_data_path_string)): continue
+            
+            GT_array = self.load_gt_array(gt_image_num)
+            if len(GT_array) == 0: continue
+            
+            if gt_image_num < 400:
+                gt_image = np.load(self.PATH+'all_training_images_1.npy')[:,:,gt_image_num]
+            elif gt_image_num >=400 and gt_image_num <800:
+                gt_image = np.load(self.PATH+'all_training_images_2.npy')[:,:,gt_image_num-400]
+            elif gt_image_num >=800 and gt_image_num <1200:
+                gt_image = np.load(self.PATH+'all_training_images_3.npy')[:,:,gt_image_num-800]
+            elif gt_image_num >=1200 and gt_image_num <1440:
+                gt_image = np.load(self.PATH+'all_training_images_4.npy')[:,:,gt_image_num-1200]
+#            print(gt_image)  
+            gc.collect()
+
+            for GT_line in GT_array:
+                gt_extraction_list_temp, gt_indices_list_temp = self.process_gt_image_extractions(gt_image, GT_line)
+#                del gt_image
+    #            gt_indices_list = []
+    #            gt_extraction_list = []
+                #remove class 23's from extractions
+                if (int(gt_indices_list_temp[0]) != 23):# and (int(gt_indices_list_temp[gt_list_index]) < 48):
+#                    gt_indices_list.append(gt_indices_list_temp[gt_list_index]) 
+#                    gt_extraction_list.append(gt_extraction_list_temp[gt_list_index])
+            
+                    gc.collect()
+                    prediction_index = (self.predict_from_gt_image(gt_extraction_list_temp[0], trained_model))
+                
+                    ground_truth_index = gt_indices_list_temp[0]
+                    prediction_indices.append(prediction_index)
+                    ground_truth_indices.append(ground_truth_index)
+
+            print(ground_truth_indices)
+            print(prediction_indices)
+            
+        accuracy = calculate_accuracy(prediction_indices, ground_truth_indices)
+
+        gc.collect()
+            
+        f.writelines(str(accuracy)+'\n')
+        f.writelines(str(prediction_indices)+'\n')
+        f.writelines(str(ground_truth_indices)+'\n')
+        f.close()
+        del trained_model
+        gc.collect()
+
+        from helper_functions import plot_confusion_matrix
+        from constants import target_names_all
+        from sklearn.metrics import confusion_matrix
+#        import itertools
+        cnf_matrix = confusion_matrix(np.asarray(ground_truth_indices),
+                    np.asarray(prediction_indices))
+        plot_confusion_matrix(cnf_matrix, classes=target_names_all,
+                      title='Confusion matrix')
+        del prediction_indices
+        del ground_truth_indices
+        gc.collect()
+        
+        return
     def test_classifier(self, training_dataset_filename, train_ratio, k,list_of_n,iters,seed): 
         #training_dataset_filename example: Training_Samples_64_classes_100x100_all
         # ground_truth_filename example: all_44
