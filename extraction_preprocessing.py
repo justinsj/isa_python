@@ -206,4 +206,4 @@ class ExtractionPreprocessing(object):
             ax.add_patch(rect)
         plt.show()
 
-        fig.savefig(str(self.name)+'.jpg')
+#        fig.savefig(str(self.name)+'.jpg')
