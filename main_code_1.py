@@ -160,7 +160,7 @@ print('Done setting hyperparamters...')
 
 # In[6]:
 
-
+'''
 start = time.time() # Begin time measurement
 
 seed = 1000
@@ -179,7 +179,7 @@ dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_updated_13301_
 dataset_name_list = [dataset_name_2, dataset_name_1]
 count_list = training_obj.control_dataset(dataset_PATH, dataset_name_list,num_classes,600)
 #data_count = training_obj.count_dataset(dataset_PATH, dataset_name_list,num_classes)
-
+'''
 #%%
 training_obj.train_from_multiple_files(200,seed,dataset_PATH,dataset_name_list,verbose = 1)
 weights_name = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739+13301_121epochs"
@@ -213,18 +213,44 @@ t4 = end-start
 seed = 1000
 
 #weights_name = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739+7500(0-350)"
-weights_name = dataset_name
-#dataset_name_1 = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739"
-#dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_updated_7500_0-350"
-dataset_name_list = [dataset_name]
+#weights_name = dataset_name
+
+dataset_name_1 = "Training_Samples_64_classes_100x100_all_cleaned_29724" # base training images
+dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_13291" # problem ground truth images
+dataset_name_list = [dataset_name_1, dataset_name_2]
 
 testing_obj = TestingClass(dataset_PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
-testing_obj.test_classifier_multiple_slow(dataset_PATH, dataset_name_list,
+ground_truth_list, prediction_list = testing_obj.test_classifier_multiple_slow(dataset_PATH, dataset_name_list,
                                      num_classes,dropout, 
                                      TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,
                                      200,seed,350,706)
 #, weights_name = weights_name
 #testing_obj.test_classifier_all(dataset_PATH, dataset_name, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,200,seed,400) 
+# In[9]:
+# Plot confusion matrix
+#Add base data for confusion matrix
+for i in range(64):
+    ground_truth_list.append(i)
+    prediction_list.append(i)
+    
+# Compute confusion matrix
+from sklearn.metrics import confusion_matrix
+cnf_matrix = confusion_matrix(ground_truth_list,prediction_list)
+
+# Plot non-normalized confusion matrix
+from helper_functions import plot_confusion_matrix
+from constants import target_names_all
+import matplotlib.pyplot as plt
+plot_confusion_matrix(cnf_matrix, classes=target_names_all,
+                      normalize=False,
+                      title='Confusion matrix', 
+                      cmap=plt.cm.Blues,PATH=dataset_PATH, name="confusion_matrix_"+str(confusion_matrix_index), verbose = False)
+
+from helper_functions import confusion_matrix_analysis
+dataset_PATH = "C:/Users/JustinSanJuan/Desktop/HKUST/UROP Deep Learning Image-based Structural Analysis/Code/Python/Testing Folder/"
+name = "confusion_matrix_"+str(confusion_matrix_index)+"_analysis"
+min_count = 5
+confusion_matrix_analysis(cnf_matrix, dataset_PATH, name, min_count, verbose = False) #Turn verbose on to show data analysis
 
 # In[3]:
 
@@ -341,13 +367,14 @@ print(training_obj.X_train.shape[1:])
 #Model is Sketch_a_net
 training_obj.model = training_obj.load_sketch_a_net_model(dropout, num_classes,(100,100,1))
 
-dataset_name_1 = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739"
-dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_updated_13301_all_problem_images"
+dataset_name_1 = "Training_Samples_64_classes_100x100_all_cleaned_29724" # base training images
+dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_13291" # problem ground truth images
 dataset_name_list = [dataset_name_1, dataset_name_2]
+count_list = training_obj.control_dataset(dataset_PATH, dataset_name_list,num_classes,600)
 data_count_list = training_obj.count_dataset(dataset_PATH, dataset_name_list,num_classes)
 
 training_obj.train_from_multiple_files(100,seed,dataset_PATH,dataset_name_list,verbose = 1)
-weights_name = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739+13301"
+weights_name = "Training_Samples_64_classes_100x100_all_cleaned_updated_29724+13291"
 training_obj.save(dataset_PATH+weights_name)
 #training_obj.train(100,seed)
 #training_obj.save(name+'_'+str(i))
@@ -383,6 +410,8 @@ prediction_obj = ComponentClassifierPredict(min_percent_match, min_confidence)
 
 ext_class_index_list, ext_class_name_list, ext_match_first_max_percent_list, ext_match_second_max_percent_list = prediction_obj.predict_classes(ext_images_list,trained_model)
 ""
+
+
 #y_pred_one_hot = prediction_obj.get_one_hot(prediction_list)
 #y_test_one_hot = prediciton_obj.get_one_hot(ground_truth_list)
 
@@ -516,8 +545,10 @@ labelling_obj = ExtractionLabelling(dataset_PATH,
                           ext_images_list, ext_data_list,ext_class_index_list, ext_class_name_list, 
                           num_classes, img_rows, img_cols)
 labelling_obj = ExtractionLabelling(dataset_PATH, [],[],[],[],64,100,100)
-new_dataset_name = labelling_obj.update_answers_list(dataset_PATH, dataset_name,350,706,exclude=[23])
+#new_dataset_name = labelling_obj.update_answers_list(dataset_PATH, dataset_name,350,706,exclude=[23])
+
 final_dataset_name = labelling_obj.clean_dataset(dataset_PATH,new_dataset_name)
+#print(final_dataset_name)
 
 labelling_obj.define_model(trained_model)
 #labelling_obj.select_good_bounding_boxes(image, PATH+"GT/"+"easy_" + str(image_index))
