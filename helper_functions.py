@@ -8,6 +8,12 @@ import matplotlib.patches as mpatches
 from constants import subset_dictionary
 from constants import specific_dictionary
 
+def print_time_string(index,time_cost_string_list,time_cost_time_list):
+    print(str(time_cost_string_list[index]) + ' done... Time Elapsed : '+ str(time_cost_time_list[index]) + ' seconds...')
+    return
+def store_time(index,time_cost_time_list,time_count):
+    time_cost_time_list[index] = time_count
+    return time_cost_time_list
 def print_image_bw(image,l,w):
     fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (l,w))
     ax.imshow(image,cmap = 'binary')
