@@ -456,7 +456,7 @@ class ComponentClassifierTraining(object):
         print(controlled_dataset_name)
         np.save(dataset_PATH+controlled_dataset_name, controlled_dataset)
         print('saved as :'+ str(dataset_PATH) + controlled_dataset_name)
-        self.count_dataset(dataset_PATH, [controlled_dataset_name], num_classes)
+#        self.count_dataset(dataset_PATH, [controlled_dataset_name], num_classes)
         return controlled_dataset_name
         
         #recreate dataset
