@@ -499,11 +499,11 @@ class TestingClass(object):
                     np.asarray(prediction_indices))
         plot_confusion_matrix(cnf_matrix, classes=target_names_all,
                       title='Confusion matrix')
-        del prediction_indices
-        del ground_truth_indices
+#        del prediction_indices
+#        del ground_truth_indices
         gc.collect()
         
-        return
+        return ground_truth_indices, prediction_indices
     def test_classifier(self, training_dataset_filename, train_ratio, k,list_of_n,iters,seed): 
         #training_dataset_filename example: Training_Samples_64_classes_100x100_all
         # ground_truth_filename example: all_44
