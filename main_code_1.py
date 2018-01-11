@@ -159,6 +159,100 @@ print('Done setting hyperparamters...')
 # Image (binary, grayscale, 2D, numpy array) for regions of interest proposals is loaded.
 
 # In[6]:
+start = time.time() # Begin time measurement
+
+seed = 1000
+training_obj = ComponentClassifierTraining(num_classes, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL)
+'''
+#To get model shape = (100, 100,1)
+training_obj.shuffle_data(training_obj.load_data(dataset_PATH,base_dataset_name),seed)
+print(training_obj.X_train.shape[1:])
+'''
+#Model is Sketch_a_net
+training_obj.model = training_obj.load_sketch_a_net_model(dropout, num_classes,(100,100,1))
+
+dataset_name_1 = "Training_Samples_64_classes_100x100_all_controlled_30858"  # base training images
+#dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_13291" # problem ground truth images
+dataset_name_list = [dataset_name_1]
+new_dataset_name = training_obj.control_dataset(dataset_PATH, dataset_name_list,num_classes,600)
+data_count_list = training_obj.count_dataset(dataset_PATH, [new_dataset_name],num_classes)
+
+training_obj.train_from_multiple_files(100,seed,dataset_PATH,dataset_name_list,verbose = 1)
+weights_name = "Sketch-A-Net_controlled_600_30858"
+training_obj.save(dataset_PATH+weights_name)
+
+
+
+training_obj = ComponentClassifierTraining(num_classes, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL)
+'''
+#To get model shape = (100, 100,1)
+training_obj.shuffle_data(training_obj.load_data(dataset_PATH,base_dataset_name),seed)
+print(training_obj.X_train.shape[1:])
+'''
+#Model is Sketch_a_net
+training_obj.model = training_obj.load_sketch_a_net_model(dropout, num_classes,(100,100,1))
+
+dataset_name_1 = "Training_Samples_64_classes_100x100_all_controlled_30858_1" # base training images
+#dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_13291" # problem ground truth images
+dataset_name_list = [dataset_name_1]
+new_dataset_name = training_obj.control_dataset(dataset_PATH, dataset_name_list,num_classes,600)
+data_count_list = training_obj.count_dataset(dataset_PATH, [new_dataset_name],num_classes)
+
+training_obj.train_from_multiple_files(100,seed,dataset_PATH,dataset_name_list,verbose = 1)
+weights_name = "Sketch-A-Net_controlled_600_30858_1"
+training_obj.save(dataset_PATH+weights_name)
+
+
+
+
+training_obj = ComponentClassifierTraining(num_classes, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL)
+'''
+#To get model shape = (100, 100,1)
+training_obj.shuffle_data(training_obj.load_data(dataset_PATH,base_dataset_name),seed)
+print(training_obj.X_train.shape[1:])
+'''
+#Model is Sketch_a_net
+training_obj.model = training_obj.load_sketch_a_net_model(dropout, num_classes,(100,100,1))
+
+dataset_name_1 = "Training_Samples_64_classes_100x100_all_cleaned_32898" # base training images
+#dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_13291" # problem ground truth images
+dataset_name_list = [dataset_name_1]
+new_dataset_name = training_obj.control_dataset(dataset_PATH, dataset_name_list,num_classes,600)
+data_count_list = training_obj.count_dataset(dataset_PATH, [new_dataset_name],num_classes)
+
+training_obj.train_from_multiple_files(100,seed,dataset_PATH,dataset_name_list,verbose = 1)
+weights_name = "Sketch-A-Net_exclude_23_32898"
+training_obj.save(dataset_PATH+weights_name)
+#training_obj.train(100,seed)
+#training_obj.save(name+'_'+str(i))
+#training_obj.model.load_weights(PATH+name+'.h5')
+
+trained_model = training_obj.model
+
+#training_obj.plot_training_data_all(dataset_PATH,new_dataset_name,0)
+
+end = time.time()#record time
+print('ComponentClassifierTraining done... Time Elapsed : '+ str(end-start) + ' seconds...')
+t4 = end-start
+
+
+
+"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
+# In[6]:
 
 '''
 start = time.time() # Begin time measurement
