@@ -434,7 +434,7 @@ class ComponentClassifierTraining(object):
         fig.savefig(dataset_PATH+dataset_name+'dataset_count')
 #        print(count_list)
         return count_list
-    def control_dataset(self, dataset_PATH, dataset_name_list,num_classes,max_samples):
+    def control_dataset(self, dataset_PATH, dataset_name_list,num_classes,max_samples,suffix=None):
         #load data
         
         count_list = np.zeros(num_classes).astype(np.int).tolist()
@@ -451,6 +451,8 @@ class ComponentClassifierTraining(object):
                     controlled_dataset.append(data_all[i,:])
         controlled_dataset = np.asarray(controlled_dataset)
         controlled_dataset_name = "Training_Samples_64_classes_100x100_all_controlled_"+str(controlled_dataset.shape[0])
+        if suffix != None:
+            controlled_dataset_name = controlled_dataset_name + '_'+str(suffix)
         print(controlled_dataset_name)
         np.save(dataset_PATH+controlled_dataset_name, controlled_dataset)
         print('saved as :'+ str(dataset_PATH) + controlled_dataset_name)
