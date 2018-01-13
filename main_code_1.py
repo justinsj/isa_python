@@ -172,10 +172,10 @@ print(training_obj.X_train.shape[1:])
 training_obj.model = training_obj.load_sketch_a_net_model(dropout, num_classes,(100,100,1))
 
 dataset_name_1 = "Training_Samples_64_classes_100x100_all_controlled_30858"  # base training images
-#dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_13291" # problem ground truth images
+#dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_updated_7500_0-350" # problem ground truth images
 dataset_name_list = [dataset_name_1]
-new_dataset_name = training_obj.control_dataset(dataset_PATH, dataset_name_list,num_classes,600)
-data_count_list = training_obj.count_dataset(dataset_PATH, [new_dataset_name],num_classes)
+#new_dataset_name = training_obj.control_dataset(dataset_PATH, dataset_name_list,num_classes,600)
+data_count_list = training_obj.count_dataset(dataset_PATH, dataset_name_list,num_classes)
 
 training_obj.train_from_multiple_files(100,seed,dataset_PATH,dataset_name_list,verbose = 1)
 weights_name = "Sketch-A-Net_controlled_600_30858"
