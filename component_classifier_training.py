@@ -415,7 +415,7 @@ class ComponentClassifierTraining(object):
 #                print(i)
                 count_list[int(i)] += 1
                 
-        fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(25, 25))
+        fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(10, 10))
         plt.bar(x_list,count_list)
         plt.title("Dataset Count")
         ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
@@ -425,6 +425,7 @@ class ComponentClassifierTraining(object):
             ax.yaxis.set_major_locator(ticker.MultipleLocator(int(max(count_list)/2)))
         plt.xlabel("Class index")
         plt.ylabel("Count")
+        plt.xticks(rotation=90)
         xmin = -0.5
         xmax = num_classes-1+0.5
         plt.xlim(xmin, xmax)
