@@ -91,7 +91,7 @@ print('Done Importing...')
 # (higher difference means less ambiguity between first and second highest match, which means less likelihood of random object)<br>
 # ##### The directory is also defined in the PATH variable.<br>The name of the CNN model data is defined in the name variable.<br>The training data set name for the CNN is defined in the data_set_name variable.
 
-# In[2]:
+# In[ ]:
 
 
 #selective search parameters
@@ -178,6 +178,11 @@ ground_truth_list, prediction_list = testing_obj.test_classifier_multiple_slow(d
                                      TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,
                                      200,seed,350,706, weights_name = weights_name)
 
+f = open(dataset_PATH+'testing_results.txt','a')
+f.writelines('ground_truth_list_2 = '+str(ground_truth_list) +'\n'
+             'prediction_list_2 = '+str(prediction_list))
+f.close()
+
 end = time.time()#record time
 time_cost_time_list = store_time(9,time_cost_time_list,end-start)
 print_time_string(9,time_cost_string_list,time_cost_time_list)
@@ -238,6 +243,11 @@ ground_truth_list, prediction_list = testing_obj.test_classifier_multiple_slow(d
                                      num_classes,dropout, 
                                      TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,
                                      200,seed,350,706, weights_name = weights_name)
+
+f = open(dataset_PATH+'testing_results.txt','a')
+f.writelines('ground_truth_list_3 = '+str(ground_truth_list) +'\n'
+             'prediction_list_3 = '+str(prediction_list))
+f.close()
 
 end = time.time()#record time
 time_cost_time_list = store_time(9,time_cost_time_list,end-start)
@@ -300,6 +310,11 @@ ground_truth_list, prediction_list = testing_obj.test_classifier_multiple_slow(d
                                      TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,
                                      200,seed,350,706, weights_name = weights_name)
 
+f = open(dataset_PATH+'testing_results.txt','a')
+f.writelines('ground_truth_list_4 = '+str(ground_truth_list) +'\n'
+             'prediction_list_4 = '+str(prediction_list)+'\n')
+f.close()
+
 end = time.time()#record time
 time_cost_time_list = store_time(9,time_cost_time_list,end-start)
 print_time_string(9,time_cost_string_list,time_cost_time_list)
@@ -355,149 +370,3 @@ print_time_string(10,time_cost_string_list,time_cost_time_list)
 
 
 
-###### OLD CODE ######
-
-
-
-#%%
-#'''
-#Train 10 different models using different seeds
-#'''
-#
-#PATH = '/home/chloong/Desktop/Justin San Juan/Testing Folder/'
-#
-## image_set = np.load(PATH+'all_training_images.npy')
-#name = 'Sketch-a-Net_64_classes_100x100_0.0_all_100epochs'
-#seed = 4581
-#accuracies =[]
-#for i in range(1):
-#    print('BUILDING... '+str(i))
-#    seed = int(random.random()*10000)
-#    random.seed(seed)
-#    data_set_name = 'Training_Samples_64_classes_100x100_all'
-#    dropout = 0
-#    training_obj = ComponentClassifierTraining(PATH, data_set_name, num_classes, dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL)
-#    training_obj.shuffle_data(training_obj.load_data(PATH,data_set_name),seed)
-#    training_obj.model = training_obj.load_sketch_a_net_model(dropout, num_classes, training_obj.X_train.shape[1:])
-#    
-#    seed = int(random.random()*10000)
-#    random.seed(seed)
-#    
-#    training_obj.model.load_weights(name+'_'+str(i))
-#    training_obj.is_trained = True
-#    training_obj.get_stats()
-#    
-
-#%%
-'''
-Load different models
-'''
-
-PATH = '/home/chloong/Desktop/Justin San Juan/Testing Folder/'
-
-# image_set = np.load(PATH+'all_training_images.npy')
-name = 'Sketch-a-Net_64_classes_100x100_0.0_all_100epochs'
-seed = 4581
-for i in range(30):
-    print('BUILDING... '+str(i))
-    seed = int(random.random()*10000)
-    random.seed(seed)
-    data_set_name = 'Training_Samples_64_classes_100x100_all'
-    dropout = 0
-    training_obj = ComponentClassifierTraining(PATH, data_set_name, num_classes, dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL)
-    training_obj.shuffle_data(training_obj.load_data(PATH,data_set_name),seed)
-    training_obj.model = training_obj.load_sketch_a_net_model(dropout, num_classes, training_obj.X_train.shape[1:])
-    
-    seed = int(random.random()*10000)
-    random.seed(seed)
-    
-    training_obj.train(200,seed)
-    training_obj.model.load_weights(name+'_'+str(i)+'.h5')
-    training_obj.
-    
-#%%
-'''
-Test rotations
-'''
-import numpy as np
-import argparse
-import imutils
-import cv2
-
-ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--image", required=True,
-	help="path to the image file")
-args = vars(ap.parse_args())
-
-# load the image from disk
-image = cv2.imread(args["image"])
- 
-# loop over the rotation angles
-for angle in np.arange(0, 360, 15):
-	rotated = imutils.rotate(image, angle)
-	cv2.imshow("Rotated (Problematic)", rotated)
-	cv2.waitKey(0)
- 
-# loop over the rotation angles again, this time ensuring
-# no part of the image is cut off
-for angle in np.arange(0, 360, 15):
-	rotated = imutils.rotate_bound(image, angle)
-	cv2.imshow("Rotated (Correct)", rotated)
-	cv2.waitKey(0)
-
-image = np.asarray(  
-        [[0,0,0,1,0,0,0,0,0,0],
-         [0,0,1,1,0,0,0,1,1,0],
-         [0,0,0,1,0,0,1,0,0,1],
-         [0,0,0,1,0,0,0,1,1,1],
-         [0,0,0,1,0,0,0,0,0,1],
-         [0,0,0,1,0,0,0,0,0,1],
-         [0,0,0,0,0,1,0,1,0,1],
-         [0,0,0,0,0,0,0,0,0,0],
-         [0,0,0,0,0,0,0,0,0,0]])
-
-    
-#%%
-PATH = '/home/chloong/Desktop/Justin San Juan/Testing Folder/'
-src_im = Image.open(PATH + "sample01.JPG")
-angle = 5
-size = 1000, 1000
-
-
-im = src_im
-rot = im.rotate(angle, expand=1 )
-rot.save(PATH + "test.png")
-
-#%%
-
-image = np.asarray(  
-        [[0,0,0,1,0,0,0,0,0,0],
-         [0,0,1,1,0,0,0,1,1,0],
-         [0,0,0,1,0,0,1,0,0,1],
-         [0,0,0,1,0,0,0,1,1,1],
-         [0,0,0,1,0,0,0,0,0,1],
-         [0,0,0,1,0,0,0,0,0,1],
-         [0,0,0,0,0,1,0,1,0,1],
-         [0,0,0,0,0,0,0,0,0,0],
-         [0,0,0,0,0,0,0,0,0,0]])
-data = [(1,0,4,7),(5,0,5,8)]
-
-extraction_obj = ExtractionPreprocessing(image, '', data)
-gt_extraction_list, gt_extraction_data = extraction_obj.preprocess_extractions(wanted_w, wanted_h, export_w, export_h,
-                                                max_piece_percent)
-b = np.asarray(
-        [[0,1],
-         [1,1],
-         [0,1],
-         [0,1],
-         [0,1],
-         [0,1]])
-c = np.asarray(
-        [[0,0,0,0,0],
-         [0,0,1,1,0],
-         [0,1,0,0,1],
-         [0,0,1,1,1],
-         [0,0,0,0,1],
-         [0,0,0,0,1],
-         [0,0,1,0,1],
-         [0,0,0,0,0]])

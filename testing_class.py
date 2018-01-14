@@ -100,15 +100,15 @@ class TestingClass(object):
             index = prediction_obj.predict_class_with_rotations(ground_truth_image,trained_model_1)
         return index
     
-    def load_gt_array(self,gt_image_num):
+    def load_gt_array(self,dataset_PATH, gt_image_num):
 #        gt_image = np.load(self.PATH+'all_training_images.npy').astype(bool)
 
         gc.collect()
         GT = []
         gc.collect()
         ground_truth_filename = "all_" + str(gt_image_num)
-        labelling_obj=ExtractionLabelling(self.PATH,[],[],[],[],64, 100,100)
-        labelling_obj.load_text(ground_truth_filename)
+        labelling_obj=ExtractionLabelling([],[],[],[],64, 100,100)
+        labelling_obj.load_text(dataset_PATH, ground_truth_filename)
         GT = labelling_obj.gt #list of tuples
         GT_array = np.asarray(GT)
         
@@ -141,7 +141,7 @@ class TestingClass(object):
 #        print(gt_indices_list)
         return gt_extraction_list, gt_indices_list
         
-    def update_answers(self,gt_image_num):
+    def update_answers(self,dataset_PATH, gt_image_num):
         start = time.time()
         
         print('loading original training set...')
@@ -154,7 +154,7 @@ class TestingClass(object):
         t = end-start
         print('time elapsed loading original training set = ' + str(t))
         
-        GT_array = self.load_gt_array(gt_image_num)
+        GT_array = self.load_gt_array(dataset_PATH, gt_image_num)
         
         GT_data = GT_array[:,0:-1]
         GT_indices = GT_array[:,-1]
@@ -249,7 +249,7 @@ class TestingClass(object):
             
             if not(os.path.isfile(gt_data_path_string)): continue
             
-            GT_array = self.load_gt_array(gt_image_num)
+            GT_array = self.load_gt_array(dataset_PATH, gt_image_num)
             if len(GT_array) == 0: continue
             if gt_image_num <400:
                 gt_image = np.load(self.PATH+'all_training_images_1.npy').astype(bool)[:,:,gt_image_num]
@@ -446,7 +446,7 @@ class TestingClass(object):
             
             if not(os.path.isfile(gt_data_path_string)): continue
             
-            GT_array = self.load_gt_array(gt_image_num)
+            GT_array = self.load_gt_array(dataset_PATH, gt_image_num)
             if len(GT_array) == 0: continue
             
             if gt_image_num < 400:
