@@ -176,11 +176,11 @@ testing_obj = TestingClass(dataset_PATH, wanted_w, wanted_h, export_w, export_h,
 ground_truth_list, prediction_list = testing_obj.test_classifier_multiple_slow(dataset_PATH, dataset_name_list,
                                      num_classes,dropout, 
                                      TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,
-                                     200,seed,350,706, weights_name = weights_name)
+                                     200,seed,350,706, weights_name = weights_name,exclude = [])
 
 f = open(dataset_PATH+'testing_results.txt','a')
-f.writelines('ground_truth_list_2 = '+str(ground_truth_list) +'\n'
-             'prediction_list_2 = '+str(prediction_list))
+f.writelines('ground_truth_list_5 = '+str(ground_truth_list) +'\n'
+             'prediction_list_5 = '+str(prediction_list)+'\n')
 f.close()
 
 end = time.time()#record time
@@ -245,8 +245,8 @@ ground_truth_list, prediction_list = testing_obj.test_classifier_multiple_slow(d
                                      200,seed,350,706, weights_name = weights_name)
 
 f = open(dataset_PATH+'testing_results.txt','a')
-f.writelines('ground_truth_list_3 = '+str(ground_truth_list) +'\n'
-             'prediction_list_3 = '+str(prediction_list))
+f.writelines('ground_truth_list_6 = '+str(ground_truth_list) +'\n'
+             'prediction_list_6 = '+str(prediction_list)+'\n')
 f.close()
 
 end = time.time()#record time
@@ -311,8 +311,8 @@ ground_truth_list, prediction_list = testing_obj.test_classifier_multiple_slow(d
                                      200,seed,350,706, weights_name = weights_name)
 
 f = open(dataset_PATH+'testing_results.txt','a')
-f.writelines('ground_truth_list_4 = '+str(ground_truth_list) +'\n'
-             'prediction_list_4 = '+str(prediction_list)+'\n')
+f.writelines('ground_truth_list_7 = '+str(ground_truth_list) +'\n'
+             'prediction_list_7 = '+str(prediction_list)+'\n')
 f.close()
 
 end = time.time()#record time

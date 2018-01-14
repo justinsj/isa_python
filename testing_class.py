@@ -402,7 +402,7 @@ class TestingClass(object):
         gc.collect()
         
         return 
-    def test_classifier_multiple_slow(self, dataset_PATH, dataset_name_list, num_classes,dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,iters,seed,start,end,weights_name = None): 
+    def test_classifier_multiple_slow(self, dataset_PATH, dataset_name_list, num_classes,dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,iters,seed,start,end,weights_name = None,exclude = []): 
         #training_dataset_filename example: Training_Samples_64_classes_100x100_all
         # ground_truth_filename example: all_44
         #test n number of samples
@@ -466,7 +466,7 @@ class TestingClass(object):
     #            gt_indices_list = []
     #            gt_extraction_list = []
                 #remove class 23's from extractions
-                if (int(gt_indices_list_temp[0]) != 23):# and (int(gt_indices_list_temp[gt_list_index]) < 48):
+                if not(int(gt_indices_list_temp[0]) in exclude):# and (int(gt_indices_list_temp[gt_list_index]) < 48):
 #                    gt_indices_list.append(gt_indices_list_temp[gt_list_index]) 
 #                    gt_extraction_list.append(gt_extraction_list_temp[gt_list_index])
             
