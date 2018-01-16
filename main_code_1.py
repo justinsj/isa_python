@@ -1,30 +1,3 @@
-
-# coding: utf-8
-
-# # Image-Based Structural Analysis
-# ### Code created and maintained by Justin David Q. SAN JUAN, <br>email: jdqsj1997@yahoo.com, <br> personal website: justinsj.weebly.com
-# 
-# #### This code focuses in the segmentation and classification processes (except reconstruction) of the complete project pipeline as described below:
-# <img src="https://justinsj.weebly.com/uploads/6/4/9/2/64923303/process-flowchart_orig.jpg" alt="Drawing" style="width: 800px;"/>
-
-# # Import Dependencies
-# #### Dependencies:
-# numpy: for handling data types (mostly handled as numpy arrays)<br>
-# Sequential (from keras.models): for CNN setup<br>
-# random: for pseudo-random shuffling of data<br>
-# cv2: for raw RBG image import and transformation to grayscale<br>
-# time: for measuring time elapsed per function<br>
-# ##### Custom Classes:
-# ComponentSegmentation: for proposing regions of interest (RoI's)<br>
-# ExtractionPreprocessing: for trimming, noise removal, and resizing of image<br>
-# ComponentClassifierTraining: for loading the CNN model, training data, and training the model<br>
-# ComponentClassifierPredict: for using the CNN model to predict the class of preprocessed extractions<br>
-# ExtractionLabelling: for labelling ground truth bounding boxes and classes in problem images<br>
-# TestingClass: for testing the accuracy of a CNN model on the problem images<br>
-# <br>
-# print_image_bw is used to print a simple 2-D array<br>
-# gc: for clearing up space after acquiring data from larger datasets
-
 # In[1]:
 
 %load_ext autoreload
@@ -53,43 +26,6 @@ gc.enable()
 
 print('Done Importing...')
 
-
-# # Hyper-parameters
-# #### Selective Search Parameters:
-# scale_input<br>
-# sigma_input<br>
-# min_size_input<br>
-# #### Noise Reduction Parameters:
-# min_shape: for minimum number of black pixels in bounding box<br>
-# min_height: for minimum height of bounding box<br>
-# min_width: for minimum width of bounding box<br>
-# <br>
-# buffer_zone: for expanding bounding box all directions<br>
-# min_area: for minimum area of bounding box<br>
-# min_black: for minimum number of black pixels in bounding box<br>
-# min_black_ratio: for minimum ratio of black pixels to the bounding box area<br>
-# #### Overlap Parameters:
-# overlap_repeats: for number of iterations for merging algorithm to be applied<br>
-# overlap_threshold: threshold of area overlap over union area for merging to be applied<br>
-# #### Removing Unconnected Pieces Parameters:
-# max_piece_percent: maximum percentage of piece to be removed<br>
-# (if percentage is larger, piece will not be removed as it is more likely an important piece)<br>
-# #### Extractions Preprocessing Parameters:
-# img_rows, img_cols: for classifier input shape<br>
-# wanted_w, wanted_h: for black pixels edges resizing boundary shape<br>
-# export_w, export_h: for overall image resizing shape ([export_w-wanted_w]/2 = horizontal buffer on each side)<br>
-# #### CNN Training Parameters:
-# num_classes: number of classes for classifier to predict<br>
-# TRAINING_RATIO_TRAIN: ratio of training samples to total number of samples<br>
-# TRAINING_RATIO_VAL: ratio of validation samples to total number of samples<br>
-# TRAINING_RATIO_TEST: ratio of test samples to total number of samples <br>
-# Note: TRAINING_RATIO_TEST is implicitly calculated as [1-{TRAINING_RATIO_TRAIN + TRAINING_RATIO_VAL}]<br>
-# dropout: dropout value to be used in all layers except last layer of Sketch-A-Net CNN model<br>
-# #### CNN Prediction Parameters:
-# min_percent_match: minimum probability of class prediction for that class to be set as the prediction<br>
-# min_confidence: minimum difference between first-highest % match and second-highest % match<br>
-# (higher difference means less ambiguity between first and second highest match, which means less likelihood of random object)<br>
-# ##### The directory is also defined in the PATH variable.<br>The name of the CNN model data is defined in the name variable.<br>The training data set name for the CNN is defined in the data_set_name variable.
 
 # In[2]:
 
@@ -127,8 +63,8 @@ TRAINING_RATIO_VAL = 0.15
 dropout = 0
 
 #CNN prediction parameters
-min_percent_match = 0 # set to 0.7
-min_confidence = 0 # set to 0.3
+min_percent_match = 0.45 # set to 0.45
+min_confidence = 0.95 # set to 0.95
 
 #Paths and names
 
@@ -157,6 +93,297 @@ print('Done setting hyperparamters...')
 
 # # Load Image
 # Image (binary, grayscale, 2D, numpy array) for regions of interest proposals is loaded.
+
+# In[7]:
+
+"""
+start = time.time() # Begin time measurement
+"""
+seed = 1000
+
+#weights_name = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739+7500(0-350)"
+#weights_name = dataset_name
+
+#dataset_name_1 = "Training_Samples_64_classes_100x100_all_cleaned_29724" # base training images
+#dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_13291" # problem ground truth images
+#dataset_name_list = [dataset_name_1, dataset_name_2]
+model_1_weights_name = 'Sketch-A-Net_controlled_600_30858'
+#model_1_weights_name = 'Sketch-A-Net_controlled_600_30858_1'
+#model_1_weights_name = 'Sketch-A-Net_exclude_23_32898'
+
+testing_obj = TestingClass(dataset_PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
+prediction_list, ground_truth_list, ext_class_name, ext_class_first_max_index_1, ext_class_second_max_index_1, ext_match_first_max_percent_1, ext_match_second_max_percent_1\
+ = testing_obj.test_classifier_multiple_slow(dataset_PATH, [], num_classes,dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,\
+                                             100,seed,350,706,min_percent_match, min_confidence,model_1_weights_name = model_1_weights_name,exclude = [],save = True)
+
+
+from helper_functions import separate_correct
+
+correct_ext_match_first_max_percent_1, wrong_ext_match_first_max_percent_1 = separate_correct(ext_match_first_max_percent_1,prediction_list,ground_truth_list)
+correct_ext_match_second_max_percent_1, wrong_ext_match_second_max_percent_1 = separate_correct(ext_match_second_max_percent_1,prediction_list,ground_truth_list)
+
+correct_mean_first_max_percent_1 = sum(correct_ext_match_first_max_percent_1)/len(correct_ext_match_first_max_percent_1)
+correct_max_first_max_percent_1 = max(correct_ext_match_first_max_percent_1)
+correct_min_first_max_percent_1 = min(correct_ext_match_first_max_percent_1)
+
+correct_mean_second_max_percent_1 = sum(correct_ext_match_second_max_percent_1)/len(correct_ext_match_second_max_percent_1)
+correct_max_second_max_percent_1 = max(correct_ext_match_second_max_percent_1)
+correct_min_second_max_percent_1 = min(correct_ext_match_second_max_percent_1)
+
+wrong_mean_first_max_percent_1 = sum(wrong_ext_match_first_max_percent_1)/len(wrong_ext_match_first_max_percent_1)
+wrong_max_first_max_percent_1 = max(wrong_ext_match_first_max_percent_1)
+wrong_min_first_max_percent_1 = min(wrong_ext_match_first_max_percent_1)
+
+wrong_mean_second_max_percent_1 = sum(wrong_ext_match_second_max_percent_1)/len(wrong_ext_match_second_max_percent_1)
+wrong_max_second_max_percent_1 = max(wrong_ext_match_second_max_percent_1)
+wrong_min_second_max_percent_1 = min(wrong_ext_match_second_max_percent_1)
+
+
+correct_ext_match_first_max_percent_1_array = np.asarray(correct_ext_match_first_max_percent_1)
+wrong_ext_match_first_max_percent_1_array = np.asarray(wrong_ext_match_first_max_percent_1)
+correct_ext_match_second_max_percent_1_array = np.asarray(correct_ext_match_second_max_percent_1)
+wrong_ext_match_second_max_percent_1_array = np.asarray(wrong_ext_match_second_max_percent_1)
+
+#difference_ext_match_first_max_percent_1 = (correct_ext_match_first_max_percent_1_array - wrong_ext_match_first_max_percent_1_array).tolist()
+#difference_ext_match_second_max_percent_1 = (correct_ext_match_second_max_percent_1_array - wrong_ext_match_second_max_percent_1_array).tolist()
+
+difference_correct = (correct_ext_match_first_max_percent_1_array - correct_ext_match_second_max_percent_1_array).tolist()
+difference_wrong = (wrong_ext_match_first_max_percent_1_array - wrong_ext_match_second_max_percent_1_array).tolist()
+
+#difference_mean_first_max_percent_1 = sum(difference_ext_match_first_max_percent_1)/len(difference_ext_match_first_max_percent_1)
+#difference_max_first_max_percent_1 = max(difference_ext_match_first_max_percent_1)
+#difference_min_first_max_percent_1 = min(difference_ext_match_first_max_percent_1)
+#
+#difference_mean_second_max_percent_1 = sum(difference_ext_match_second_max_percent_1)/len(difference_ext_match_second_max_percent_1)
+#difference_max_second_max_percent_1 = max(difference_ext_match_second_max_percent_1)
+#difference_min_second_max_percent_1 = min(difference_ext_match_second_max_percent_1)
+
+difference_correct_mean = sum(difference_correct)/len(difference_correct)
+difference_wrong_mean = sum(difference_wrong)/len(difference_wrong)
+difference_correct_max = max(difference_correct)
+difference_wrong_max = max(difference_wrong)
+difference_correct_min = min(difference_correct)
+difference_wrong_min = min(difference_wrong)
+
+
+f = open(dataset_PATH+'testing_results_entropy.txt','a')
+f.writelines(str(model_1_weights_name)+'\n')
+f.writelines(\
+'correct_mean_first_max_percent_1 = ' + str(correct_mean_first_max_percent_1) + '\n'\
+\
+'correct_max_first_max_percent_1 = ' + str(correct_max_first_max_percent_1) + '\n'\
+\
+'correct_min_first_max_percent_1 = ' + str(correct_min_first_max_percent_1) + '\n'\
+\
+'correct_mean_second_max_percent_1 = ' + str(correct_mean_second_max_percent_1) + '\n'\
+\
+'correct_max_second_max_percent_1 = ' + str(correct_max_second_max_percent_1) + '\n'\
+\
+'correct_min_second_max_percent_1 = ' + str(correct_min_second_max_percent_1) + '\n'\
++'\n'\
+'wrong_mean_first_max_percent_1 = ' + str(wrong_mean_first_max_percent_1) + '\n'\
+\
+'wrong_max_first_max_percent_1 = ' + str(wrong_max_first_max_percent_1) + '\n'\
+\
+'wrong_min_first_max_percent_1 = ' + str(wrong_min_first_max_percent_1) + '\n'\
+\
+'wrong_mean_second_max_percent_1 = ' + str(wrong_mean_second_max_percent_1) + '\n'\
+\
+'wrong_max_second_max_percent_1 = ' + str(wrong_max_second_max_percent_1) + '\n'\
+\
+'wrong_min_second_max_percent_1 = ' + str(wrong_min_second_max_percent_1) + '\n'\
++'\n'\
+'difference_correct_mean = ' + str(difference_correct_mean) + '\n'\
+\
+'difference_wrong_mean = ' + str(difference_wrong_mean) + '\n'\
+\
+'difference_correct_max = ' + str(difference_correct_max) + '\n'\
+\
+'difference_wrong_max = ' + str(difference_wrong_max) + '\n'\
+\
+'difference_correct_min = ' + str(difference_correct_min) + '\n'\
+\
+'difference_wrong_min = ' + str(difference_wrong_min) + '\n'\
++'\n'\
+)
+
+f.close()
+#%%
+
+
+from helper_functions import separate_correct
+
+correct_ext_match_first_max_percent_1, wrong_ext_match_first_max_percent_1 = separate_correct(ext_match_first_max_percent_1,prediction_list,ground_truth_list)
+correct_ext_match_first_max_percent_2, wrong_ext_match_first_max_percent_2 = separate_correct(ext_match_first_max_percent_2,prediction_list,ground_truth_list)
+correct_ext_match_first_max_percent_3, wrong_ext_match_first_max_percent_3 = separate_correct(ext_match_first_max_percent_3,prediction_list,ground_truth_list)
+
+correct_ext_match_second_max_pecent_1, wrong_ext_match_second_max_pecent_1 = separate_correct(ext_match_second_max_percent_1,prediction_list,ground_truth_list)
+correct_ext_match_second_max_pecent_2, wrong_ext_match_second_max_pecent_2 = separate_correct(ext_match_second_max_percent_2,prediction_list,ground_truth_list)
+correct_ext_match_second_max_pecent_3, wrong_ext_match_second_max_pecent_3 = separate_correct(ext_match_second_max_percent_3,prediction_list,ground_truth_list)
+
+
+correct_mean_first_max_pecent_1 = sum(correct_ext_match_first_max_percent_1)/len(correct_ext_match_first_max_percent_1)
+correct_mean_first_max_pecent_2 = sum(correct_ext_match_first_max_percent_2)/len(correct_ext_match_first_max_percent_2)
+correct_mean_first_max_pecent_3 = sum(correct_ext_match_first_max_percent_3)/len(correct_ext_match_first_max_percent_3)
+
+correct_max_first_max_percent_1 = max(correct_ext_match_first_max_percent_1)
+correct_max_first_max_percent_2 = max(correct_ext_match_first_max_percent_2)
+correct_max_first_max_percent_3 = max(correct_ext_match_first_max_percent_3)
+
+correct_min_first_max_percent_1 = min(correct_ext_match_first_max_percent_1)
+correct_min_first_max_percent_2 = min(correct_ext_match_first_max_percent_2)
+correct_min_first_max_percent_3 = min(correct_ext_match_first_max_percent_3)
+
+correct_mean_second_max_pecent_1 = sum(correct_ext_match_second_max_percent_1)/len(correct_ext_match_second_max_percent_1)
+correct_mean_second_max_pecent_2 = sum(correct_ext_match_second_max_percent_2)/len(correct_ext_match_second_max_percent_2)
+correct_mean_second_max_pecent_3 = sum(correct_ext_match_second_max_percent_3)/len(correct_ext_match_second_max_percent_3)
+
+correct_max_second_max_percent_1 = max(correct_ext_match_second_max_percent_1)
+correct_max_second_max_percent_2 = max(correct_ext_match_second_max_percent_2)
+correct_max_second_max_percent_3 = max(correct_ext_match_second_max_percent_3)
+
+correct_min_second_max_percent_1 = min(correct_ext_match_second_max_percent_1)
+correct_min_second_max_percent_2 = min(correct_ext_match_second_max_percent_2)
+correct_min_second_max_percent_3 = min(correct_ext_match_second_max_percent_3)
+
+
+wrong_mean_first_max_pecent_1 = sum(wrong_ext_match_first_max_percent_1)/len(wrong_ext_match_first_max_percent_1)
+wrong_mean_first_max_pecent_2 = sum(wrong_ext_match_first_max_percent_2)/len(wrong_ext_match_first_max_percent_2)
+wrong_mean_first_max_pecent_3 = sum(wrong_ext_match_first_max_percent_3)/len(wrong_ext_match_first_max_percent_3)
+
+wrong_max_first_max_percent_1 = max(wrong_ext_match_first_max_percent_1)
+wrong_max_first_max_percent_2 = max(wrong_ext_match_first_max_percent_2)
+wrong_max_first_max_percent_3 = max(wrong_ext_match_first_max_percent_3)
+
+wrong_min_first_max_percent_1 = min(wrong_ext_match_first_max_percent_1)
+wrong_min_first_max_percent_2 = min(wrong_ext_match_first_max_percent_2)
+wrong_min_first_max_percent_3 = min(wrong_ext_match_first_max_percent_3)
+
+wrong_mean_second_max_pecent_1 = sum(wrong_ext_match_second_max_percent_1)/len(wrong_ext_match_second_max_percent_1)
+wrong_mean_second_max_pecent_2 = sum(wrong_ext_match_second_max_percent_2)/len(wrong_ext_match_second_max_percent_2)
+wrong_mean_second_max_pecent_3 = sum(wrong_ext_match_second_max_percent_3)/len(wrong_ext_match_second_max_percent_3)
+
+wrong_max_second_max_percent_1 = max(wrong_ext_match_second_max_percent_1)
+wrong_max_second_max_percent_2 = max(wrong_ext_match_second_max_percent_2)
+wrong_max_second_max_percent_3 = max(wrong_ext_match_second_max_percent_3)
+
+wrong_min_second_max_percent_1 = min(wrong_ext_match_second_max_percent_1)
+wrong_min_second_max_percent_2 = min(wrong_ext_match_second_max_percent_2)
+wrong_min_second_max_percent_3 = min(wrong_ext_match_second_max_percent_3)
+
+f = open(dataset_PATH+'testing_results_entropy.txt','a')
+f.writelines(\
+'correct_mean_first_max_pecent_1 = ' + str(correct_mean_first_max_percent_1) + '\n'\
+'correct_mean_first_max_pecent_2 = ' + str(correct_mean_first_max_percent_2) + '\n'\
+'correct_mean_first_max_pecent_3 = ' + str(correct_mean_first_max_percent_3) + '\n'\
+\
+'correct_max_first_max_percent_1 = ' + str(correct_max_first_max_percent_1) + '\n'\
+'correct_max_first_max_percent_2 = ' + str(correct_max_first_max_percent_2) + '\n'\
+'correct_max_first_max_percent_3 = ' + str(correct_max_first_max_percent_3) + '\n'\
+\
+'correct_min_first_max_percent_1 = ' + str(correct_mix_first_max_percent_1) + '\n'\
+'correct_min_first_max_percent_2 = ' + str(correct_min_first_max_percent_2) + '\n'\
+'correct_min_first_max_percent_3 = ' + str(correct_min_first_max_percent_3) + '\n'\
+\
+'correct_mean_second_max_pecent_1 = ' + str(correct_mean_second_max_percent_1) + '\n'\
+'correct_mean_second_max_pecent_2 = ' + str(correct_mean_second_max_percent_2) + '\n'\
+'correct_mean_second_max_pecent_3 = ' + str(correct_mean_second_max_percent_3) + '\n'\
+\
+'correct_max_second_max_percent_1 = ' + str(correct_max_second_max_percent_1) + '\n'\
+'correct_max_second_max_percent_2 = ' + str(correct_max_second_max_percent_2) + '\n'\
+'correct_max_second_max_percent_3 = ' + str(correct_max_second_max_percent_3) + '\n'\
+\
+'correct_min_second_max_percent_1 = ' + str(correct_min_second_max_percent_1) + '\n'\
+'correct_min_second_max_percent_2 = ' + str(correct_min_second_max_percent_2) + '\n'\
+'correct_min_second_max_percent_3 = ' + str(correct_min_second_max_percent_3) + '\n'\
+\
+'wrong_mean_first_max_pecent_1 = ' + str(wrong_mean_first_max_percent_1) + '\n'\
+'wrong_mean_first_max_pecent_2 = ' + str(wrong_mean_first_max_percent_2) + '\n'\
+'wrong_mean_first_max_pecent_3 = ' + str(wrong_mean_first_max_percent_3) + '\n'\
+\
+'wrong_max_first_max_percent_1 = ' + str(wrong_max_first_max_percent_1) + '\n'\
+'wrong_max_first_max_percent_2 = ' + str(wrong_max_first_max_percent_2) + '\n'\
+'wrong_max_first_max_percent_3 = ' + str(wrong_max_first_max_percent_3) + '\n'\
+\
+'wrong_min_first_max_percent_1 = ' + str(wrong_mix_first_max_percent_1) + '\n'\
+'wrong_min_first_max_percent_2 = ' + str(wrong_min_first_max_percent_2) + '\n'\
+'wrong_min_first_max_percent_3 = ' + str(wrong_min_first_max_percent_3) + '\n'\
+\
+'wrong_mean_second_max_pecent_1 = ' + str(wrong_mean_second_max_percent_1) + '\n'\
+'wrong_mean_second_max_pecent_2 = ' + str(wrong_mean_second_max_percent_2) + '\n'\
+'wrong_mean_second_max_pecent_3 = ' + str(wrong_mean_second_max_percent_3) + '\n'\
+\
+'wrong_max_second_max_percent_1 = ' + str(wrong_max_second_max_percent_1) + '\n'\
+'wrong_max_second_max_percent_2 = ' + str(wrong_max_second_max_percent_2) + '\n'\
+'wrong_max_second_max_percent_3 = ' + str(wrong_max_second_max_percent_3) + '\n'\
+\
+'wrong_min_second_max_percent_1 = ' + str(wrong_min_second_max_percent_1) + '\n'\
+'wrong_min_second_max_percent_2 = ' + str(wrong_min_second_max_percent_2) + '\n'\
+'wrong_min_second_max_percent_3 = ' + str(wrong_min_second_max_percent_3) + '\n'\
+)
+
+f.close()
+#%%
+from helper_functions import get_optimal_entropy_parameters
+from data_analysis_data import prediction_list_exclude_23_32898 as prediction_list
+from data_analysis_data import ground_truth_list_exclude_23_32898 as ground_truth_list
+from data_analysis_data import ext_class_first_max_index_exclude_23_32898 as ext_class_first_max_index
+from data_analysis_data import ext_class_second_max_index_exclude_23_32898 as ext_class_second_max_index
+from data_analysis_data import ext_match_first_max_percent_exclude_23_32898 as ext_match_first_max_percent
+from data_analysis_data import ext_match_second_max_percent_exclude_23_32898 as ext_match_second_max_percent
+seed = 1000
+iters = 100
+resolution = 0.001
+min_percent_match, min_confidence = get_optimal_entropy_parameters(prediction_list,
+                                    ground_truth_list,
+                                    ext_class_first_max_index,
+                                    ext_class_second_max_index,
+                                    ext_match_first_max_percent,
+                                    ext_match_second_max_percent,iters,seed, resolution)
+
+prediction_obj = ComponentClassifierPredict(min_percent_match, min_confidence)
+
+#Following are lists:
+ext_class_name = []
+ext_class_index = []
+ext_class_first_max_index_1 = []
+ext_class_second_max_index_1 = []
+ext_match_first_max_percent_1 = []
+ext_match_second_max_percent_1 = []
+
+ext_class_first_max_index_2 = []
+ext_class_second_max_index_2 = []
+ext_match_first_max_percent_2 = []
+ext_match_second_max_percent_2 = []
+
+ext_class_first_max_index_3 = []
+ext_class_second_max_index_3 = []
+ext_match_first_max_percent_3 = []
+ext_match_second_max_percent_3 = []
+    
+index, index_1,index_2,index_3, first_max_index_1, second_max_index_1, first_max_percent_1, second_max_percent_1,\
+first_max_index_2, second_max_index_2, first_max_percent_2, second_max_percent_2,\
+first_max_index_3, second_max_index_3, first_max_percent_3, second_max_percent_3 = prediction_obj.predict_class_3_models(image,dataset_PATH, model_1_weights_name, model_2_weights_name, model_3_weights_name,return_all=True)
+
+
+
+ext_class_index.append(index)
+ext_class_name.append(target_names_all[index])
+
+ext_class_first_max_index_1.append(first_max_index_1)
+ext_class_second_max_index_1.append(second_max_index_1)
+ext_match_first_max_percent_1.append(first_max_percent_1)
+ext_match_second_max_percent_1.append(second_max_percent_1)
+
+ext_class_first_max_index_2.append(first_max_index_2)
+ext_class_second_max_index_2.append(second_max_index_2)
+ext_match_first_max_percent_2.append(first_max_percent_2)
+ext_match_second_max_percent_2.append(second_max_percent_2)
+
+ext_class_first_max_index_3.append(first_max_index_3)
+ext_class_second_max_index_3.append(second_max_index_3)
+ext_match_first_max_percent_3.append(first_max_percent_3)
+ext_match_second_max_percent_3.append(second_max_percent_3)
 
 # In[6]:
 start = time.time() # Begin time measurement
@@ -525,7 +752,93 @@ start = time.time() # Begin time measurement
 """
 prediction_obj = ComponentClassifierPredict(min_percent_match, min_confidence)
 
-ext_class_index_list, ext_class_name_list, ext_match_first_max_percent_list, ext_match_second_max_percent_list = prediction_obj.predict_classes(ext_images_list,trained_model)
+
+#Following are lists:
+ext_class_index, ext_class_name, ext_class_first_max_index_1, ext_class_second_max_index_1, ext_match_first_max_percent_1, ext_match_second_max_percent_1,\
+ext_class_first_max_index_2, ext_class_second_max_index_2, ext_match_first_max_percent_2, ext_match_second_max_percent_2,\
+ext_class_first_max_index_3, ext_class_second_max_index_3, ext_match_first_max_percent_3, ext_match_second_max_percent_3 = prediction_obj.predict_classes_3_models(ext_images_list,PATH, model_1_weights_name, model_2_weights_name, model_3_weights_name,return_all=True)
+
+
+#separate correct and wrong
+from data_analysis_data import ground_truth_list as ground_truth_list
+
+def separate_correct(list_to_be_separated, prediction_list, ground_truth_list):
+    ground_truth_array = np.asarray(ground_truth_list)
+    prediction_array = np.asarray(prediction_list)
+    correct_list = (ground_truth_array == prediction_array)
+    correct_output_list = []
+    wrong_output_list = []
+    for i in range(len(correct_list)):
+        if correct_list[i] == True:
+            correct_output_list.append(list_to_be_separated[i])
+        else:
+            wrong_output_list.append(list_to_be_separated[i])
+    return correct_output_list, wrong_output_list
+
+correct_ext_match_first_max_pecent_1, wrong_ext_match_first_max_pecent_1 = separate_correct(ext_match_first_max_percent_1,prediction_list,ground_truth_list)
+correct_ext_match_first_max_pecent_2, wrong_ext_match_first_max_pecent_2 = separate_correct(ext_match_first_max_percent_2,prediction_list,ground_truth_list)
+correct_ext_match_first_max_pecent_3, wrong_ext_match_first_max_pecent_3 = separate_correct(ext_match_first_max_percent_3,prediction_list,ground_truth_list)
+
+correct_ext_match_second_max_pecent_1, wrong_ext_match_second_max_pecent_1 = separate_correct(ext_match_second_max_percent_1,prediction_list,ground_truth_list)
+correct_ext_match_second_max_pecent_2, wrong_ext_match_second_max_pecent_2 = separate_correct(ext_match_second_max_percent_2,prediction_list,ground_truth_list)
+correct_ext_match_second_max_pecent_3, wrong_ext_match_second_max_pecent_3 = separate_correct(ext_match_second_max_percent_3,prediction_list,ground_truth_list)
+
+
+correct_mean_first_max_pecent_1 = sum(correct_ext_match_first_max_percent_1)/len(correct_ext_match_first_max_percent_1)
+correct_mean_first_max_pecent_2 = sum(correct_ext_match_first_max_percent_2)/len(correct_ext_match_first_max_percent_2)
+correct_mean_first_max_pecent_3 = sum(correct_ext_match_first_max_percent_3)/len(correct_ext_match_first_max_percent_3)
+
+correct_max_first_max_percent_1 = max(correct_ext_match_first_max_percent_1)
+correct_max_first_max_percent_2 = max(correct_ext_match_first_max_percent_2)
+correct_max_first_max_percent_3 = max(correct_ext_match_first_max_percent_3)
+
+correct_min_first_max_percent_1 = min(correct_ext_match_first_max_percent_1)
+correct_min_first_max_percent_2 = min(correct_ext_match_first_max_percent_2)
+correct_min_first_max_percent_3 = min(correct_ext_match_first_max_percent_3)
+
+correct_mean_second_max_pecent_1 = sum(correct_ext_match_second_max_percent_1)/len(correct_ext_match_second_max_percent_1)
+correct_mean_second_max_pecent_2 = sum(correct_ext_match_second_max_percent_2)/len(correct_ext_match_second_max_percent_2)
+correct_mean_second_max_pecent_3 = sum(correct_ext_match_second_max_percent_3)/len(correct_ext_match_second_max_percent_3)
+
+correct_max_second_max_percent_1 = max(correct_ext_match_second_max_percent_1)
+correct_max_second_max_percent_2 = max(correct_ext_match_second_max_percent_2)
+correct_max_second_max_percent_3 = max(correct_ext_match_second_max_percent_3)
+
+correct_min_second_max_percent_1 = min(correct_ext_match_second_max_percent_1)
+correct_min_second_max_percent_2 = min(correct_ext_match_second_max_percent_2)
+correct_min_second_max_percent_3 = min(correct_ext_match_second_max_percent_3)
+
+
+wrong_mean_first_max_pecent_1 = sum(wrong_ext_match_first_max_percent_1)/len(wrong_ext_match_first_max_percent_1)
+wrong_mean_first_max_pecent_2 = sum(wrong_ext_match_first_max_percent_2)/len(wrong_ext_match_first_max_percent_2)
+wrong_mean_first_max_pecent_3 = sum(wrong_ext_match_first_max_percent_3)/len(wrong_ext_match_first_max_percent_3)
+
+wrong_max_first_max_percent_1 = max(wrong_ext_match_first_max_percent_1)
+wrong_max_first_max_percent_2 = max(wrong_ext_match_first_max_percent_2)
+wrong_max_first_max_percent_3 = max(wrong_ext_match_first_max_percent_3)
+
+wrong_min_first_max_percent_1 = min(wrong_ext_match_first_max_percent_1)
+wrong_min_first_max_percent_2 = min(wrong_ext_match_first_max_percent_2)
+wrong_min_first_max_percent_3 = min(wrong_ext_match_first_max_percent_3)
+
+wrong_mean_second_max_pecent_1 = sum(wrong_ext_match_second_max_percent_1)/len(wrong_ext_match_second_max_percent_1)
+wrong_mean_second_max_pecent_2 = sum(wrong_ext_match_second_max_percent_2)/len(wrong_ext_match_second_max_percent_2)
+wrong_mean_second_max_pecent_3 = sum(wrong_ext_match_second_max_percent_3)/len(wrong_ext_match_second_max_percent_3)
+
+wrong_max_second_max_percent_1 = max(wrong_ext_match_second_max_percent_1)
+wrong_max_second_max_percent_2 = max(wrong_ext_match_second_max_percent_2)
+wrong_max_second_max_percent_3 = max(wrong_ext_match_second_max_percent_3)
+
+wrong_min_second_max_percent_1 = min(wrong_ext_match_second_max_percent_1)
+wrong_min_second_max_percent_2 = min(wrong_ext_match_second_max_percent_2)
+wrong_min_second_max_percent_3 = min(wrong_ext_match_second_max_percent_3)
+
+
+
+    
+
+#data in lists
+#ext_class_index_list, ext_class_name_list, ext_match_first_max_percent_list, ext_match_second_max_percent_list = prediction_obj.predict_classes(ext_images_list,trained_model)
 ""
 
 
