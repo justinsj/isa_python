@@ -112,6 +112,7 @@ def create_string_from_dict(accuracies_dict):
             
     return string
 
+
 def calculate_subset_accuracies(prediction_list, ground_truth_list):
     
     #test
@@ -215,7 +216,7 @@ def calculate_accuracies(prediction_list, ground_truth_list):
 def plot_confusion_matrix(cm, classes,
                           normalize=False,
                           title='Confusion matrix',
-                          cmap=plt.cm.Blues, PATH='', name='confusion_matrix', verbose = False):
+                          cmap=plt.cm.Blues, PATH='', name='confusion_matrix', verbose = False,save = False):
     
     import matplotlib.pyplot as plt
     fig,ax = plt.subplots(ncols=1, nrows=1, figsize=(25, 25))
@@ -249,8 +250,9 @@ def plot_confusion_matrix(cm, classes,
     plt.xlabel('Predicted label')
     plt.tight_layout()
     plt.show()
-    fig.savefig(PATH+name)
-    print('Figure is saved as: ' +PATH+name+'.png')
+    if save:
+        fig.savefig(PATH+name)
+        print('Figure is saved as: ' +PATH+name+'.png')
 
 def confusion_matrix_analysis(cm, dataset_PATH, name, min_count, verbose = False):
     count = 0
@@ -298,6 +300,152 @@ def confusion_matrix_analysis(cm, dataset_PATH, name, min_count, verbose = False
     print('Data saved as: ' + dataset_PATH+name+'.txt')
     return
 
+def separate_correct(list_to_be_separated, prediction_list, ground_truth_list):
+    ground_truth_array = np.asarray(ground_truth_list)
+    prediction_array = np.asarray(prediction_list)
+    correct_list = (ground_truth_array == prediction_array)
+    correct_output_list = []
+    wrong_output_list = []
+    for i in range(len(correct_list)):
+        if correct_list[i] == True:
+            correct_output_list.append(list_to_be_separated[i])
+        else:
+            wrong_output_list.append(list_to_be_separated[i])
+    return correct_output_list, wrong_output_list
+
+def get_gradient_entropy_parameters(prediction_list,
+                                    ground_truth_list,
+                                    ext_class_first_max_index_1,
+                                    ext_class_second_max_index_1,
+                                    ext_match_first_max_percent_1,
+                                    ext_match_second_max_percent_1,
+                                    min_percent_match, min_confidence, resolution):
+    
+    
+    accuracy_base = test_accuracy(prediction_list,ground_truth_list,
+                    ext_class_first_max_index_1,ext_class_second_max_index_1,
+                    ext_match_first_max_percent_1,ext_match_second_max_percent_1,
+                    min_percent_match, min_confidence)
+    
+    #try increasing min_percent_match
+    inc_min_percent_match = min_percent_match
+    accuracy_inc_min_percent_match = accuracy_base
+    while accuracy_inc_min_percent_match == accuracy_base and inc_min_percent_match <= 1.0:
+        print('inc_min_percent_match = ' + str(inc_min_percent_match))
+        inc_min_percent_match +=resolution
+        accuracy_inc_min_percent_match = test_accuracy(prediction_list,ground_truth_list,
+                        ext_class_first_max_index_1,ext_class_second_max_index_1,
+                        ext_match_first_max_percent_1,ext_match_second_max_percent_1,
+                        inc_min_percent_match, min_confidence)
+        
+    if inc_min_percent_match >=1.0: inc_min_percent_match = min_percent_match
+    
+    #try decreasing min_percent_match
+    dec_min_percent_match = min_percent_match
+    accuracy_dec_min_percent_match = accuracy_base
+    while accuracy_dec_min_percent_match == accuracy_base and dec_min_percent_match >= 0:
+        print('dec_min_percent_match = ' + str(dec_min_percent_match))
+        dec_min_percent_match -=resolution
+        accuracy_dec_min_percent_match = test_accuracy(prediction_list,ground_truth_list,
+                        ext_class_first_max_index_1,ext_class_second_max_index_1,
+                        ext_match_first_max_percent_1,ext_match_second_max_percent_1,
+                        dec_min_percent_match, min_confidence)
+    if dec_min_percent_match <=0: dec_min_percent_match = min_percent_match
+    
+    if accuracy_inc_min_percent_match > accuracy_base and accuracy_inc_min_percent_match > accuracy_dec_min_percent_match:
+        dmin_percent_match = inc_min_percent_match-min_percent_match
+    elif accuracy_dec_min_percent_match > accuracy_base:
+        dmin_percent_match = dec_min_percent_match-min_percent_match
+    else: dmin_percent_match = 0
+    
+    #try increasing min_confidence
+    inc_min_confidence = min_confidence
+    accuracy_inc_min_confidence = accuracy_base
+    while accuracy_inc_min_confidence == accuracy_base and inc_min_confidence <= 1.0:
+        print('inc_min_confidence = ' + str(inc_min_confidence))
+        inc_min_confidence +=resolution
+        accuracy_inc_min_confidence = test_accuracy(prediction_list,ground_truth_list,
+                        ext_class_first_max_index_1,ext_class_second_max_index_1,
+                        ext_match_first_max_percent_1,ext_match_second_max_percent_1,
+                        min_percent_match, inc_min_confidence)
+        
+    if inc_min_confidence >=1.0: inc_min_confidence = min_confidence
+    #try decreasing min_confidence
+    dec_min_confidence = min_confidence
+    accuracy_dec_min_confidence = accuracy_base
+    while accuracy_dec_min_confidence == accuracy_base and dec_min_confidence >= 0:
+        print('dec_min_confidence= ' + str(dec_min_confidence))
+        dec_min_confidence -=resolution
+        accuracy_dec_min_confidence = test_accuracy(prediction_list,ground_truth_list,
+                        ext_class_first_max_index_1,ext_class_second_max_index_1,
+                        ext_match_first_max_percent_1,ext_match_second_max_percent_1,
+                        min_percent_match, dec_min_confidence)
+    if dec_min_confidence <=0: dec_min_confidence = min_confidence
+    
+    if accuracy_inc_min_confidence > accuracy_base and accuracy_inc_min_confidence > accuracy_dec_min_confidence:
+        dmin_confidence = inc_min_confidence-min_confidence
+    elif accuracy_dec_min_confidence > accuracy_base:
+        dmin_confidence = dec_min_confidence-min_confidence
+    else: dmin_confidence = 0
+    
+    return dmin_percent_match, dmin_confidence
+
+
+
+def test_accuracy(prediction_list,
+                    ground_truth_list,
+                    ext_class_first_max_index_1,
+                    ext_class_second_max_index_1,
+                    ext_match_first_max_percent_1,
+                    ext_match_second_max_percent_1,
+                    min_percent_match, min_confidence):
+    temp_prediction_list = []
+    for i in range(len(prediction_list)):
+        index = ext_class_first_max_index_1[i]
+        if not(ext_match_first_max_percent_1[i] > min_percent_match and (ext_match_first_max_percent_1[i]-ext_match_second_max_percent_1[i]) > min_confidence):
+            index = 23
+        
+        temp_prediction_list.append(index)
+        
+    score_matrix = (np.asarray(prediction_list) == np.asarray(ground_truth_list))
+    accuracy = sum(score_matrix)/len(score_matrix)
+    return accuracy
+def get_optimal_entropy_parameters(prediction_list,
+                                    ground_truth_list,
+                                    ext_class_first_max_index_1,
+                                    ext_class_second_max_index_1,
+                                    ext_match_first_max_percent_1,
+                                    ext_match_second_max_percent_1,iters,seed, resolution):
+    import random
+    from helper_functions import get_gradient_entropy_parameters
+    from helper_functions import test_accuracy
+    #initialize with seed
+    min_percent_match = int(random.random()/resolution)*resolution #from 0 to 1
+    min_confidence = int(random.random()/resolution)*resolution # from 0 to 1
+    for a in range(iters):
+        print(a)
+        #get gradient
+        dmin_percent_match, dmin_confidence = get_gradient_entropy_parameters(prediction_list,
+                                    ground_truth_list,
+                                    ext_class_first_max_index_1,
+                                    ext_class_second_max_index_1,
+                                    ext_match_first_max_percent_1,
+                                    ext_match_second_max_percent_1, min_percent_match, min_confidence, resolution)
+        
+        #apply gradient update
+        min_percent_match += dmin_percent_match
+        min_confidence += dmin_confidence
+        
+        #test accuracy
+        accuracy = test_accuracy(prediction_list,
+                        ground_truth_list,
+                        ext_class_first_max_index_1,
+                        ext_class_second_max_index_1,
+                        ext_match_first_max_percent_1,
+                        ext_match_second_max_percent_1,
+                        min_percent_match, min_confidence)
+        print(accuracy)
+    return min_percent_match, min_confidence
 #%%
 ################## OLD CODE #########################
 """
