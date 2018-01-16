@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 from extraction_preprocessing import ExtractionPreprocessing
-
+from component_classifier_training import ComponentClassifierTraining
 
 from constants import target_names_all, target_names
 
@@ -49,47 +49,48 @@ class ComponentClassifierPredict(object):
                 
         return expanded_image
 
-    def predict_class(self, image, model_1, model_2=None,model_3 = None):
+    def get_first_and_second_max_and_indices(self, prediction_list):
+        
+        first_max_percent = max(prediction_list)
+        first_max_index = prediction_list.index(first_max_percent)
+        
+        second_max_list = prediction_list[:]
+        second_max_list.remove(max(second_max_list))
+        
+        second_max_percent = max(second_max_list)
+        second_max_index = prediction_list.index(second_max_percent)
+        
+        return first_max_index, second_max_index, first_max_percent, second_max_percent
+    def predict_class(self, image, model_1):#, model_2=None,model_3 = None):
 
         image = self.expand_dimension(image,3)
         
-        prediction_1 = model_1.predict(image)
-        first_max_1 = max(prediction_1[0])
-    
-        second_max_1 = list(prediction_1[0])
-        second_max_1.remove(max(second_max_1))
-        second_max_1 = max(second_max_1)
+#        print(model_1.predict(image)[0])
+#        print(model_1.predict(image)[0].tolist())
+        prediction_1 = model_1.predict(image)[0].tolist()
+        first_max_index_1, second_max_index_1, first_max_percent_1, second_max_percent_1 = \
+        first_max_index, second_max_index, first_max_percent, second_max_percent = self.get_first_and_second_max_and_indices(prediction_1)
         
-        index_1 = (prediction_1[0]).tolist().index(first_max_1)
+#        if model_2 != None and model_3 != None:
+#            prediction_2 = model_2.predict(image)
+#            first_max_index_2, second_max_index_2, first_max_percent_2, second_max_percent_2 = \
+#            get_first_and_second_max_and_indices(prediction_2[0])
+#            
+#            prediction_3 = model_3.predict(image)
+#            first_max_index_3, second_max_index_3, first_max_percent_3, second_max_percent_3 = \
+#            get_first_and_second_max_and_indices(prediction_3[0])
+#        
+#        # Get first, second, and third maximum percentage matches
+#        # To be used for entropy calculations
+#            return first_max_index_1, second_max_index_1, first_max_percent_1, second_max_percent_1,\
+#                first_max_index_2, second_max_index_2, first_max_percent_2, second_max_percent_2,\
+#                first_max_index_3, second_max_index_3, first_max_percent_3, second_max_percent_3
         
-        if model_2 != None and model_3 != None:
-            prediction_2 = model_2.predict(image)
-            first_max_2 = max(prediction_2[0])
-        
-            second_max_2 = list(prediction_2[0])
-            second_max_2.remove(max(second_max_2))
-            second_max_2 = max(second_max_2)
-            
-            prediction_3 = model_3.predict(image)
-            first_max_3 = max(prediction_3[0])
-        
-            second_max_3 = list(prediction_3[0])
-            second_max_3.remove(max(second_max_3))
-            second_max_3 = max(second_max_3)
-
-            index_2 = (prediction_2[0]).tolist().index(first_max_2)
-            index_3 = (prediction_3[0]).tolist().index(first_max_3)
-        
-        # Get first, second, and third maximum percentage matches
-        # To be used for entropy calculations
-            return index_1, first_max_1, second_max_1, index_2, first_max_2, second_max_2, index_3, first_max_3, second_max_3 
-        
-        return index_1, first_max_1, second_max_1
-    
+        return first_max_index_1, second_max_index_1, first_max_percent_1, second_max_percent_1
     
     def predict_class_with_rotations(self,image,model_1, model_2=None, model_3=None):
-        min_angle = -5
-        max_angle = 5
+        min_angle = -10
+        max_angle = 10
         step = 1
         list_of_angles = list(np.arange(min_angle,max_angle,step))
         predictions_list = []
@@ -121,7 +122,7 @@ class ComponentClassifierPredict(object):
         Prediction list has list of indices predicted
         Percentage matches has list of percent matches with indices in prediction list
         '''
-        index = prediction_list[prediction_list.index(max(prediction_list))]
+        index = prediction_list[prediction_list.index(max(percentage_matches))]
         return index
     
     def mode(self,arr):
@@ -156,22 +157,118 @@ class ComponentClassifierPredict(object):
         # Otherwise, if prediciton is confident, return the original index
         return index
 
-    def predict_class_3_models(self, image, model_1, model_2, model_3):
-        expanded_image = self.expand_dimension(image, 3)
+    def predict_classes_3_models(self, ext_images,PATH, model_1_weights_name, model_2_weights_name, model_3_weights_name,return_all=False):
+        if type(ext_images) is list:
+            if len(ext_images) == 0: return
+        if type(ext_images) is np.ndarray:
+            if ext_images.shape[1] == 0: return
+        
+        # Initialization
+        ext_class_name = []
+        ext_class_index = []
+        ext_class_first_max_index_1 = []
+        ext_class_second_max_index_1 = []
+        ext_match_first_max_percent_1 = []
+        ext_match_second_max_percent_1 = []
+        
+        ext_class_first_max_index_2 = []
+        ext_class_second_max_index_2 = []
+        ext_match_first_max_percent_2 = []
+        ext_match_second_max_percent_2 = []
+        
+        ext_class_first_max_index_3 = []
+        ext_class_second_max_index_3 = []
+        ext_match_first_max_percent_3 = []
+        ext_match_second_max_percent_3 = []
 
-        index_1, first_max_1, second_max_1 = self.predict_class(expanded_image, model_1)
-        index_1 = self.use_entropy(index_1, first_max_1, second_max_1)
+        for i in range(len(ext_images)):
+            image = ext_images[i]
+            if return_all:
+                index, index_1,index_2,index_3, first_max_index_1, second_max_index_1, first_max_percent_1, second_max_percent_1,\
+                first_max_index_2, second_max_index_2, first_max_percent_2, second_max_percent_2,\
+                first_max_index_3, second_max_index_3, first_max_percent_3, second_max_percent_3 = self.predict_class_3_models(self, image, PATH, model_1_weights_name, model_2_weights_name, model_3_weights_name,return_all=return_all)
+                
+                ext_class_first_max_index_2.append(first_max_index_2)
+                ext_class_second_max_index_2.append(second_max_index_2)
+                ext_match_first_max_percent_2.append(first_max_percent_2)
+                ext_match_second_max_percent_2.append(second_max_percent_2)
         
-        index_2, first_max_2, second_max_2 = self.predict_class(expanded_image, model_2)
-        index_2 = self.use_entropy(index_2, first_max_2, second_max_2)
+                ext_class_first_max_index_3.append(first_max_index_3)
+                ext_class_second_max_index_3.append(second_max_index_3)
+                ext_match_first_max_percent_3.append(first_max_percent_3)
+                ext_match_second_max_percent_3.append(second_max_percent_3)
+            else:
+                index, index_1,index_2,index_3, first_max_index_1, second_max_index_1, first_max_percent_1, second_max_percent_1 = self.predict_class_3_models(self, image, PATH, model_1_weights_name, model_2_weights_name, model_3_weights_name,return_all=return_all)
+            # Save extractions
+            ext_class_index.append(index)
+            ext_class_name.append(target_names_all[index])
+            ext_class_first_max_index_1.append(first_max_index_1)
+            ext_class_second_max_index_1.append(second_max_index_1)
+            ext_match_first_max_percent_1.append(first_max_percent_1)
+            ext_match_second_max_percent_1.append(second_max_percent_1)
+
+        if return_all:
+            return ext_class_index, ext_class_name, ext_class_first_max_index_1, ext_class_second_max_index_1, ext_match_first_max_percent_1, ext_match_second_max_percent_1,\
+                    ext_class_first_max_index_2, ext_class_second_max_index_2, ext_match_first_max_percent_2, ext_match_second_max_percent_2,\
+                    ext_class_first_max_index_3, ext_class_second_max_index_3, ext_match_first_max_percent_3, ext_match_second_max_percent_3
         
-        index_3, first_max_3, second_max_3 = self.predict_class(expanded_image, model_3)
-        index_3 = self.use_entropy(index_3, first_max_3, second_max_3)
+        return ext_class_index, ext_class_name, ext_class_first_max_index_1, ext_class_second_max_index_1, ext_match_first_max_percent_1, ext_match_second_max_percent_1
+
+
         
-        index = self.select_most_common_prediction([index_1,index_2,index_3])
+    def predict_class_preloaded(self, image, PATH, dropout, num_classes, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL, model_1):
+        expanded_image = self.expand_dimension(image, 3)
+        
+        #do prediction
+        first_max_index_1, second_max_index_1, first_max_percent_1, second_max_percent_1 = self.predict_class(image, model_1)
+        index = self.use_entropy(first_max_index_1, first_max_percent_1, second_max_percent_1)
+        
+        return index, first_max_index_1, second_max_index_1, first_max_percent_1, second_max_percent_1
+        
+    def predict_class_3_models(self, image, PATH, dropout, num_classes, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL, model_1_weights_name, model_2_weights_name=None, model_3_weights_name=None,return_all=False):
+        expanded_image = self.expand_dimension(image, 3)
+        
+        #load first weights
+        training_obj = ComponentClassifierTraining(64,TRAINING_RATIO_TRAIN,TRAINING_RATIO_VAL)
+        training_obj.model = training_obj.load_sketch_a_net_model(dropout, num_classes,(100,100,1))
+        training_obj.model.load_weights(PATH+model_1_weights_name+'.h5')
+        
+        #do prediction
+        first_max_index_1, second_max_index_1, first_max_percent_1, second_max_percent_1 = self.predict_class(image, training_obj.model)
+        index_1 = self.use_entropy(first_max_index_1, first_max_percent_1, second_max_percent_1)
+        
+        if model_2_weights_name != None:
+            #load second weights
+            training_obj = ComponentClassifierTraining(64,TRAINING_RATIO_TRAIN,TRAINING_RATIO_VAL)
+            training_obj.model = training_obj.load_sketch_a_net_model(dropout, num_classes,(100,100,1))
+            training_obj.model.load_weights(PATH+model_2_weights_name+'.h5')
             
-        return index
+            #do prediction
+            first_max_index_2, second_max_index_2, first_max_percent_2, second_max_percent_2 = self.predict_class(image, training_obj.model)
+            index_2 = self.use_entropy(first_max_index_2, first_max_percent_2, second_max_percent_2)
+        if model_3_weights_name != None:
+            #load third weights
+            training_obj = ComponentClassifierTraining(64,TRAINING_RATIO_TRAIN,TRAINING_RATIO_VAL)
+            training_obj.model = training_obj.load_sketch_a_net_model(dropout, num_classes,(100,100,1))
+            training_obj.model.load_weights(PATH+model_3_weights_name+'.h5')
+            
+            #do prediction
+            first_max_index_3, second_max_index_3, first_max_percent_3, second_max_percent_3 = self.predict_class(image, training_obj.model)
+            index_3 = self.use_entropy(first_max_index_3, first_max_percent_3, second_max_percent_3)
+    
         
+        
+        if model_2_weights_name != None and model_3_weights_name != None:
+            index = self.select_most_common_prediction([index_1,index_2,index_3])
+        else:
+            index = index_1
+            return index, first_max_index_1, second_max_index_1, first_max_percent_1, second_max_percent_1
+        
+        if return_all:
+            return index, index_1,index_2,index_3, first_max_index_1, second_max_index_1, first_max_percent_1, second_max_percent_1,\
+                first_max_index_2, second_max_index_2, first_max_percent_2, second_max_percent_2,\
+                first_max_index_3, second_max_index_3, first_max_percent_3, second_max_percent_3
+        return index, index_1,index_2,index_3, first_max_index_1, second_max_index_1, first_max_percent_1, second_max_percent_1
         
     def predict_classes(self, ext_images, model_1, model_2 = None, model_3 = None):
         
@@ -189,7 +286,6 @@ class ComponentClassifierPredict(object):
         for i in range(len(ext_images)):
             image = ext_images[i]
             expanded_image = self.expand_dimension(image, 3)
-    
     
             if model_2 == None or model_3 == None:
                 # Predict object class with entropy theory and record data
