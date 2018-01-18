@@ -302,12 +302,15 @@ class TestingClass(object):
         
         return 
 
-    def test_classifier_multiple_slow(self, dataset_PATH, dataset_name_list, num_classes,dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,iters,seed,start,end,min_percent_match, min_confidence,model_1_weights_name = None, exclude = [],save = False): 
+    def test_classifier_multiple_slow(self, dataset_PATH, dataset_name_list, num_classes,dropout, 
+                                      TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,iters,seed,start,end,
+                                      min_percent_match, min_confidence,model_1_weights_name = None,
+                                      exclude = [], save = False, model_num = 0): 
         #training_dataset_filename example: Training_Samples_64_classes_100x100_all
         # ground_truth_filename example: all_44
         #test n number of samples
         #for k times
-        
+        import time
         from constants import target_names_all
         '''
         Inputs: image, ground_truth_data, ground_truth_index
@@ -343,13 +346,35 @@ class TestingClass(object):
         prediction_obj = ComponentClassifierPredict(min_percent_match, min_confidence)
         
         training_obj = ComponentClassifierTraining(64,TRAINING_RATIO_TRAIN,TRAINING_RATIO_VAL)
-        training_obj.model = training_obj.load_sketch_a_net_model(dropout, num_classes,(100,100,1))
+        if model_num == -1:
+            training_obj.model = training_obj.load_sketch_a_net_model_7_layers(dropout, num_classes,(100,100,1))
+        elif model_num == 1:
+            training_obj.model = training_obj.load_sketch_a_net_model_1(dropout, num_classes,(100,100,1))
+        elif model_num == 2:
+            training_obj.model = training_obj.load_sketch_a_net_model_2(dropout, num_classes,(100,100,1))
+        elif model_num == 3:
+            training_obj.model = training_obj.load_sketch_a_net_model_3(dropout, num_classes,(100,100,1))
+        elif model_num == 4:
+            training_obj.model = training_obj.load_sketch_a_net_model_4(dropout, num_classes,(100,100,1))
+        elif model_num == 5:
+            training_obj.model = training_obj.load_sketch_a_net_model_5(dropout, num_classes,(100,100,1))
+        elif model_num == 6:
+            training_obj.model = training_obj.load_sketch_a_net_model_6(dropout, num_classes,(100,100,1))
+        elif model_num == 7:
+            training_obj.model = training_obj.load_sketch_a_net_model_7(dropout, num_classes,(100,100,1))
+        elif model_num == 8:
+            training_obj.model = training_obj.load_sketch_a_net_model_8(dropout, num_classes,(100,100,1))
+
+        else:
+            training_obj.model = training_obj.load_sketch_a_net_model(dropout, num_classes,(100,100,1))
         training_obj.model.load_weights(dataset_PATH+model_1_weights_name+'.h5')
         model_1 = training_obj.model
-        
+        t = 0
+        t_total = 0
+        image_count = 0
         for gt_image_num in range(start,end):
+            time_start = time.time()
             gc.collect()
-            print('testing on image number: ' + str(gt_image_num))
             gt_data_path_string = dataset_PATH+'GT/'+'GT_all_'+str(gt_image_num)+'.txt'
             
             if not(os.path.isfile(gt_data_path_string)): continue
@@ -392,21 +417,27 @@ class TestingClass(object):
 
 #            print(ground_truth_indices)
 #            print(prediction_indices)
-            
+            time_end = time.time()
+            t = time_end-time_start
+            t_total += t
+            image_count +=1
+            t_ave = t_total/image_count
+            print('tested image number: ' + str(gt_image_num)+', '+str(model_1_weights_name)+ ', ' + str(t) + ' seconds, ' +'t_ave = '+str(t_ave) + ' seconds')
+
         accuracy = calculate_accuracy(prediction_list, ground_truth_list)
 
         gc.collect()
         
         f.writelines("#"+str(model_1_weights_name)+'\n')
         f.writelines("#"+str(accuracy)+'\n')
-        f.writelines('prediction_list = ' + str(prediction_list) + '\n')
-        f.writelines('ground_truth_list = ' + str(ground_truth_list) + '\n')
+        f.writelines('prediction_list_'+str(model_1_weights_name)+' = ' + str(prediction_list) + '\n')
+        f.writelines('ground_truth_list_'+str(model_1_weights_name)+' = ' + str(ground_truth_list) + '\n')
 #        f.writelines('ext_class_name = ' + str(ext_class_name) + '\n')
-        f.writelines('ext_class_first_max_index_1 = ' + str(ext_class_first_max_index_1) + '\n')
-        f.writelines('ext_class_second_max_index_1 = ' + str(ext_class_second_max_index_1) + '\n')
-        f.writelines('ext_match_first_max_percent_1 = ' + str(ext_match_first_max_percent_1) + '\n')
-        f.writelines('ext_match_second_max_percent_1 = ' + str(ext_match_second_max_percent_1) + '\n')
-
+        f.writelines('ext_class_first_max_index_'+str(model_1_weights_name)+' = ' + str(ext_class_first_max_index_1) + '\n')
+        f.writelines('ext_class_second_max_index_'+str(model_1_weights_name)+' = ' + str(ext_class_second_max_index_1) + '\n')
+        f.writelines('ext_match_first_max_percent_'+str(model_1_weights_name)+' = ' + str(ext_match_first_max_percent_1) + '\n')
+        f.writelines('ext_match_second_max_percent_'+str(model_1_weights_name)+' = ' + str(ext_match_second_max_percent_1) + '\n')
+        f.writelines('\n')
         f.close()
 #        del trained_model
         gc.collect()

@@ -1,30 +1,3 @@
-
-# coding: utf-8
-
-# # Image-Based Structural Analysis
-# ### Code created and maintained by Justin David Q. SAN JUAN, <br>email: jdqsj1997@yahoo.com, <br> personal website: justinsj.weebly.com
-# 
-# #### This code focuses in the segmentation and classification processes (except reconstruction) of the complete project pipeline as described below:
-# <img src="https://justinsj.weebly.com/uploads/6/4/9/2/64923303/process-flowchart_orig.jpg" alt="Drawing" style="width: 800px;"/>
-
-# # Import Dependencies
-# #### Dependencies:
-# numpy: for handling data types (mostly handled as numpy arrays)<br>
-# Sequential (from keras.models): for CNN setup<br>
-# random: for pseudo-random shuffling of data<br>
-# cv2: for raw RBG image import and transformation to grayscale<br>
-# time: for measuring time elapsed per function<br>
-# ##### Custom Classes:
-# ComponentSegmentation: for proposing regions of interest (RoI's)<br>
-# ExtractionPreprocessing: for trimming, noise removal, and resizing of image<br>
-# ComponentClassifierTraining: for loading the CNN model, training data, and training the model<br>
-# ComponentClassifierPredict: for using the CNN model to predict the class of preprocessed extractions<br>
-# ExtractionLabelling: for labelling ground truth bounding boxes and classes in problem images<br>
-# TestingClass: for testing the accuracy of a CNN model on the problem images<br>
-# <br>
-# print_image_bw is used to print a simple 2-D array<br>
-# gc: for clearing up space after acquiring data from larger datasets
-
 # In[1]:
 
 
@@ -52,44 +25,6 @@ import gc
 gc.enable()
 
 print('Done Importing...')
-
-
-# # Hyper-parameters
-# #### Selective Search Parameters:
-# scale_input<br>
-# sigma_input<br>
-# min_size_input<br>
-# #### Noise Reduction Parameters:
-# min_shape: for minimum number of black pixels in bounding box<br>
-# min_height: for minimum height of bounding box<br>
-# min_width: for minimum width of bounding box<br>
-# <br>
-# buffer_zone: for expanding bounding box all directions<br>
-# min_area: for minimum area of bounding box<br>
-# min_black: for minimum number of black pixels in bounding box<br>
-# min_black_ratio: for minimum ratio of black pixels to the bounding box area<br>
-# #### Overlap Parameters:
-# overlap_repeats: for number of iterations for merging algorithm to be applied<br>
-# overlap_threshold: threshold of area overlap over union area for merging to be applied<br>
-# #### Removing Unconnected Pieces Parameters:
-# max_piece_percent: maximum percentage of piece to be removed<br>
-# (if percentage is larger, piece will not be removed as it is more likely an important piece)<br>
-# #### Extractions Preprocessing Parameters:
-# img_rows, img_cols: for classifier input shape<br>
-# wanted_w, wanted_h: for black pixels edges resizing boundary shape<br>
-# export_w, export_h: for overall image resizing shape ([export_w-wanted_w]/2 = horizontal buffer on each side)<br>
-# #### CNN Training Parameters:
-# num_classes: number of classes for classifier to predict<br>
-# TRAINING_RATIO_TRAIN: ratio of training samples to total number of samples<br>
-# TRAINING_RATIO_VAL: ratio of validation samples to total number of samples<br>
-# TRAINING_RATIO_TEST: ratio of test samples to total number of samples <br>
-# Note: TRAINING_RATIO_TEST is implicitly calculated as [1-{TRAINING_RATIO_TRAIN + TRAINING_RATIO_VAL}]<br>
-# dropout: dropout value to be used in all layers except last layer of Sketch-A-Net CNN model<br>
-# #### CNN Prediction Parameters:
-# min_percent_match: minimum probability of class prediction for that class to be set as the prediction<br>
-# min_confidence: minimum difference between first-highest % match and second-highest % match<br>
-# (higher difference means less ambiguity between first and second highest match, which means less likelihood of random object)<br>
-# ##### The directory is also defined in the PATH variable.<br>The name of the CNN model data is defined in the name variable.<br>The training data set name for the CNN is defined in the data_set_name variable.
 
 # In[ ]:
 
@@ -152,10 +87,6 @@ new_dataset_name = 'Training_Samples_64_classes_100x100_all_cleaned_32898'
 print('Done setting hyperparamters...')
 
 
-# # Print Confusion Matrix
-
-# # dataset_2 first controlled to 600 max
-
 # In[ ]:
 
 
@@ -163,7 +94,7 @@ start = time.time() # Begin time measurement
 
 seed = 1000
 
-weights_name = "Sketch-A-Net_controlled_600_30858"
+weights_name = "Sketch-A-Net_controlled_600_30858_7_layers"
 #weights_name = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739+7500(0-350)"
 #weights_name = dataset_name
 #dataset_name_1 = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739"
@@ -176,11 +107,12 @@ testing_obj = TestingClass(dataset_PATH, wanted_w, wanted_h, export_w, export_h,
 ground_truth_list, prediction_list = testing_obj.test_classifier_multiple_slow(dataset_PATH, dataset_name_list,
                                      num_classes,dropout, 
                                      TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,
-                                     200,seed,350,706, weights_name = weights_name,exclude = [])
+                                     200,seed,350,706, min_percent_match, min_confidence, 
+                                     model_1_weights_name = weights_name,model_7_layers = True, exclude = [])
 
 f = open(dataset_PATH+'testing_results.txt','a')
-f.writelines('ground_truth_list_5 = '+str(ground_truth_list) +'\n'
-             'prediction_list_5 = '+str(prediction_list)+'\n')
+f.writelines('ground_truth_list_8 = '+str(ground_truth_list) +'\n'
+             'prediction_list_8 = '+str(prediction_list)+'\n')
 f.close()
 
 end = time.time()#record time

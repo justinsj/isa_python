@@ -392,6 +392,118 @@ class ComponentClassifierTraining(object):
         if verbose:
             model.summary()
         return model
+    
+    @staticmethod
+    def load_sketch_a_net_model_6(dropout, num_classes, input_shape,verbose = False):
+        """ Load Sketch-A-Net keras model layers """
+        model = Sequential()
+
+        # Layer 1
+        model.add(Conv2D(64, (15, 15), strides=3, activation='relu', input_shape=input_shape))
+        model.add(MaxPooling2D(pool_size=(3, 3), strides=1))
+        model.add(Dropout(dropout))
+        # Layer 2
+        model.add(Conv2D(128, (5, 5), strides=1, activation='relu'))
+        model.add(MaxPooling2D(pool_size=(3, 3), strides=2))
+        model.add(Dropout(dropout))
+        # Layer 3
+        model.add(Conv2D(256, (3, 3), strides=1, padding='same', activation='relu'))
+        model.add(Dropout(dropout))
+        # Layer 4
+        model.add(Conv2D(256, (3, 3), strides=1, padding='same', activation='relu'))
+        model.add(Dropout(dropout))
+        # Layer 5
+        model.add(Conv2D(256, (3, 3), strides=1, padding='same', activation='relu'))
+        model.add(MaxPooling2D(pool_size=(3, 3), strides=2))
+        model.add(Dropout(dropout))
+#        # Layer 6
+#        model.add(Conv2D(512, (5, 5), strides=1, activation='relu'))
+#        model.add(Dropout(0.5))
+
+        # Layer 7
+        model.add(Flatten())
+        model.add(Dense(num_classes, activation='softmax'))
+        
+        
+        model.compile(loss='categorical_crossentropy',
+                      optimizer=Adadelta(),
+                      metrics=['accuracy'])
+        if verbose:
+            model.summary()
+        return model
+    
+    @staticmethod
+    def load_sketch_a_net_model_7(dropout, num_classes, input_shape,verbose = False):
+        """ Load Sketch-A-Net keras model layers """
+        model = Sequential()
+
+        # Layer 1
+        model.add(Conv2D(64, (15, 15), strides=3, activation='relu', input_shape=input_shape))
+        model.add(MaxPooling2D(pool_size=(3, 3), strides=1))
+        model.add(Dropout(dropout))
+        # Layer 2
+        model.add(Conv2D(128, (5, 5), strides=1, activation='relu'))
+        model.add(MaxPooling2D(pool_size=(3, 3), strides=2))
+        model.add(Dropout(dropout))
+        # Layer 3
+        model.add(Conv2D(256, (3, 3), strides=1, padding='same', activation='relu'))
+        model.add(Dropout(dropout))
+
+        # Layer 4
+        model.add(Conv2D(256, (5, 5), strides=1, padding='same', activation='relu'))
+        model.add(MaxPooling2D(pool_size=(3, 3), strides=2))
+        model.add(Dropout(dropout))
+        # Layer 5
+        model.add(Conv2D(512, (5, 5), strides=1, activation='relu'))
+        model.add(Dropout(0.5))
+
+        # Layer 6
+        model.add(Flatten())
+        model.add(Dense(num_classes, activation='softmax'))
+        
+        
+        model.compile(loss='categorical_crossentropy',
+                      optimizer=Adadelta(),
+                      metrics=['accuracy'])
+        if verbose:
+            model.summary()
+        return model
+    @staticmethod
+    def load_sketch_a_net_model_8(dropout, num_classes, input_shape,verbose = False):
+        """ Load Sketch-A-Net keras model layers """
+        model = Sequential()
+
+        # Layer 1
+        model.add(Conv2D(64, (15, 15), strides=3, activation='relu', input_shape=input_shape))
+        model.add(MaxPooling2D(pool_size=(3, 3), strides=1))
+        model.add(Dropout(dropout))
+        # Layer 2
+        model.add(Conv2D(128, (5, 5), strides=1, activation='relu'))
+        model.add(MaxPooling2D(pool_size=(3, 3), strides=2))
+        model.add(Dropout(dropout))
+        # Layer 3
+        model.add(Conv2D(128, (5, 5), strides=1, padding='same', activation='relu'))
+        model.add(Dropout(dropout))
+
+        # Layer 4
+        model.add(Conv2D(256, (5, 5), strides=1, padding='same', activation='relu'))
+        model.add(MaxPooling2D(pool_size=(5, 5), strides=2))
+        model.add(Dropout(dropout))
+        # Layer 5
+        model.add(Conv2D(512, (1, 1), strides=1, activation='relu'))
+        model.add(Dropout(0.5))
+
+        # Layer 6
+        model.add(Flatten())
+        model.add(Dense(num_classes, activation='softmax'))
+        
+        
+        model.compile(loss='categorical_crossentropy',
+                      optimizer=Adadelta(),
+                      metrics=['accuracy'])
+#        if verbose:
+        model.summary()
+        return model
 
     def train(self, epochs, seed, verbose=1):
         """ Train model with input number of epochs """
