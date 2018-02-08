@@ -66,7 +66,7 @@ print('Done setting hyperparamters...')
 start = time.time() # Begin time measurement
 #print('Beginning loading of image...')
 
-PATH = '/home/chloong/Desktop/Justin San Juan/Testing Folder/'
+PATH = 'C:/Users/JustinSanJuan/Desktop/HKUST/UROP Deep Learning Image-based Structural Analysis/Code/Python/Testing Folder'
 
 # image_set = np.load(PATH+'all_training_images.npy')
 name = 'Sketch-a-Net_64_classes_100x100_0.0_all_100epochs'

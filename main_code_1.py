@@ -102,188 +102,360 @@ start = time.time() # Begin time measurement
 """
 seed = 1000
 
-#weights_name = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739+7500(0-350)"
-#weights_name = dataset_name
+model_1_weights_name = 'Sketch-A-Net_all_29739+13301_7_layers'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_1'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_2'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_3'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_4'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_5'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_6'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_7'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_8'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_7_layers'
 
-#dataset_name_1 = "Training_Samples_64_classes_100x100_all_cleaned_29724" # base training images
-#dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_13291" # problem ground truth images
-#dataset_name_list = [dataset_name_1, dataset_name_2]
-model_1_weights_name = 'Sketch-A-Net_controlled_600_30858'
-#model_1_weights_name = 'Sketch-A-Net_controlled_600_30858_1_7_layers'
-#model_1_weights_name = 'Sketch-A-Net_exclude_23_32898_7_layers'
+testing_obj = TestingClass(dataset_PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
+prediction_list, ground_truth_list, ext_class_name, ext_class_first_max_index_1, ext_class_second_max_index_1, ext_match_first_max_percent_1, ext_match_second_max_percent_1\
+ = testing_obj.test_classifier_multiple_slow(dataset_PATH, [], num_classes,dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,\
+                                             100,seed,350,706,min_percent_match, min_confidence,model_1_weights_name = model_1_weights_name, model_num = -1, exclude = [],save = True)
+
+del testing_obj
+del prediction_list
+del ground_truth_list
+del ext_class_name
+del ext_class_first_max_index_1
+del ext_class_second_max_index_1
+del ext_match_first_max_percent_1
+del ext_match_second_max_percent_1
+gc.collect()
+#####
+seed = 1000
+
 #model_1_weights_name = 'Sketch-A-Net_all_29739+13301_7_layers'
-
-#model_1_weights_name = 'Sketch-A-Net_model_1_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_2_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_3_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_4_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_5_exclude_23'
+model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_1'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_2'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_3'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_4'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_5'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_6'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_7'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_8'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_7_layers'
 
 testing_obj = TestingClass(dataset_PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
 prediction_list, ground_truth_list, ext_class_name, ext_class_first_max_index_1, ext_class_second_max_index_1, ext_match_first_max_percent_1, ext_match_second_max_percent_1\
  = testing_obj.test_classifier_multiple_slow(dataset_PATH, [], num_classes,dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,\
                                              100,seed,350,706,min_percent_match, min_confidence,model_1_weights_name = model_1_weights_name, model_num = 0, exclude = [],save = True)
 
+del testing_obj
+del prediction_list
+del ground_truth_list
+del ext_class_name
+del ext_class_first_max_index_1
+del ext_class_second_max_index_1
+del ext_match_first_max_percent_1
+del ext_match_second_max_percent_1
+gc.collect()
 
-#weights_name = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739+7500(0-350)"
-#weights_name = dataset_name
+#####
+seed = 1000
 
-#dataset_name_1 = "Training_Samples_64_classes_100x100_all_cleaned_29724" # base training images
-#dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_13291" # problem ground truth images
-#dataset_name_list = [dataset_name_1, dataset_name_2]
-#model_1_weights_name = 'Sketch-A-Net_controlled_600_30858_7_layers'
-model_1_weights_name = 'Sketch-A-Net_controlled_600_30858_1'
-#model_1_weights_name = 'Sketch-A-Net_exclude_23_32898_7_layers'
 #model_1_weights_name = 'Sketch-A-Net_all_29739+13301_7_layers'
-
-#model_1_weights_name = 'Sketch-A-Net_model_1_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_2_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_3_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_4_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_5_exclude_23'
-
-testing_obj = TestingClass(dataset_PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
-prediction_list, ground_truth_list, ext_class_name, ext_class_first_max_index_1, ext_class_second_max_index_1, ext_match_first_max_percent_1, ext_match_second_max_percent_1\
- = testing_obj.test_classifier_multiple_slow(dataset_PATH, [], num_classes,dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,\
-                                             100,seed,350,706,min_percent_match, min_confidence,model_1_weights_name = model_1_weights_name, model_num = 0, exclude = [],save = True)
-
-
-#weights_name = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739+7500(0-350)"
-#weights_name = dataset_name
-
-#dataset_name_1 = "Training_Samples_64_classes_100x100_all_cleaned_29724" # base training images
-#dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_13291" # problem ground truth images
-#dataset_name_list = [dataset_name_1, dataset_name_2]
-#model_1_weights_name = 'Sketch-A-Net_controlled_600_30858_7_layers'
-#model_1_weights_name = 'Sketch-A-Net_controlled_600_30858_1_7_layers'
-model_1_weights_name = 'Sketch-A-Net_exclude_23_32898'
-#model_1_weights_name = 'Sketch-A-Net_all_29739+13301_7_layers'
-
-#model_1_weights_name = 'Sketch-A-Net_model_1_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_2_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_3_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_4_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_5_exclude_23'
-
-testing_obj = TestingClass(dataset_PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
-prediction_list, ground_truth_list, ext_class_name, ext_class_first_max_index_1, ext_class_second_max_index_1, ext_match_first_max_percent_1, ext_match_second_max_percent_1\
- = testing_obj.test_classifier_multiple_slow(dataset_PATH, [], num_classes,dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,\
-                                             100,seed,350,706,min_percent_match, min_confidence,model_1_weights_name = model_1_weights_name, model_num = 0, exclude = [],save = True)
-
-
-#weights_name = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739+7500(0-350)"
-#weights_name = dataset_name
-
-#dataset_name_1 = "Training_Samples_64_classes_100x100_all_cleaned_29724" # base training images
-#dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_13291" # problem ground truth images
-#dataset_name_list = [dataset_name_1, dataset_name_2]
-#model_1_weights_name = 'Sketch-A-Net_controlled_600_30858_7_layers'
-#model_1_weights_name = 'Sketch-A-Net_controlled_600_30858_1_7_layers'
-#model_1_weights_name = 'Sketch-A-Net_exclude_23_32898_7_layers'
-model_1_weights_name = 'Training_Samples_64_classes_100x100_all_cleaned_updated_29739+7500(0-350)'
-
-#model_1_weights_name = 'Sketch-A-Net_model_1_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_2_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_3_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_4_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_5_exclude_23'
-
-testing_obj = TestingClass(dataset_PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
-prediction_list, ground_truth_list, ext_class_name, ext_class_first_max_index_1, ext_class_second_max_index_1, ext_match_first_max_percent_1, ext_match_second_max_percent_1\
- = testing_obj.test_classifier_multiple_slow(dataset_PATH, [], num_classes,dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,\
-                                             100,seed,350,706,min_percent_match, min_confidence,model_1_weights_name = model_1_weights_name, model_num = 0, exclude = [],save = True)
-
-
-#weights_name = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739+7500(0-350)"
-#weights_name = dataset_name
-
-#dataset_name_1 = "Training_Samples_64_classes_100x100_all_cleaned_29724" # base training images
-#dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_13291" # problem ground truth images
-#dataset_name_list = [dataset_name_1, dataset_name_2]
-#model_1_weights_name = 'Sketch-A-Net_controlled_600_30858_7_layers'
-#model_1_weights_name = 'Sketch-A-Net_controlled_600_30858_1_7_layers'
-#model_1_weights_name = 'Sketch-A-Net_exclude_23_32898_7_layers'
-#model_1_weights_name = 'Sketch-A-Net_all_29739+13301_7_layers'
-
-model_1_weights_name = 'Sketch-A-Net_model_1_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_2_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_3_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_4_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_5_exclude_23'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)'
+model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_1'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_2'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_3'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_4'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_5'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_6'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_7'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_8'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_7_layers'
 
 testing_obj = TestingClass(dataset_PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
 prediction_list, ground_truth_list, ext_class_name, ext_class_first_max_index_1, ext_class_second_max_index_1, ext_match_first_max_percent_1, ext_match_second_max_percent_1\
  = testing_obj.test_classifier_multiple_slow(dataset_PATH, [], num_classes,dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,\
                                              100,seed,350,706,min_percent_match, min_confidence,model_1_weights_name = model_1_weights_name, model_num = 1, exclude = [],save = True)
 
+del testing_obj
+del prediction_list
+del ground_truth_list
+del ext_class_name
+del ext_class_first_max_index_1
+del ext_class_second_max_index_1
+del ext_match_first_max_percent_1
+del ext_match_second_max_percent_1
+gc.collect()
 
-#weights_name = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739+7500(0-350)"
-#weights_name = dataset_name
+#####
+seed = 1000
 
-#dataset_name_1 = "Training_Samples_64_classes_100x100_all_cleaned_29724" # base training images
-#dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_13291" # problem ground truth images
-#dataset_name_list = [dataset_name_1, dataset_name_2]
-#model_1_weights_name = 'Sketch-A-Net_controlled_600_30858_7_layers'
-#model_1_weights_name = 'Sketch-A-Net_controlled_600_30858_1_7_layers'
-#model_1_weights_name = 'Sketch-A-Net_exclude_23_32898_7_layers'
 #model_1_weights_name = 'Sketch-A-Net_all_29739+13301_7_layers'
-
-#model_1_weights_name = 'Sketch-A-Net_model_1_exclude_23'
-model_1_weights_name = 'Sketch-A-Net_model_2_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_3_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_4_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_5_exclude_23'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_1'
+model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_2'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_3'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_4'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_5'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_6'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_7'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_8'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_7_layers'
 
 testing_obj = TestingClass(dataset_PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
 prediction_list, ground_truth_list, ext_class_name, ext_class_first_max_index_1, ext_class_second_max_index_1, ext_match_first_max_percent_1, ext_match_second_max_percent_1\
  = testing_obj.test_classifier_multiple_slow(dataset_PATH, [], num_classes,dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,\
                                              100,seed,350,706,min_percent_match, min_confidence,model_1_weights_name = model_1_weights_name, model_num = 2, exclude = [],save = True)
 
+del testing_obj
+del prediction_list
+del ground_truth_list
+del ext_class_name
+del ext_class_first_max_index_1
+del ext_class_second_max_index_1
+del ext_match_first_max_percent_1
+del ext_match_second_max_percent_1
+gc.collect()
 
-#weights_name = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739+7500(0-350)"
-#weights_name = dataset_name
+#####
+seed = 1000
 
-#dataset_name_1 = "Training_Samples_64_classes_100x100_all_cleaned_29724" # base training images
-#dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_13291" # problem ground truth images
-#dataset_name_list = [dataset_name_1, dataset_name_2]
-#model_1_weights_name = 'Sketch-A-Net_controlled_600_30858_7_layers'
-#model_1_weights_name = 'Sketch-A-Net_controlled_600_30858_1_7_layers'
-#model_1_weights_name = 'Sketch-A-Net_exclude_23_32898_7_layers'
 #model_1_weights_name = 'Sketch-A-Net_all_29739+13301_7_layers'
-
-#model_1_weights_name = 'Sketch-A-Net_model_1_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_2_exclude_23'
-model_1_weights_name = 'Sketch-A-Net_model_3_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_4_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_5_exclude_23'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_1'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_2'
+model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_3'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_4'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_5'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_6'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_7'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_8'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_7_layers'
 
 testing_obj = TestingClass(dataset_PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
 prediction_list, ground_truth_list, ext_class_name, ext_class_first_max_index_1, ext_class_second_max_index_1, ext_match_first_max_percent_1, ext_match_second_max_percent_1\
  = testing_obj.test_classifier_multiple_slow(dataset_PATH, [], num_classes,dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,\
                                              100,seed,350,706,min_percent_match, min_confidence,model_1_weights_name = model_1_weights_name, model_num = 3, exclude = [],save = True)
+del testing_obj
+del prediction_list
+del ground_truth_list
+del ext_class_name
+del ext_class_first_max_index_1
+del ext_class_second_max_index_1
+del ext_match_first_max_percent_1
+del ext_match_second_max_percent_1
+gc.collect()
 
+#####
+seed = 1000
 
-#weights_name = "Training_Samples_64_classes_100x100_all_cleaned_updated_29739+7500(0-350)"
-#weights_name = dataset_name
-
-#dataset_name_1 = "Training_Samples_64_classes_100x100_all_cleaned_29724" # base training images
-#dataset_name_2 = "Training_Samples_64_classes_100x100_all_cleaned_13291" # problem ground truth images
-#dataset_name_list = [dataset_name_1, dataset_name_2]
-#model_1_weights_name = 'Sketch-A-Net_controlled_600_30858_7_layers'
-#model_1_weights_name = 'Sketch-A-Net_controlled_600_30858_1_7_layers'
-#model_1_weights_name = 'Sketch-A-Net_exclude_23_32898_7_layers'
 #model_1_weights_name = 'Sketch-A-Net_all_29739+13301_7_layers'
-
-#model_1_weights_name = 'Sketch-A-Net_model_1_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_2_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_3_exclude_23'
-model_1_weights_name = 'Sketch-A-Net_model_4_exclude_23'
-#model_1_weights_name = 'Sketch-A-Net_model_5_exclude_23'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_1'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_2'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_3'
+model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_4'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_5'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_6'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_7'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_8'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_7_layers'
 
 testing_obj = TestingClass(dataset_PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
 prediction_list, ground_truth_list, ext_class_name, ext_class_first_max_index_1, ext_class_second_max_index_1, ext_match_first_max_percent_1, ext_match_second_max_percent_1\
  = testing_obj.test_classifier_multiple_slow(dataset_PATH, [], num_classes,dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,\
                                              100,seed,350,706,min_percent_match, min_confidence,model_1_weights_name = model_1_weights_name, model_num = 4, exclude = [],save = True)
+del testing_obj
+del prediction_list
+del ground_truth_list
+del ext_class_name
+del ext_class_first_max_index_1
+del ext_class_second_max_index_1
+del ext_match_first_max_percent_1
+del ext_match_second_max_percent_1
+gc.collect()
+
+#####
+seed = 1000
+
+#model_1_weights_name = 'Sketch-A-Net_all_29739+13301_7_layers'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_1'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_2'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_3'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_4'
+model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_5'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_6'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_7'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_8'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_7_layers'
+
+testing_obj = TestingClass(dataset_PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
+prediction_list, ground_truth_list, ext_class_name, ext_class_first_max_index_1, ext_class_second_max_index_1, ext_match_first_max_percent_1, ext_match_second_max_percent_1\
+ = testing_obj.test_classifier_multiple_slow(dataset_PATH, [], num_classes,dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,\
+                                             100,seed,350,706,min_percent_match, min_confidence,model_1_weights_name = model_1_weights_name, model_num = 5, exclude = [],save = True)
+
+del testing_obj
+del prediction_list
+del ground_truth_list
+del ext_class_name
+del ext_class_first_max_index_1
+del ext_class_second_max_index_1
+del ext_match_first_max_percent_1
+del ext_match_second_max_percent_1
+gc.collect()
+
+#####
+seed = 1000
+
+#model_1_weights_name = 'Sketch-A-Net_all_29739+13301_7_layers'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_1'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_2'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_3'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_4'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_5'
+model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_6'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_7'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_8'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_7_layers'
+
+testing_obj = TestingClass(dataset_PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
+prediction_list, ground_truth_list, ext_class_name, ext_class_first_max_index_1, ext_class_second_max_index_1, ext_match_first_max_percent_1, ext_match_second_max_percent_1\
+ = testing_obj.test_classifier_multiple_slow(dataset_PATH, [], num_classes,dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,\
+                                             100,seed,350,706,min_percent_match, min_confidence,model_1_weights_name = model_1_weights_name, model_num = 6, exclude = [],save = True)
+
+del testing_obj
+del prediction_list
+del ground_truth_list
+del ext_class_name
+del ext_class_first_max_index_1
+del ext_class_second_max_index_1
+del ext_match_first_max_percent_1
+del ext_match_second_max_percent_1
+gc.collect()
+
+#####
+seed = 1000
+
+#model_1_weights_name = 'Sketch-A-Net_all_29739+13301_7_layers'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_1'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_2'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_3'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_4'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_5'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_6'
+model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_7'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_8'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_7_layers'
+
+testing_obj = TestingClass(dataset_PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
+prediction_list, ground_truth_list, ext_class_name, ext_class_first_max_index_1, ext_class_second_max_index_1, ext_match_first_max_percent_1, ext_match_second_max_percent_1\
+ = testing_obj.test_classifier_multiple_slow(dataset_PATH, [], num_classes,dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,\
+                                             100,seed,350,706,min_percent_match, min_confidence,model_1_weights_name = model_1_weights_name, model_num = 7, exclude = [],save = True)
+
+del testing_obj
+del prediction_list
+del ground_truth_list
+del ext_class_name
+del ext_class_first_max_index_1
+del ext_class_second_max_index_1
+del ext_match_first_max_percent_1
+del ext_match_second_max_percent_1
+gc.collect()
+
+#####
+seed = 1000
+
+#model_1_weights_name = 'Sketch-A-Net_all_29739+13301_7_layers'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_1'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_2'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_3'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_4'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_5'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_6'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_7'
+model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_8'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_7_layers'
+
+testing_obj = TestingClass(dataset_PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
+prediction_list, ground_truth_list, ext_class_name, ext_class_first_max_index_1, ext_class_second_max_index_1, ext_match_first_max_percent_1, ext_match_second_max_percent_1\
+ = testing_obj.test_classifier_multiple_slow(dataset_PATH, [], num_classes,dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,\
+                                             100,seed,350,706,min_percent_match, min_confidence,model_1_weights_name = model_1_weights_name, model_num = 8, exclude = [],save = True)
+
+del testing_obj
+del prediction_list
+del ground_truth_list
+del ext_class_name
+del ext_class_first_max_index_1
+del ext_class_second_max_index_1
+del ext_match_first_max_percent_1
+del ext_match_second_max_percent_1
+gc.collect()
+
+#####
+seed = 1000
+
+#model_1_weights_name = 'Sketch-A-Net_all_29739+13301_7_layers'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_1'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_2'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_3'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_4'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_5'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_6'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_7'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_8'
+model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_7_layers'
+
+testing_obj = TestingClass(dataset_PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
+prediction_list, ground_truth_list, ext_class_name, ext_class_first_max_index_1, ext_class_second_max_index_1, ext_match_first_max_percent_1, ext_match_second_max_percent_1\
+ = testing_obj.test_classifier_multiple_slow(dataset_PATH, [], num_classes,dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,\
+                                             100,seed,350,706,min_percent_match, min_confidence,model_1_weights_name = model_1_weights_name, model_num = -1, exclude = [],save = True)
+
+del testing_obj
+del prediction_list
+del ground_truth_list
+del ext_class_name
+del ext_class_first_max_index_1
+del ext_class_second_max_index_1
+del ext_match_first_max_percent_1
+del ext_match_second_max_percent_1
+gc.collect()
+
+#%%
+#####
+seed = 1000
+
+#model_1_weights_name = 'Sketch-A-Net_all_29739+13301_7_layers'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_1'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_2'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_3'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_4'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_5'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_6'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_7'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_model_8'
+#model_1_weights_name = 'Sketch-A-Net_29739+7500(0-350)_7_layers'
+model_1_weights_name = 'Sketch-A-Net_model_5_exclude_23'
+testing_obj = TestingClass(dataset_PATH, wanted_w, wanted_h, export_w, export_h, max_piece_percent)
+prediction_list, ground_truth_list, ext_class_name, ext_class_first_max_index_1, ext_class_second_max_index_1, ext_match_first_max_percent_1, ext_match_second_max_percent_1\
+ = testing_obj.test_classifier_multiple_slow(dataset_PATH, [], num_classes,dropout, TRAINING_RATIO_TRAIN, TRAINING_RATIO_VAL,\
+                                             100,seed,350,706,min_percent_match, min_confidence,model_1_weights_name = model_1_weights_name, model_num = 5, exclude = [],save = True)
+
+del testing_obj
+del prediction_list
+del ground_truth_list
+del ext_class_name
+del ext_class_first_max_index_1
+del ext_class_second_max_index_1
+del ext_match_first_max_percent_1
+del ext_match_second_max_percent_1
+gc.collect()
 
 
 #%%
@@ -495,21 +667,58 @@ f.writelines(\
 f.close()
 #%%
 from helper_functions import get_optimal_entropy_parameters
+from helper_functions import print_all_entropy_parameters
 from data_analysis_data import prediction_list_exclude_23_32898 as prediction_list
 from data_analysis_data import ground_truth_list_exclude_23_32898 as ground_truth_list
 from data_analysis_data import ext_class_first_max_index_exclude_23_32898 as ext_class_first_max_index
 from data_analysis_data import ext_class_second_max_index_exclude_23_32898 as ext_class_second_max_index
 from data_analysis_data import ext_match_first_max_percent_exclude_23_32898 as ext_match_first_max_percent
 from data_analysis_data import ext_match_second_max_percent_exclude_23_32898 as ext_match_second_max_percent
+#
+#from data_analysis_data import prediction_list_Sketch_A_Net_model_1_exclude_23 as prediction_list
+#from data_analysis_data import ground_truth_list_Sketch_A_Net_model_1_exclude_23 as ground_truth_list
+#from data_analysis_data import ext_class_first_max_index_1_Sketch_A_Net_model_1_exclude_23 as ext_class_first_max_index
+#from data_analysis_data import ext_class_second_max_index_1_Sketch_A_Net_model_1_exclude_23 as ext_class_second_max_index
+#from data_analysis_data import ext_match_first_max_percent_1_Sketch_A_Net_model_1_exclude_23 as ext_match_first_max_percent
+#from data_analysis_data import ext_match_second_max_percent_1_Sketch_A_Net_model_1_exclude_23 as ext_match_second_max_percent
+
+
 seed = 1000
 iters = 100
 resolution = 0.001
+min_percent_match_start=0.8
+min_percent_match_end=0.999
+min_confidence_start=0.7
+min_confidence_end = 0.85
+X, Y ,Z = print_all_entropy_parameters(prediction_list,
+                                    ground_truth_list,
+                                    ext_class_first_max_index,
+                                    ext_class_second_max_index,
+                                    ext_match_first_max_percent,
+                                    ext_match_second_max_percent, 
+                                    resolution)
+Zneg = 100-Z
+from mpl_toolkits.mplot3d import axes3d
+import matplotlib.pyplot as plt
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_wireframe(X1, Y1, Z1)
+ax.set_xlabel('min_percent_match')
+ax.set_ylabel('min_confidence')
+ax.set_zlabel('accuracy (%)')
+plt.show()
+dataset_PATH = "C:/Users/JustinSanJuan/Desktop/HKUST/UROP Deep Learning Image-based Structural Analysis/Code/Python/Testing Folder/"
+fig.savefig(dataset_PATH + '3D_plot_1')
+
+seed = 1234
 min_percent_match, min_confidence = get_optimal_entropy_parameters(prediction_list,
                                     ground_truth_list,
                                     ext_class_first_max_index,
                                     ext_class_second_max_index,
                                     ext_match_first_max_percent,
                                     ext_match_second_max_percent,iters,seed, resolution)
+
 
 prediction_obj = ComponentClassifierPredict(min_percent_match, min_confidence)
 

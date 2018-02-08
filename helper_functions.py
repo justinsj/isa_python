@@ -312,6 +312,41 @@ def separate_correct(list_to_be_separated, prediction_list, ground_truth_list):
         else:
             wrong_output_list.append(list_to_be_separated[i])
     return correct_output_list, wrong_output_list
+def print_all_entropy_parameters(prediction_list,
+                                    ground_truth_list,
+                                    ext_class_first_max_index,
+                                    ext_class_second_max_index,
+                                    ext_match_first_max_percent,
+                                    ext_match_second_max_percent,
+                                    resolution, min_percent_match_start,
+                                    min_percent_match_end,
+                                    min_confidence_start,
+                                    min_confidence_end):
+    import numpy as np
+    min_percent_match_list = []
+    min_confidence_list = []
+    accuracy_list = []
+    for min_percent_match in np.arange(min_percent_match_start,min_percent_match_end+resolution,resolution):
+        temp_min_percent_match_list = []
+        temp_min_confidence_list = []
+        temp_accuracy_list = []
+        for min_confidence in np.arange(min_confidence_start,min_confidence_end+resolution,resolution):
+            accuracy = test_accuracy(prediction_list,ground_truth_list,
+                    ext_class_first_max_index,ext_class_second_max_index,
+                    ext_match_first_max_percent,ext_match_second_max_percent,
+                    min_percent_match, min_confidence)
+            temp_accuracy_list.append(accuracy*100)
+            temp_min_confidence_list.append(min_confidence)
+            temp_min_percent_match_list.append(min_percent_match)
+            print(str(min_percent_match) + ' ' + str(min_confidence) + ' ' +str(accuracy))
+        
+        min_percent_match_list.append(np.asarray(temp_min_percent_match_list))
+        min_confidence_list.append(np.asarray(temp_min_confidence_list))
+        accuracy_list.append(np.asarray(temp_accuracy_list))
+    min_percent_match_list = np.asarray(min_percent_match_list)
+    min_confidence_list = np.asarray(min_confidence_list)
+    accuracy_list = np.asarray(accuracy_list)
+    return min_percent_match_list, min_confidence_list, accuracy_list
 
 def get_gradient_entropy_parameters(prediction_list,
                                     ground_truth_list,
@@ -330,7 +365,7 @@ def get_gradient_entropy_parameters(prediction_list,
     #try increasing min_percent_match
     inc_min_percent_match = min_percent_match
     accuracy_inc_min_percent_match = accuracy_base
-    while accuracy_inc_min_percent_match == accuracy_base and inc_min_percent_match <= 1.0:
+    while accuracy_inc_min_percent_match == accuracy_base and inc_min_percent_match <= 1.0 and inc_min_percent_match - min_percent_match <0.5:
         print('inc_min_percent_match = ' + str(inc_min_percent_match))
         inc_min_percent_match +=resolution
         accuracy_inc_min_percent_match = test_accuracy(prediction_list,ground_truth_list,
@@ -343,7 +378,7 @@ def get_gradient_entropy_parameters(prediction_list,
     #try decreasing min_percent_match
     dec_min_percent_match = min_percent_match
     accuracy_dec_min_percent_match = accuracy_base
-    while accuracy_dec_min_percent_match == accuracy_base and dec_min_percent_match >= 0:
+    while accuracy_dec_min_percent_match == accuracy_base and dec_min_percent_match >= 0 and min_percent_match - dec_min_percent_match <0.5:
         print('dec_min_percent_match = ' + str(dec_min_percent_match))
         dec_min_percent_match -=resolution
         accuracy_dec_min_percent_match = test_accuracy(prediction_list,ground_truth_list,
@@ -361,7 +396,7 @@ def get_gradient_entropy_parameters(prediction_list,
     #try increasing min_confidence
     inc_min_confidence = min_confidence
     accuracy_inc_min_confidence = accuracy_base
-    while accuracy_inc_min_confidence == accuracy_base and inc_min_confidence <= 1.0:
+    while accuracy_inc_min_confidence == accuracy_base and inc_min_confidence <= 1.0 and inc_min_confidence - min_confidence <0.5:
         print('inc_min_confidence = ' + str(inc_min_confidence))
         inc_min_confidence +=resolution
         accuracy_inc_min_confidence = test_accuracy(prediction_list,ground_truth_list,
@@ -373,7 +408,7 @@ def get_gradient_entropy_parameters(prediction_list,
     #try decreasing min_confidence
     dec_min_confidence = min_confidence
     accuracy_dec_min_confidence = accuracy_base
-    while accuracy_dec_min_confidence == accuracy_base and dec_min_confidence >= 0:
+    while accuracy_dec_min_confidence == accuracy_base and dec_min_confidence >= 0 and min_confidence - dec_min_confidence <0.5:
         print('dec_min_confidence= ' + str(dec_min_confidence))
         dec_min_confidence -=resolution
         accuracy_dec_min_confidence = test_accuracy(prediction_list,ground_truth_list,
@@ -407,7 +442,7 @@ def test_accuracy(prediction_list,
         
         temp_prediction_list.append(index)
         
-    score_matrix = (np.asarray(prediction_list) == np.asarray(ground_truth_list))
+    score_matrix = (np.asarray(temp_prediction_list) == np.asarray(ground_truth_list))
     accuracy = sum(score_matrix)/len(score_matrix)
     return accuracy
 def get_optimal_entropy_parameters(prediction_list,

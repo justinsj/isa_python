@@ -442,16 +442,16 @@ class TestingClass(object):
 #        del trained_model
         gc.collect()
 
-        from helper_functions import plot_confusion_matrix
-        from constants import target_names_all
-        from sklearn.metrics import confusion_matrix
-#        import itertools
-        
-        cnf_matrix = confusion_matrix(np.asarray(ground_truth_list),
-                    np.asarray(prediction_list),labels = np.arange(64))
-        name = "confusion_matrix_"+str(start)+'-'+str(end)+"_"+str(model_1_weights_name)
-        plot_confusion_matrix(cnf_matrix, classes=target_names_all,
-                      title='Confusion matrix',name = name,save = save)
+#        from helper_functions import plot_confusion_matrix
+#        from constants import target_names_all
+#        from sklearn.metrics import confusion_matrix
+##        import itertools
+#        
+#        cnf_matrix = confusion_matrix(np.asarray(ground_truth_list),
+#                    np.asarray(prediction_list),labels = np.arange(64))
+#        name = "confusion_matrix_"+str(start)+'-'+str(end)+"_"+str(model_1_weights_name)
+#        plot_confusion_matrix(cnf_matrix, classes=target_names_all,
+#                      title='Confusion matrix',name = name,save = save)
 #        del prediction_indices
 #        del ground_truth_indices
         gc.collect()
