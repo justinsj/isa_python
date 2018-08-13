@@ -14,7 +14,7 @@ def print_time_string(index,time_cost_string_list,time_cost_time_list):
 def store_time(index,time_cost_time_list,time_count):
     time_cost_time_list[index] = time_count
     return time_cost_time_list
-def print_image_bw(image,l,w):
+def print_image_bw(image,l=5,w=5):
     fig,ax=plt.subplots(ncols=1,nrows=1,figsize = (l,w))
     ax.imshow(image,cmap = 'binary')
     plt.show()
@@ -26,13 +26,14 @@ def dropout_search(dropout_ls):
     """
     pass
 
-def plot_model_results_and_save(image,name, ext_data_list, ext_class_index_list, ext_class_name_list, ground_truth_index_list):
+def plot_model_results_and_save(image,name, ext_data_list, ext_class_index_list, ext_class_name_list, ground_truth_index_list,rejected_classes = [], m1_percent_list=[],m2_percent_list=[],show_percentages = False, min_confidence = None, min_percent_match=None,print_extra_indices = False):
     fig1, ax1 = plt.subplots(ncols=1, nrows=1, figsize=(25, 25))
     together = []
     for i in range(len(ext_data_list)):
+        if ext_class_index_list[i] in rejected_classes or (min_percent_match != None and  m1_percent_list[i] < min_percent_match) or (min_confidence != None and m1_percent_list[i]-m2_percent_list[i] < min_confidence):
+            continue
         x, y, w, h = ext_data_list[i]
-        rect = mpatches.Rectangle(
-            (x, y), w, h, fill=False, edgecolor='red', linewidth=1)
+        rect = mpatches.Rectangle((x, y), w, h, fill=False, edgecolor='red', linewidth=1)
         ax1.add_patch(rect)
         color='b' #not compared to any answer
         try:
@@ -40,12 +41,15 @@ def plot_model_results_and_save(image,name, ext_data_list, ext_class_index_list,
                 color='r' # incorrect
             else:
                 color = 'g' # correct
-                
         except:
             color = 'b' #not compared to any answer
-#        ax1.annotate(str(i) + ' : ' + str(ext_class_name_list[i]),xy=(x, y-2),fontsize=12,color=color)
-        string = str(i+1) + ' : ' + str(ext_class_name_list[i])
-        
+		#ax1.annotate(str(i) + ' : ' + str(ext_class_name_list[i]),xy=(x, y-2),fontsize=12,color=color)
+
+        string = str(ext_class_name_list[i])
+        if print_extra_indices:
+            string += " | " + str(ext_class_index_list[i]) + " | " + str(i)
+        if show_percentages:
+            string += " " + str(m1_percent_list[i])# + " " + str(m2_percent_list[i])
         together.append((string,x,y,color))
     
     together.sort()
@@ -68,9 +72,9 @@ def plot_model_results_and_save(image,name, ext_data_list, ext_class_index_list,
     #y = f(x)
     #print(y)
     adjust_text(texts,x=x,y=y, arrowprops=dict(arrowstyle="->", color='r', lw=1),
-                expand_points=(1.2,1.2),
-                force_text=0.9,
-                force_points = 0.15)
+                expand_points=(1.05,1.2),
+                force_text=(0.1,0.25),
+                force_points = (0.2,0.5))
 ############ convert to graymap
     image1=np.multiply(np.subtract(image,1),-1)
     cmap = plt.cm.gray
@@ -81,10 +85,7 @@ def plot_model_results_and_save(image,name, ext_data_list, ext_class_index_list,
 #    ax1.imshow(image)
 #    plt.tight_layout()
     plt.show()
-    try:    
-        fig1.savefig('C:/Users/JustinSanJuan/Desktop/HKUST/UROP Deep Learning Image-based Structural Analysis/Training Data Set/Output/print_'+str(name)+'.jpg')
-    except: 
-        fig1.savefig('/home/chloong/Desktop/Justin San Juan/Testing Folder/Output/print_'+str(name)+'.jpg')
+	#fig1.savefig('C:/Users/jdqsj/Desktop/Workspace/isa-python/print_'+str(name)+'.jpg')
 
 def calculate_accuracy(prediction_list, ground_truth_list):
     if len(prediction_list) != len(ground_truth_list):

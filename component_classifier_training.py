@@ -505,13 +505,14 @@ class ComponentClassifierTraining(object):
         model.summary()
         return model
 
-    def train(self, epochs, seed, verbose=1):
+    def train(self, epochs, seed, dataset_PATH,dataset_name, verbose=True):
         """ Train model with input number of epochs """
         np.random.seed(seed)  # For reproducibility
-        
+        X_train,y_train,X_val,y_val = self.LoadBatch(dataset_PATH,dataset_name,seed)
         self.history = self.model.fit(self.X_train, self.y_train, batch_size=self.batch_size,
-                                      epochs=epochs, verbose=verbose,
-                                      validation_data=(self.X_val, self.y_val))
+                                  epochs=epochs, verbose=verbose,
+                                  validation_data=(self.X_val, self.y_val))
+
         self.is_trained = True
     def LoadBatch(self,dataset_PATH, dataset_name,seed):
         data_all = self.load_data(dataset_PATH,dataset_name)
@@ -523,6 +524,7 @@ class ComponentClassifierTraining(object):
         # create BatchGenerator using dataset_PATH, and dataset_names
         
         #run training
+
         for e in range(epochs):
             print('Main Epoch : ' +str(e)+'/'+str(epochs))
             for dataset_name in dataset_name_list:
@@ -624,6 +626,9 @@ class ComponentClassifierTraining(object):
             raise ModelNotTrained('Model is not trained yet!')
         else:
             self.model.save_weights(name+'.h5')
+			
+	#def combine_datasets(self,dataset_list,name):
+		
     def plot_training_data_all(self,PATH,name, start):
         from constants import target_names_all
         complete_data_set = self.load_data(PATH,name)

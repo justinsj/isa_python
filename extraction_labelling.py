@@ -13,15 +13,21 @@ from helper_functions import print_image_bw
 
 class ExtractionLabelling(object):
 
-    def __init__(self,ext_images,ext_data,ext_class_index,ext_class_name, num_classes, img_rows,img_cols):
+    def __init__(self,ext_images,ext_data,ext_class_index,ext_class_name, num_classes, img_rows,img_cols, min_percent_match, min_confidence):
         self.ext_images = ext_images
         self.ext_data = ext_data
         self.ext_class_index = ext_class_index
         self.ext_class_name = ext_class_name
         self.num_classes = num_classes
         self.img_rows = img_rows
+        print("img_rows =" + str(img_rows))
+        print("img_cols =" + str(img_cols))
         self.img_cols = img_cols
         self.gt =[]
+        self.extraction = []
+        self.image = []
+        self.min_percent_match = min_percent_match
+        self.min_confidence = min_confidence
 
         #reset labeller answers
         self.answer = ''
@@ -119,9 +125,12 @@ class ExtractionLabelling(object):
         self.ext_class_name_temp.append(self.ext_class_name[k])
         self.ext_images_temp.append(self.ext_images[k])
         self.ext_data_temp.append(self.ext_data[k])
+        print(len(self.ext_data_temp))
+        print(len(self.ext_data))
         
         #create string to write as a single line in ground truth file
         string = str(self.ext_data[k][0])+' '+ str(self.ext_data[k][1])+' '+ str(self.ext_data[k][2])+' '+ str(self.ext_data[k][3])+' '+str(self.ext_class_index[k])
+        print(string)
         return string
 
     def answer_is_b(self,k):
@@ -176,7 +185,7 @@ class ExtractionLabelling(object):
             
             #ask for answer in previous k
             self.request_answer(k-1)
-            continuecode = self.parse_answer(k-1)
+            continuecode = self.parse_answer(image,k-1)
             if continuecode == 0:
                 return 0
             #ask for answer in current k again
@@ -226,19 +235,30 @@ class ExtractionLabelling(object):
             self.h = y2-y1
             #do prediction
             
-            extraction=self.image[y1:y2,x1:x2]
-            extraction = ExtractionPreprocessing.resize_extraction(extraction)
+            extraction=image[y1:y2,x1:x2]
+            ExtractionPreprocessingObj = ExtractionPreprocessing(extraction, "", [])
+            extraction = ExtractionPreprocessingObj.resize_extraction(extraction,x1,y1, x2-x1,y2-y1,self.img_cols,self.img_rows,self.img_cols,self.img_rows)
             self.extraction = extraction
             
             num_channel = 3 # since we need RGB, then expand dimensions of extraction
-            prediction = ComponentClassifierPredict()
+            prediction = ComponentClassifierPredict(self.min_percent_match, self.min_confidence)
             extraction = prediction.expand_dimension(extraction,num_channel)
-            index, first_max, second_max = prediction.predict_class(extraction, self.model)
-            self.prediction_index = int(prediction.use_entropy(index, first_max, second_max))
+            first_index, second_index, first_max, second_max = prediction.predict_class(extraction, self.model)
+            self.prediction_index = int(prediction.use_entropy(first_index, first_max, second_max))
+            self.ext_images.append(extraction)
+            self.ext_data.append((x1,y1,x2-x1,y2-y1))
+            self.ext_class_index.append(self.prediction_index)
+            self.ext_class_name.append(target_names_all[self.prediction_index])
+            """
+            self.ext_images_temp.append(extraction)
+            self.ext_data_temp.append((x1,y1,x2-x1,y2-y1))
+            self.ext_class_index_temp.append(self.prediction_index)
+            self.ext_class_name_temp.append(target_names_all[self.prediction_index])
+            """
 
-
-            self.print_extraction_image(image, k='coords', x=self.x, y=self.y, w=self.w, h=self.h)
-            print('Prediction is ' +str(target_names_all[self.prediction_index]))
+            self.print_extraction_image(image, k=len(self.ext_class_index)-1)
+            
+            #print('Prediction is ' +str(target_names_all[self.prediction_index]))
             #if labeller just pressed enter, then save predicted index
             #else, save the number entered as the class index
         
@@ -321,6 +341,12 @@ class ExtractionLabelling(object):
             continuecode = self.parse_complete(image)
             if continuecode == 0:
                 break
+            #print(self.ext_class_index[len(self.ext_class_index)-1])
+            self.request_answer(len(self.ext_class_index)-1)
+            continuecode = self.parse_answer(image,len(self.ext_class_index)-1)
+            if continuecode == 0:
+                break
+            #print(self.ext_class_index)
             
             self.print_problem_image(image,'correct')
             
@@ -338,8 +364,22 @@ class ExtractionLabelling(object):
             for l in lines:
                 if not(l == '' or l ==' ' or l =='\n'):
                     self.gt.append(tuple(map(int,l.split(" "))))
-#            print(self.gt)
-#        return self.gt
+    def load_bounding_boxes(self,PATH,imagename): #imagename example = all_44
+        filename = PATH +'GT/' + 'GT_'+str(imagename)
+        if os.path.isfile(str(filename)+'.txt'):
+            f = open(str(filename)+'.txt')
+            lines = [line.rstrip('\n') for line in f]
+            lines = lines[1::] #remove header
+            gt = []
+            for l in lines:
+                if not(l == '' or l ==' ' or l =='\n'):
+                    xywhc = tuple(map(int,l.split(" ")))
+                    x,y,w,h,c = xywhc
+                    if c != 23:
+                        gt.append((x,y,w,h))
+        return gt
+            #print(self.gt)
+        #return self.gt
     def plot_ground_truths(self,image,PATH, imagename):
         self.image = image
         self.load_text(PATH,imagename) # create groundtruth array, modifies self.gt

@@ -165,8 +165,16 @@ class ComponentSegmentation(object):
                             area_union = int(union_w * union_h) - gaps
                             percent_overlap = area_overlap / area_union
 
+
+                            #check if box 2 completely encapsulates box 1
+                            encapsulates = False
+                            outer_box = [outer_x1,outer_x2,outer_y1,outer_y2]
+                            box_2 = premerged_set[n,:]
+                            if (all(elem in outer_box  for elem in box_2)):
+                                encapsulates = True
+
                                 # Merge bounding boxes if overlap percent is large enough
-                            if percent_overlap > self.overlap_threshold:
+                            if percent_overlap > self.overlap_threshold:# or encapsulates:
 
                                 # Convert back to x,y,w,h and save as good_segment
                                 good_segment = [int(outer_x1),int(outer_y1),int(outer_x2-outer_x1), int(outer_y2-outer_y1)]
@@ -330,8 +338,10 @@ class ComponentSegmentation(object):
 
 
         # perform selective search
-        img_lbl, regions = selectivesearch.selective_search(cropped, scale=scale_input, sigma=sigma_input, min_size=min_size_input)
-        
+        try:
+        	img_lbl, regions = selectivesearch.selective_search(cropped, scale=scale_input, sigma=sigma_input, min_size=min_size_input)
+        except ValueError:
+        	return
         # each r in regions is a dictionary (rect: x, y, w, h; size: n ...)
         for r in regions:
 

@@ -7,6 +7,8 @@ import numpy as np
 from PIL import Image
 from extraction_preprocessing import ExtractionPreprocessing
 from component_classifier_training import ComponentClassifierTraining
+import gc
+gc.enable
 
 from constants import target_names_all, target_names
 
@@ -270,7 +272,7 @@ class ComponentClassifierPredict(object):
                 first_max_index_3, second_max_index_3, first_max_percent_3, second_max_percent_3
         return index, index_1,index_2,index_3, first_max_index_1, second_max_index_1, first_max_percent_1, second_max_percent_1
         
-    def predict_classes(self, ext_images, model_1, model_2 = None, model_3 = None):
+    def predict_classes(self, ext_images, model_1, model_2 = None, model_3 = None, conservative = False):
         
         if type(ext_images) is list:
             if len(ext_images) == 0: return
@@ -285,16 +287,18 @@ class ComponentClassifierPredict(object):
 
         for i in range(len(ext_images)):
             image = ext_images[i]
+            gc.collect()
             expanded_image = self.expand_dimension(image, 3)
-    
-            if model_2 == None or model_3 == None:
+            
+            if model_2 == None and model_3 == None:
                 # Predict object class with entropy theory and record data
-                index, first_max, second_max = self.predict_class(expanded_image, model_1)
-                index = self.use_entropy(index, first_max, second_max)
-                
+                first_max_index_1, second_max_index_1, first_max_percent_1, second_max_percent_1 = self.predict_class(expanded_image, model_1)
+                index = self.use_entropy(first_max_index_1, first_max_percent_1, second_max_percent_1)
+                gc.collect()
                 # Attach percentages to lists (in range of 0 to 1.0, ex: 91% is recorded as 0.91)
-                ext_match_first_max_percent.append(first_max)
-                ext_match_second_max_percent.append(second_max)
+                if not(conservative):
+                    ext_match_first_max_percent.append(first_max_percent_1)
+                    ext_match_second_max_percent.append(second_max_percent_1)
             else:
                 index_1, first_max_1, second_max_1 = self.predict_class(expanded_image, model_1)
                 index_1 = self.use_entropy(index_1, first_max_1, second_max_1)
@@ -314,9 +318,10 @@ class ComponentClassifierPredict(object):
         if not(model_2 == None or model_3 == None):
             ext_match_first_max_percent = np.zeros(len(ext_images)).tolist()
             ext_match_second_max_percent = np.zeros(len(ext_images)).tolist()
-
-        return ext_class_index, ext_class_name, ext_match_first_max_percent, ext_match_second_max_percent
-
+        if not(conservative): 
+            return ext_class_index, ext_class_name, ext_match_first_max_percent, ext_match_second_max_percent
+        else:# don't output so much data
+            return ext_class_index, ext_class_name
     def get_confusion_matrix(self, y_pred_one_hot, y_test_one_hot):
         """ Input one hot """
         y_pred_reverse = np.argmax(y_pred_one_hot, axis=1)
@@ -402,6 +407,14 @@ class ComponentClassifierPredict(object):
             adjusted_ext_class_name.append(target_names[mapped_index])
         return adjusted_ext_class_index, adjusted_ext_class_name
 
+    def save_predictions(self, ext_data_list, ext_class_index_list, filepath, filename):
+        f = open(filepath+filename,"w+")
+        f.write(filename+"\n")
+        for i in range(len(ext_class_index_list)):
+            x, y, w, h = ext_data_list[i]
+            c = ext_class_index_list[i]
+            f.write(str(x)+" "+str(y)+" "+str(w)+" "+str(h)+" "+str(c)+"\n")
+        f.close()
     def calculate_recall(self):
         pass
 
