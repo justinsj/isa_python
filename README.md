@@ -8,6 +8,7 @@ Image-based Structural Analysis (ISA) is an application of studying the behavior
 5. Pishun Tantivangphaisal
 6. Jimmy Leung Whing Cheong Tom
 7. Lai Sheung Wan.
+8. Abhishek Gupta
 
 For further details, please contact: Cheng Ning Loong (cnloong@connect.ust.hk), Justin San Juan (jdsanjuan@connect.ust.hk), Ng Zhi Yong Ignavier (zyingaa@connect.ust.hk).
 
