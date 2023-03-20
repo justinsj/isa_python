@@ -11,33 +11,3 @@ Image-based Structural Analysis (ISA) is an application of studying the behavior
 8. Abhishek Gupta
 
 For further details, please contact: Cheng Ning Loong (cnloong@connect.ust.hk), Justin San Juan (jdsanjuan@connect.ust.hk), Ng Zhi Yong Ignavier (zyingaa@connect.ust.hk).
-
-
-# Progress
-
- Code status:
- 
- ---- not ready ----
- 
- TrainComponentClassifier - not ready
- 
- ProblemPreprocessing - not ready
- 
- ImagePreprocessing - not ready
- 
- ComponentPreprocessing - not ready
- 
- ----- ready ----
-
- Constants - ready and tested
-
- ComponentClassifierTraining - ready and tested
-
- ExtractionPreprocessing - ready and tested
- 
- ComponentSegmentation - ready and tested
-
- ExtractionLabelling - ready and tested
-
- MainCode - ready, to be tested
-
